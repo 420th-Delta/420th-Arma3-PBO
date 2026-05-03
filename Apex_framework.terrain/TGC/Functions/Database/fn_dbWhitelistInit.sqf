@@ -66,6 +66,20 @@ addMissionEventHandler ["PlayerDisconnected", {
     if (missionNamespace getVariable ["QS_missionConfig_dbWhitelistEnabled", false] isNotEqualTo true) exitWith {};
     if (isNil "QS_whitelist_data") then {QS_whitelist_data = createHashMap};
 
+    // TGC_fnc_dbWhitelistInit_cleanOnDisconnect = true;
+    // The above variable can be set to enable cleaning up whitelists after disconnect.
+    // This reduces network traffic when a lot of unique whitelisted players
+    // frequently connect and disconnect.
+    //
+    // However, note that the database may fail to respond in a timely manner
+    // before a player's initialization begins. This can cause issues such as
+    // curator modules not being created.
+    //
+    // By disabling cleanup, players can re-connect as a workaround to
+    // re-initialize themselves, if the database whitelists arrived late.
+    // As such, it is recommended to keep this disabled.
+    if (missionNamespace getVariable ["TGC_fnc_dbWhitelistInit_cleanOnDisconnect", false] isNotEqualTo true) exitWith {};
+
     private _removed = 0;
     {
         private _roles = QS_whitelist_data getOrDefaultCall [_role, {createHashMap}, true];
@@ -74,5 +88,7 @@ addMissionEventHandler ["PlayerDisconnected", {
     } forEach keys QS_whitelist_data;
 
     diag_log format ["TGC_fnc_dbWhitelistInit: %1 (%2) disconnected, removing %3 whitelists", _name, _uid, _removed];
-    if (_removed > 0) then {publicVariable "QS_whitelist_data"};
+    // Leave below commented to reduce network traffic.
+    // The next whitelisted player that connects will trigger a broadcast.
+    // if (_removed > 0) then {publicVariable "QS_whitelist_data"};
 }];
