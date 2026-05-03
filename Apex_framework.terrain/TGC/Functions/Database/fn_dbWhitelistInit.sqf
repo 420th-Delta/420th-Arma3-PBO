@@ -48,17 +48,16 @@ addMissionEventHandler ["PlayerConnected", {
         };
 
         private _whitelists = [_users] call _parseWhitelistsFromUsers;
-        diag_log format ["TGC_fnc_dbWhitelistInit: %1 (%2) connected, adding %3 whitelists", _name, _uid, count _whitelists];
-        if (_whitelists isEqualTo []) exitWith {};
-
+        private _added = 0;
         {
             _x params ["_uid", "_role"];
-            QS_whitelist_data
-                getOrDefaultCall [_role, {createHashMap}, true]
-                set [_uid, 1];
+            private _roles = QS_whitelist_data getOrDefaultCall [_role, {createHashMap}, true];
+            private _overwritten = _roles set [_uid, 1, false];
+            if (!_overwritten) then {_added = _added + 1};
         } forEach _whitelists;
 
-        publicVariable "QS_whitelist_data";
+        diag_log format ["TGC_fnc_dbWhitelistInit: %1 (%2) connected, adding %3 new whitelists", _name, _uid, _added];
+        if (_added > 0) then {publicVariable "QS_whitelist_data"};
     };
 }];
 
@@ -70,9 +69,8 @@ addMissionEventHandler ["PlayerDisconnected", {
     private _removed = 0;
     {
         private _roles = QS_whitelist_data getOrDefaultCall [_role, {createHashMap}, true];
-        if (!isNil {_roles deleteAt _uid}) then {
-            _removed = _removed + 1;
-        }
+        private _old = _roles deleteAt _uid;
+        if (!isNil "_old") then {_removed = _removed + 1};
     } forEach keys QS_whitelist_data;
 
     diag_log format ["TGC_fnc_dbWhitelistInit: %1 (%2) disconnected, removing %3 whitelists", _name, _uid, _removed];
