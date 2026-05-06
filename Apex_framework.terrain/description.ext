@@ -758,7 +758,7 @@ class CfgFunctions {
             class dbQuery {};
             class dbStrip {};
             class dbWhitelist {};
-            class dbWhitelistRefresher {};
+            class dbWhitelistInit { postInit = 1; };
         };
         class Drones {
             file = "TGC\Functions\Drones";
