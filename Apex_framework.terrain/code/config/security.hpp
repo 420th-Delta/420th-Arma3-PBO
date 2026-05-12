@@ -238,5 +238,6 @@ class CfgRemoteExec {
 		// class RHS_fnc_usf_flashbang_effect {}; // RHSUSAF incorrectly remote executes this
 
 		class usaf_ext_fuel_fnc_fuel_usage {};
+        class hatg_fnc_cooldown {allowedTargets = 0;};
 	};
 };
