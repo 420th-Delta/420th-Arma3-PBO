@@ -50,6 +50,8 @@ __________________________________________________________________________/*/
 	[0,'Wasp',[[0,'A3\air_f\heli_light_01\data\skins\heli_light_01_ext_wasp_co.paa']],'MH-9 Hummingbird (Heli)',['B_Heli_Light_01_F','B_Heli_Light_01_armed_F','C_Heli_Light_01_civil_F','B_Heli_Light_01_stripped_F','B_Heli_Light_01_dynamicLoadout_F'],'Bohemia Interactive'],
 	[0,'Indep',[[0,'A3\Air_F\Heli_Light_01\Data\heli_light_01_ext_indp_co.paa']],'MH-9 Hummingbird (Heli)',['B_Heli_Light_01_F','B_Heli_Light_01_armed_F','C_Heli_Light_01_civil_F','B_Heli_Light_01_stripped_F','B_Heli_Light_01_dynamicLoadout_F'],'Bohemia Interactive'],
 	[0,'Ion',[[0,'A3\air_f\Heli_Light_01\Data\heli_light_01_ext_ion_co.paa']],'MH-9 Hummingbird (Heli)',['B_Heli_Light_01_F','B_Heli_Light_01_armed_F','C_Heli_Light_01_civil_F','B_Heli_Light_01_stripped_F','B_Heli_Light_01_dynamicLoadout_F'],'Bohemia Interactive'],
+	[0,'Galaxy',[[0,'media\images\vskins\mh9\galaxy.paa']],'MH-9 Hummingbird (Heli)',['B_Heli_Light_01_F','B_Heli_Light_01_armed_F','C_Heli_Light_01_civil_F','B_Heli_Light_01_stripped_F','B_Heli_Light_01_dynamicLoadout_F'],'Ace'],
+
 	[
 		0,'Gryphon',
 		[
