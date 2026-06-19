@@ -2362,7 +2362,10 @@ for '_z' from 0 to 1 step 0 do {
 				{((group _cursorTarget) isNotEqualTo (group _QS_player))} &&
 				{((side (group _cursorTarget)) isEqualTo (side (group _QS_player)))} &&
 				{(_cursorTarget getVariable ['QS_RD_recruitable',_false])} &&
-				{!isPlayer leader _cursorTarget} && // Prevent stealing recruits from other players
+				{ // Prevent stealing recruits from other players
+					!isPlayer leader _cursorTarget
+					&& {!(_cursorTarget getVariable ['TGC_recruit_owner',objNull] in units _cursorTarget)}
+				} &&
 				{(isNull (attachedTo _cursorTarget))}
 			) then {
 				if (!(_QS_interaction_recruit)) then {
