@@ -165,7 +165,7 @@ for '_x' from 0 to 1 step 0 do {
 														((assignedVehicleRole _entity) isNotEqualTo []) && 
 														{(((assignedVehicleRole _entity) # 0) isEqualTo 'cargo')}
 													) then {
-														moveOut _entity;
+													//	moveOut _entity;
 													};
 												};
 											};
