@@ -942,9 +942,6 @@ if (isNil {missionProfileNamespace getVariable 'QS_leaderboards_meta'}) then {
 (missionProfileNamespace getVariable ['QS_leaderboards_meta',[_QS_system_weekday,_QS_missionStart]]) params ['_QS_ladder_weekday',''];
 missionProfileNamespace setVariable ['QS_leaderboards_meta',[_QS_system_weekday,_QS_missionStart]];
 if ((_QS_system_weekday isNotEqualTo _QS_ladder_weekday) && {(_QS_system_weekday isEqualTo 'mon')}) then {
-	if (!isNil {missionProfileNamespace getVariable 'QS_leaderboards2'}) then {
-		(missionProfileNamespace getVariable 'QS_leaderboards2') call (missionNamespace getVariable 'QS_fnc_leaderboardAddToWhitelist');
-	};
 	missionProfileNamespace setVariable ['QS_leaderboards2',nil];
 };
 if (isNil {missionProfileNamespace getVariable 'QS_leaderboards2'}) then {
@@ -964,42 +961,6 @@ _QS_leaderboards_saveDelay = 600;
 _QS_leaderboards_saveCheckDelay = _timeNow + _QS_leaderboards_saveDelay;
 _QS_leaderboards_publishDelay = 180;
 _QS_leaderboards_publishCheckDelay = _timeNow + _QS_leaderboards_publishDelay;
-if (isNil {missionProfileNamespace getVariable 'QS_whitelist_lb_helipilot'}) then {
-	missionProfileNamespace setVariable ['QS_whitelist_lb_helipilot',[]];
-} else {
-	_pilot_whitelist = [];
-	_wl_helipilot = missionProfileNamespace getVariable ['QS_whitelist_lb_helipilot',[]];
-	if (_wl_helipilot isNotEqualTo []) then {
-		{
-			0 = _pilot_whitelist pushBack _x;
-		} count _wl_helipilot;
-		missionNamespace setVariable ['QS_pilot_whitelist',compileFinal str _pilot_whitelist,TRUE];
-	};
-};
-if (isNil {missionProfileNamespace getVariable 'QS_whitelist_lb_cls'}) then {
-	missionProfileNamespace setVariable ['QS_whitelist_lb_cls',[]];
-} else {
-	_medic_whitelist = [];
-	_wl_cls = missionProfileNamespace getVariable ['QS_whitelist_lb_cls',[]];
-	if (_wl_cls isNotEqualTo []) then {
-		{
-			0 = _medic_whitelist pushBack _x;
-		} count _wl_cls;
-		missionNamespace setVariable ['QS_cls_whitelist',compileFinal str _medic_whitelist,TRUE];
-	};
-};
-if (isNil {missionProfileNamespace getVariable 'QS_whitelist_lb_sniper'}) then {
-	missionProfileNamespace setVariable ['QS_whitelist_lb_sniper',[]];
-} else {
-	private _sniper_whitelist = [];
-	private _wl_sniper = missionProfileNamespace getVariable ['QS_whitelist_lb_sniper',[]];
-	if (_wl_sniper isNotEqualTo []) then {
-		{
-			0 = _sniper_whitelist pushBack _x;
-		} count _wl_sniper;
-		missionNamespace setVariable ['QS_sniper_whitelist',compileFinal str _sniper_whitelist,TRUE];
-	};
-};
 
 /*/===== Captured enemies*/
 
@@ -1928,8 +1889,8 @@ for '_x' from 0 to 1 step 0 do {
 																	[0,_x] call _fn_eventAttach;
 																};
 																(missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
-																//missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
-																//deleteVehicle _x;
+																missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+																deleteVehicle _x;
 															};
 														};
 													} forEach _array;

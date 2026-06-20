@@ -5216,7 +5216,7 @@ for '_z' from 0 to 1 step 0 do {
 				};
 				/*/AIRCRAFT/*/
 				if ((['QS_trait_pilot','uavhacker','QS_trait_HQ','QS_trait_fighterPilot','QS_trait_CAS','QS_trait_JTAC'] findIf { _QS_player getUnitTrait _x }) isEqualTo -1) then {
-					if ([_atcMarkerPos,_tocMarkerPos] call _QS_module_radioChannelManager_checkState) then {
+					if ((missionProfileNamespace getVariable ['QS_client_radioChannel_aircraft',TRUE]) && {[_atcMarkerPos,_tocMarkerPos] call _QS_module_radioChannelManager_checkState}) then {
 						if (!(_QS_module_radioChannelManager_aircraftChannel in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
 							[1,_QS_module_radioChannelManager_aircraftChannel] call _fn_clientRadio;
 						};

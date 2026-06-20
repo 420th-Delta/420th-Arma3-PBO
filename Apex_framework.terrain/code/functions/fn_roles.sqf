@@ -294,15 +294,17 @@ if (_type isEqualTo 'REQUEST_ROLE') exitWith {
 	private _exit = FALSE;
 	private _roles_side = [];
 	private _role_data = [];
+	private _roleLower = toLowerANSI _role;
 	private _whitelisted = _uid in (['S3'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
+	private _staffWhitelisted = _uid in (['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 	if (!(_whitelisted)) then {
-		if ((toLowerANSI _role) isEqualTo 'pilot_heli_wl') then {
-			_whitelisted = _uid in (call (missionNamespace getVariable ['QS_pilot_whitelist',{[]}]));
+		if (_roleLower isEqualTo 'pilot_heli_wl') then {
+			_whitelisted = _uid in (call (missionNamespace getVariable ['QS_pilot_whitelist',{[]}]));	
 		};
-		if ((toLowerANSI _role) isEqualTo 'sniper_wl') then {
+		if (_roleLower isEqualTo 'sniper_wl') then {
 			_whitelisted = _uid in (call (missionNamespace getVariable ['QS_sniper_whitelist',{[]}]));
 		};
-		if ((toLowerANSI _role) isEqualTo 'medic_wl') then {
+		if (_roleLower isEqualTo 'medic_wl') then {
 			_whitelisted = _uid in (call (missionNamespace getVariable ['QS_cls_whitelist',{[]}]));
 		};
 	};
@@ -359,6 +361,10 @@ if (_type isEqualTo 'REQUEST_ROLE') exitWith {
 		if (!(_isCAS)) then {
 			// Whitelisting
 			if ((['_WL',_role,FALSE] call (missionNamespace getVariable 'QS_fnc_inString')) && (!(_whitelisted))) then {
+				_allowRequest = FALSE;
+				(missionNamespace getVariable 'QS_managed_hints') pushBack [5,TRUE,10,-1,format ['%1<br/><br/>(%2)',localize 'STR_QS_Role_009',localize 'STR_QS_Role_010'],[],-1,TRUE,localize 'STR_QS_Role_001',FALSE];
+			};
+			if ((_roleLower isEqualTo 'staff') && (!(_staffWhitelisted))) then {
 				_allowRequest = FALSE;
 				(missionNamespace getVariable 'QS_managed_hints') pushBack [5,TRUE,10,-1,format ['%1<br/><br/>(%2)',localize 'STR_QS_Role_009',localize 'STR_QS_Role_010'],[],-1,TRUE,localize 'STR_QS_Role_001',FALSE];
 			};
@@ -772,6 +778,29 @@ if (_type isEqualTo 'INIT_ROLE') exitWith {
 			[['QS_trait_gunner',FALSE,TRUE]],
 			[['QS_trait_HQ',TRUE,TRUE]],
 			[['QS_trait_fighterPilot',FALSE,TRUE]],
+			[['QS_trait_cas',TRUE,TRUE]],
+			[['QS_trait_JTAC',FALSE,TRUE]],
+			[['QS_trait_LMG',FALSE,TRUE]],
+			[['QS_trait_MMG',FALSE,TRUE]],
+			[['QS_trait_Sniper',FALSE,TRUE]]
+		];
+	};
+	if (_role isEqualTo 'staff') then {
+		_traitsData = [
+			[['medic',TRUE,FALSE]],
+			[['uavhacker',FALSE,FALSE]],
+			[['engineer',FALSE,FALSE]],
+			[['explosiveSpecialist',FALSE,FALSE]],
+			[['audibleCoef',0.5,FALSE]],
+			[['camouflageCoef',0.5,FALSE]],
+			[['loadCoef',1,FALSE]],
+			[['QS_trait_rifleman',FALSE,TRUE]],
+			[['QS_trait_leader',FALSE,TRUE]],
+			[['QS_trait_pilot',TRUE,TRUE]],
+			[['QS_trait_AT',FALSE,TRUE]],
+			[['QS_trait_gunner',FALSE,TRUE]],
+			[['QS_trait_HQ',FALSE,TRUE]],
+			[['QS_trait_fighterPilot',TRUE,TRUE]],
 			[['QS_trait_cas',TRUE,TRUE]],
 			[['QS_trait_JTAC',FALSE,TRUE]],
 			[['QS_trait_LMG',FALSE,TRUE]],

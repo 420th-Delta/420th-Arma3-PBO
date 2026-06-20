@@ -44,7 +44,7 @@ if (_type isEqualTo 'onLoad') then {
 	(_display displayCtrl 1817) ctrlSetText (if (2 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_059'},{localize 'STR_QS_Menu_060'}]);
 	(_display displayCtrl 1828) cbSetChecked (2 in (missionNamespace getVariable 'QS_client_radioChannels'));
 	(_display displayCtrl 1828) ctrlSetTooltip '';
-	(_display displayCtrl 1828) ctrlEnable FALSE;
+	(_display displayCtrl 1828) ctrlEnable (2 in (missionNamespace getVariable 'QS_radioChannels'));
 	/*/CHANNEL 8 - AO - 1810, 1818, 1829, 1837/*/
 	(_display displayCtrl 1810) ctrlSetText (localize 'STR_QS_Menu_063');
 	(_display displayCtrl 1810) ctrlSetTooltip (localize 'STR_QS_Menu_064');
@@ -89,17 +89,18 @@ if (_type isEqualTo 'onLoad') then {
 	(_display displayCtrl 1822) ctrlSetText (if (8 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
 	(_display displayCtrl 1834) cbSetChecked (8 in (missionNamespace getVariable 'QS_client_radioChannels'));
 	(_display displayCtrl 1834) ctrlSetTooltip '';
-	/*/CHANNEL 14 - Disabled - 1823, 1824, 1835/*/
-	(_display displayCtrl 1823) ctrlSetText (localize 'STR_QS_Menu_076');
-	(_display displayCtrl 1823) ctrlSetTooltip (localize 'STR_QS_Menu_075');
-	(_display displayCtrl 1823) ctrlSetTextColor [0.5,0.5,0.5,0.5];
+	/*/CHANNEL 14 - DONATORS - 1823, 1824, 1835/*/
+	_isDonator = (getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
+	(_display displayCtrl 1823) ctrlSetText 'Donators';
+	(_display displayCtrl 1823) ctrlSetTooltip 'Donator channel';
+	(_display displayCtrl 1823) ctrlSetTextColor (if (_isDonator) then [{[1,1,1,1]},{[0.5,0.5,0.5,0.5]}]);
 	(_display displayCtrl 1824) ctrlSetText (if (9 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
-	(_display displayCtrl 1824) ctrlSetTextColor [0.5,0.5,0.5,0.5];
+	(_display displayCtrl 1824) ctrlSetTextColor (if (_isDonator) then [{[1,1,1,1]},{[0.5,0.5,0.5,0.5]}]);
 	(_display displayCtrl 1835) cbSetChecked (9 in (missionNamespace getVariable 'QS_client_radioChannels'));
-	(_display displayCtrl 1835) ctrlSetTooltip (localize 'STR_QS_Menu_075');
-	(_display displayCtrl 1823) ctrlEnable FALSE;
-	(_display displayCtrl 1824) ctrlEnable FALSE;
-	(_display displayCtrl 1835) ctrlEnable FALSE;
+	(_display displayCtrl 1835) ctrlSetTooltip 'Donator channel';
+	(_display displayCtrl 1823) ctrlEnable _isDonator;
+	(_display displayCtrl 1824) ctrlEnable _isDonator;
+	(_display displayCtrl 1835) ctrlEnable _isDonator;
 	/*/CHANNEL 15 - Disabled - 1825, 1826, 1836/*/
 	(_display displayCtrl 1825) ctrlSetText (localize 'STR_QS_Menu_076');
 	(_display displayCtrl 1825) ctrlSetTooltip (localize 'STR_QS_Menu_075');
@@ -158,12 +159,16 @@ if (_type in [
 				if (!(2 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
 					[1,2] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 				};
+				missionProfileNamespace setVariable ['QS_client_radioChannel_aircraft',TRUE];
+				saveMissionProfileNamespace;
 			};		
 		} else {
 			if (2 in (missionNamespace getVariable 'QS_radioChannels')) then {
 				if (2 in (missionNamespace getVariable 'QS_client_radioChannels')) then {
 					[0,2] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 				};
+				missionProfileNamespace setVariable ['QS_client_radioChannel_aircraft',FALSE];
+				saveMissionProfileNamespace;
 			};		
 		};	
 	};
@@ -479,8 +484,9 @@ if (_type in [
 			};		
 		};
 	};
-	/*/14 - UNUSED/*/
+	/*/14 - DONATORS/*/
 	if (_type isEqualTo 'Check_9') then {
+		if (!((getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist')))) exitWith {};
 		if (_state isEqualTo 1) then {
 			if (9 in (missionNamespace getVariable 'QS_radioChannels')) then {
 				if (!(9 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
