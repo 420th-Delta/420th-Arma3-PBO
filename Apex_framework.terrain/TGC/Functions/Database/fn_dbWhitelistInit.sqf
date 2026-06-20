@@ -24,7 +24,7 @@ addMissionEventHandler ["PlayerConnected", {
             params ["_users"];
             private _whitelists = [];
             {
-                _x params ["_steam_id", "_role_s3", "_role_cas", "_role_s1", "_role_opfor", "_role_all", "_role_admin", "_role_moderator", "_role_trusted", "_role_media", "_role_curator", "_role_developer"];
+                _x params ["_steam_id", "_role_s3", "_role_cas", "_role_s1", "_role_opfor", "_role_all", "_role_admin", "_role_moderator", "_role_trusted", "_role_media", "_role_curator", "_role_developer", ["_role_donator", false]];
                 if (_role_s3       ) then {_whitelists pushBack [_steam_id, "S3"]};
                 if (_role_cas      ) then {_whitelists pushBack [_steam_id, "CAS"]};
                 if (_role_s1       ) then {_whitelists pushBack [_steam_id, "S1"]};
@@ -36,6 +36,7 @@ addMissionEventHandler ["PlayerConnected", {
                 if (_role_media    ) then {_whitelists pushBack [_steam_id, "MEDIA"]};
                 if (_role_curator  ) then {_whitelists pushBack [_steam_id, "CURATOR"]};
                 if (_role_developer) then {_whitelists pushBack [_steam_id, "DEVELOPER"]};
+                if (_role_donator  ) then {_whitelists pushBack [_steam_id, "DONATOR"]};
             } forEach _users;
             _whitelists
         };

@@ -34,6 +34,7 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 };
 if (!([getPlayerUID player] call (missionNamespace getVariable 'QS_fnc_atNameCheck'))) exitWith {};
 private _isAdmin = (getPlayerUID player) in (['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
+private _isDonator = (getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 if (_isAdmin) then {
 	_code = {
 		params ['','','','_array'];
@@ -876,9 +877,15 @@ if (_isAdmin) then {
 if ((player getUnitTrait 'QS_trait_pilot') || {(player getUnitTrait 'uavhacker')} || {(player getUnitTrait 'QS_trait_HQ')}) then {
 	_QS_radioChannels pushBack 2;
 };
+if (_isDonator) then {
+	_QS_radioChannels pushBack 9;
+};
 {
 	[1,_x] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 } forEach _QS_radioChannels;
+if (!(missionProfileNamespace getVariable ['QS_client_radioChannel_aircraft',TRUE])) then {
+	[0,2] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+};
 if (isNil {missionProfileNamespace getVariable 'QS_client_radioChannels_profile'}) then {
 	missionProfileNamespace setVariable ['QS_client_radioChannels_profile',[FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE]];
 	saveMissionProfileNamespace;
@@ -927,6 +934,11 @@ if (isNil {missionProfileNamespace getVariable 'QS_client_radioChannels_profile'
 		if ((_QS_radioChannels_profile # 7) isEqualType TRUE) then {
 			if (_QS_radioChannels_profile # 7) then {
 				[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+			};
+		};
+		if ((_QS_radioChannels_profile # 8) isEqualType TRUE) then {
+			if ((_QS_radioChannels_profile # 8) && {_isDonator}) then {
+				[1,9] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 			};
 		};
 	};

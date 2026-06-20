@@ -423,7 +423,8 @@ private _weaponsList = configFile >> 'CfgWeapons';
 			(radioChannelCreate [[1,0.4,0.4,1],'PLT Alpha channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,0.4,1],'PLT Bravo channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,0.4,1],'PLT Charlie channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
-			(radioChannelCreate [[1,0.6,0.2,1],'General channel','%UNIT_NAME',[],TRUE])
+			(radioChannelCreate [[1,0.6,0.2,1],'General channel','%UNIT_NAME',[],TRUE]),
+			(radioChannelCreate [[1,0.84,0.2,1],'Donators','%UNIT_NAME',[],TRUE])
 		],
 		TRUE
 	],
