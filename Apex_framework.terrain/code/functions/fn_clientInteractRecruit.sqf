@@ -75,6 +75,7 @@ _t enableAIFeature ['COVER',FALSE];
 (group _t) setSpeedMode 'FULL';
 [_t] call (missionNamespace getVariable 'QS_fnc_clientArsenal');
 _t setVariable ['QS_unit_isRecruited',TRUE,TRUE];
+_t setVariable ['TGC_recruit_owner',player,TRUE];
 _t addEventHandler [
 	'HandleDamage',
 	{
