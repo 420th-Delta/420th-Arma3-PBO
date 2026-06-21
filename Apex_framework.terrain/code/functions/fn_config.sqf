@@ -205,11 +205,9 @@ if (_has_extDB3) then {
 	_extDB3_ready = true;
 };
 
-QS_script_dbWhitelistRefresher = scriptNull;
 if (_extDB3_ready && QS_missionConfig_dbWhitelistEnabled) then {
 	diag_log "Database whitelisting enabled";
 	QS_fnc_whitelist = compileFinal "call TGC_fnc_dbWhitelist";
-	// QS_script_dbWhitelistRefresher = 0 spawn TGC_fnc_dbWhitelistRefresher;
 } else {
 	diag_log "Database whitelisting disabled, using whitelist.sqf";
 	QS_fnc_whitelist = compileScript ['@Apex_cfg\whitelist.sqf',TRUE];
