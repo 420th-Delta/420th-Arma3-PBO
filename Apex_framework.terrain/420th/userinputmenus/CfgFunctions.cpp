@@ -8,13 +8,11 @@
 
 class CAU_UserInputMenus {
 	class Functions {
-		#define FUNC(name) class name {file = "420th\userinputmenus\systems\display##name##.sqf";};
 		class colorPicker {file = "420th\userinputmenus\systems\displayColorPicker.sqf";};
-		FUNC(guiMessage)
-		FUNC(listBox)
-		FUNC(progressBar)
-		FUNC(slider)
-		FUNC(text)
-		#undef FUNC
+		class guiMessage {file = "420th\userinputmenus\systems\displayGuiMessage.sqf";};
+		class listBox {file = "420th\userinputmenus\systems\displayListbox.sqf";};
+		class progressBar {file = "420th\userinputmenus\systems\displayProgressBar.sqf";};
+		class slider {file = "420th\userinputmenus\systems\displaySlider.sqf";};
+		class text {file = "420th\userinputmenus\systems\displayText.sqf";};
 	};
 };
