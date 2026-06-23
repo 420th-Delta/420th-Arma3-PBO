@@ -99,7 +99,7 @@ blacklistedMagazines[] = {"rhs_weap_cbu87","rhs_weap_cbu89","rhs_weap_cbu100","B
 
 // CfgFunctions
 class CfgFunctions {
-	#include "cau\userinputmenus\CfgFunctions.cpp"
+	#include "420th\userinputmenus\CfgFunctions.cpp"
 	class QS {
 		class apex_framework {
 			class addWeapon {file = "code\functions\fn_addWeapon.sqf";};
@@ -1064,10 +1064,10 @@ class CfgWorlds {
 	};
 };
 /*/
-#include "cau\userinputmenus\systems\_macros.inc"
-#include "cau\userinputmenus\systems\_defines.inc"
-#include "cau\userinputmenus\controls.cpp"
-#include "cau\userinputmenus\systems\displayColorPicker.cpp"
+#include "420th\userinputmenus\systems\_macros.inc"
+#include "420th\userinputmenus\systems\_defines.inc"
+#include "420th\userinputmenus\controls.cpp"
+#include "420th\userinputmenus\systems\displayColorPicker.cpp"
 
 #define CT_STATIC           0
 #define CT_BUTTON           1
