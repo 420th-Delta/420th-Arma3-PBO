@@ -236,7 +236,6 @@ class CfgRemoteExec {
 		class genix_fnc_menuloadoutreceive {};
         class disablecollisionwith {};
         class enablecollisionwith {};
-		class usaf_ext_fuel_fnc_fuel_usage {};
         class hatg_fnc_cooldown {allowedTargets = 0;};
 	};
 };
