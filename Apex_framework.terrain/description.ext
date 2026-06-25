@@ -781,10 +781,12 @@ class CfgFunctions {
         };
         class Staff {
             file = "TGC\Functions\Staff";
+            class forceSideMission {};
             class initStaffKeybinds { postInit = 1; };
             class isStaff {};
             class staffChannelsGUI {};
             class staffGUI {};
+            class staffSideMissionGUI {};
         };
     };
 };
@@ -3805,14 +3807,66 @@ class QS_RD_client_dialog_menu_donatorTextures {
 			shadow = 0;
 			colorText[] = {1,1,1,1};
 		};
+		class QS_RD_client_dialog_menu_donatorTextures_button_target_1: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1813;
+			text = "Uniform";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.575 * safezoneH + safezoneY;
+			w = 0.031 * safezoneW;
+			h = 0.028 * safezoneH;
+			sizeEx = 0.019;
+			onButtonClick = "['Uniform',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorTextures_button_target_2: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1814;
+			text = "Vest";
+			x = 0.4125 * safezoneW + safezoneX;
+			y = 0.575 * safezoneH + safezoneY;
+			w = 0.026 * safezoneW;
+			h = 0.028 * safezoneH;
+			sizeEx = 0.019;
+			onButtonClick = "['Vest',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorTextures_button_target_3: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1815;
+			text = "Pack";
+			x = 0.44 * safezoneW + safezoneX;
+			y = 0.575 * safezoneH + safezoneY;
+			w = 0.031 * safezoneW;
+			h = 0.028 * safezoneH;
+			sizeEx = 0.019;
+			onButtonClick = "['Backpack',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorTextures_button_target_4: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1816;
+			text = "Helmet";
+			x = 0.4725 * safezoneW + safezoneX;
+			y = 0.575 * safezoneH + safezoneY;
+			w = 0.0375 * safezoneW;
+			h = 0.028 * safezoneH;
+			sizeEx = 0.019;
+			onButtonClick = "['Helmet',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
 		class QS_RD_client_dialog_menu_donatorTextures_button_1: QS_RD_dialog_RscButton {
 			moving = 1;
 			idc = 1810;
 			text = "$STR_QS_Dialogs_066";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.815 * safezoneH + safezoneY;
+			y = 0.805 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
-			h = 0.0340016 * safezoneH;
+			h = 0.03 * safezoneH;
 			sizeEx = 0.03;
 			onButtonClick = "['Select',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
 			shadow = 0;
@@ -3821,11 +3875,24 @@ class QS_RD_client_dialog_menu_donatorTextures {
 		class QS_RD_client_dialog_menu_donatorTextures_button_2: QS_RD_dialog_RscButton {
 			moving = 1;
 			idc = 1811;
+			text = "Reset";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.84 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.03 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['Reset',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorTextures_button_3: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1812;
 			text = "$STR_QS_Dialogs_032";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.87 * safezoneH + safezoneY;
+			y = 0.875 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
-			h = 0.0340016 * safezoneH;
+			h = 0.03 * safezoneH;
 			sizeEx = 0.03;
 			onButtonClick = "['Back',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorTextures');";
 			shadow = 0;
@@ -3835,9 +3902,9 @@ class QS_RD_client_dialog_menu_donatorTextures {
 			moving = 1;
 			idc = 1804;
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.58 * safezoneH + safezoneY;
+			y = 0.61 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
-			h = 0.22 * safezoneH;
+			h = 0.185 * safezoneH;
 			sizeEx = 0.03;
 			colorBackground[] = {0,0,0,0.5};
 		};

@@ -68,11 +68,50 @@ private _return = {
 		_colorRGBA1 call BIS_fnc_colorRGBAtoHTML;
 	};
 
+	if (_confirmed isEqualTo true) exitWith {
+		[_confirmed,_colorRGBA1,_colorRGBA256,_colorHTML,_args] call _code;
+	};
+
+	if (_confirmed isEqualTo "Reset") exitWith {
+		[_confirmed,_colorRGBA1,_colorRGBA256,_colorHTML,_args] call _code;
+	};
+
+	if (_confirmed in ["Uniform","Vest","Backpack","Helmet"]) exitWith {
+		[_confirmed,_colorRGBA1,_colorRGBA256,_colorHTML,_args] call _code;
+	};
+
 	_display closeDisplay 2;
 	[_confirmed,_colorRGBA1,_colorRGBA256,_colorHTML,_args] call _code;
 };
 
 #include "_common.inc"
+
+USE_CTRL(_ctrlButtonReset,IDC_BUTTON_RESET);
+if (!isNull _ctrlButtonReset) then {
+	_ctrlButtonReset ctrlSetText "Reset";
+	_ctrlButtonReset ctrlAddEventHandler ["ButtonClick",{
+		USE_DISPLAY(ctrlParent(_this # 0));
+		[_display,"Reset"] call (_display getVariable ["return",{}]);
+	}];
+};
+
+{
+	_x params ["_idc","_target"];
+	USE_CTRL(_ctrlClothingTarget,_idc);
+	if (!isNull _ctrlClothingTarget) then {
+		_ctrlClothingTarget ctrlShow ((vehicle player) isEqualTo player);
+		_ctrlClothingTarget ctrlSetTooltip format ["Apply colors to %1",toLower _target];
+		_ctrlClothingTarget ctrlAddEventHandler ["ButtonClick",format ["
+			private _display = ctrlParent(_this # 0);
+			[_display,'%1'] call (_display getVariable ['return',{}]);
+		",_target]];
+	};
+} forEach [
+	[IDC_COLOR_BUTTON_UNIFORM,"Uniform"],
+	[IDC_COLOR_BUTTON_VEST,"Vest"],
+	[IDC_COLOR_BUTTON_BACKPACK,"Backpack"],
+	[IDC_COLOR_BUTTON_HELMET,"Helmet"]
+];
 
 [
 	["createGrid",{

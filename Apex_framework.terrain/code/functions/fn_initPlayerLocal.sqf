@@ -856,12 +856,13 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 /*/================= Radio Channels/*/
 
 enableRadio TRUE;
+private _commandChannelEnabled = missionProfileNamespace getVariable ['QS_client_radioChannel_command',TRUE];
 {
 	_x call TGC_fnc_enableChannel;
 } count [
 	[0,[FALSE,FALSE]],
 	[1,[TRUE,_isAdmin]],
-	[2,[TRUE,TRUE]],
+	[2,[_commandChannelEnabled,_commandChannelEnabled]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
 	[5,[TRUE,TRUE]]
