@@ -67,12 +67,13 @@ showSubtitles FALSE;
 
 private _isAdmin = (getPlayerUID player) in (['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 enableRadio TRUE;
+private _commandChannelEnabled = missionProfileNamespace getVariable ['QS_client_radioChannel_command',TRUE];
 {
 	_x call TGC_fnc_enableChannel;
 } count [
 	[0,[FALSE,FALSE]],
 	[1,[TRUE,_isAdmin]],
-	[2,[TRUE,TRUE]],
+	[2,[_commandChannelEnabled,_commandChannelEnabled]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
 	[5,[TRUE,TRUE]]

@@ -14,7 +14,9 @@ class CAU_UserInputMenus_displayColorPicker {
     onLoad="uinameSpace setVariable ['CAU_UserInputMenus_displayColorPicker',_this#0]";
 
     class controlsBackground {
-        class tiles: CAU_UserInputMenus_ctrlStaticBackgroundDisableTiles {};
+        class tiles: CAU_UserInputMenus_ctrlStaticBackgroundDisableTiles {
+            show=0;
+        };
         class background: CAU_UserInputMenus_ctrlStaticBackground {
             idc=IDC_BACKGROUND;
 
@@ -41,7 +43,14 @@ class CAU_UserInputMenus_displayColorPicker {
         };
         class buttonL: CAU_UserInputMenus_ctrlButton {
             idc=IDC_BUTTONL;
-            x=CENTER_XA(DIALOG_W) + PX_WA(DIALOG_W) - PX_WA((((SIZE_M*5)*2))) - PX_WA(2);
+            x=CENTER_XA(DIALOG_W) + PX_WA(DIALOG_W) - PX_WA(((SIZE_M*5)*3)) - PX_WA(3);
+            y=CENTER_YA(DIALOG_H) + PX_HA(DIALOG_H) - PX_HA((SIZE_M + 1));
+            w=PX_WA((SIZE_M*5));
+            h=PX_HA(SIZE_M);
+        };
+        class buttonReset: CAU_UserInputMenus_ctrlButton {
+            idc=IDC_BUTTON_RESET;
+            x=CENTER_XA(DIALOG_W) + PX_WA(DIALOG_W) - PX_WA(((SIZE_M*5)*2)) - PX_WA(2);
             y=CENTER_YA(DIALOG_H) + PX_HA(DIALOG_H) - PX_HA((SIZE_M + 1));
             w=PX_WA((SIZE_M*5));
             h=PX_HA(SIZE_M);
@@ -52,6 +61,32 @@ class CAU_UserInputMenus_displayColorPicker {
             y=CENTER_YA(DIALOG_H) + PX_HA(DIALOG_H) - PX_HA((SIZE_M + 1));
             w=PX_WA((SIZE_M*5));
             h=PX_HA(SIZE_M);
+        };
+        class buttonUniform: CAU_UserInputMenus_ctrlButton {
+            idc=IDC_COLOR_BUTTON_UNIFORM;
+            text="Uniform";
+            x=CENTER_XA(DIALOG_W) + PX_WA(2);
+            y=CENTER_YA(DIALOG_H) + PX_HA(DIALOG_H) - PX_HA((SIZE_M + 1));
+            w=PX_WA(16);
+            h=PX_HA(SIZE_M);
+        };
+        class buttonVest: buttonUniform {
+            idc=IDC_COLOR_BUTTON_VEST;
+            text="Vest";
+            x=CENTER_XA(DIALOG_W) + PX_WA(19);
+            w=PX_WA(12);
+        };
+        class buttonBackpack: buttonUniform {
+            idc=IDC_COLOR_BUTTON_BACKPACK;
+            text="Backpack";
+            x=CENTER_XA(DIALOG_W) + PX_WA(32);
+            w=PX_WA(20);
+        };
+        class buttonHelmet: buttonUniform {
+            idc=IDC_COLOR_BUTTON_HELMET;
+            text="Helmet";
+            x=CENTER_XA(DIALOG_W) + PX_WA(53);
+            w=PX_WA(16);
         };
 
     // background right panel
@@ -162,7 +197,8 @@ class CAU_UserInputMenus_displayColorPicker {
                     color[]={1,1,1,1};
                     colorActive[]={1,1,1,1};
                 };
+
             };
         };
     };
-}; 
+};

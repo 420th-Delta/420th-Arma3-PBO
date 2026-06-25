@@ -101,17 +101,17 @@ if (_type isEqualTo 'onLoad') then {
 	(_display displayCtrl 1823) ctrlEnable _isDonator;
 	(_display displayCtrl 1824) ctrlEnable _isDonator;
 	(_display displayCtrl 1835) ctrlEnable _isDonator;
-	/*/CHANNEL 15 - Disabled - 1825, 1826, 1836/*/
-	(_display displayCtrl 1825) ctrlSetText (localize 'STR_QS_Menu_076');
-	(_display displayCtrl 1825) ctrlSetTooltip (localize 'STR_QS_Menu_075');
-	(_display displayCtrl 1825) ctrlSetTextColor [0.5,0.5,0.5,0.5];
-	(_display displayCtrl 1826) ctrlSetText (if (10 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
-	(_display displayCtrl 1826) ctrlSetTextColor [0.5,0.5,0.5,0.5];
-	(_display displayCtrl 1836) cbSetChecked (10 in (missionNamespace getVariable 'QS_client_radioChannels'));
-	(_display displayCtrl 1836) ctrlSetTooltip (localize 'STR_QS_Menu_075');
-	(_display displayCtrl 1836) ctrlEnable FALSE;
-	(_display displayCtrl 1825) ctrlEnable FALSE;
-	(_display displayCtrl 1826) ctrlEnable FALSE;
+	/*/CHANNEL 2 - COMMAND - 1825, 1826, 1836/*/
+	(_display displayCtrl 1825) ctrlSetText (localize 'str_channel_command');
+	(_display displayCtrl 1825) ctrlSetTooltip 'Command channel';
+	(_display displayCtrl 1825) ctrlSetTextColor [1,1,1,1];
+	(_display displayCtrl 1826) ctrlSetText (if ((channelEnabled 2) # 0) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
+	(_display displayCtrl 1826) ctrlSetTextColor [1,1,1,1];
+	(_display displayCtrl 1836) cbSetChecked (missionProfileNamespace getVariable ['QS_client_radioChannel_command',TRUE]);
+	(_display displayCtrl 1836) ctrlSetTooltip 'Command channel';
+	(_display displayCtrl 1836) ctrlEnable TRUE;
+	(_display displayCtrl 1825) ctrlEnable TRUE;
+	(_display displayCtrl 1826) ctrlEnable TRUE;
 };
 if (_type isEqualTo 'onUnload') then {
 	uiNamespace setVariable ['QS_ui_mousePosition',getMousePosition];
@@ -533,53 +533,14 @@ if (_type in [
 			};		
 		};	
 	};
-	/*/15 - UNUSED/*/
+	/*/2 - COMMAND/*/
 	if (_type isEqualTo 'Check_10') then {
-		if (_state isEqualTo 1) then {
-			if (10 in (missionNamespace getVariable 'QS_radioChannels')) then {
-				if (!(10 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
-					[1,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-					missionProfileNamespace setVariable [
-						'QS_client_radioChannels_profile',
-						[
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 0),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 1),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 2),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 3),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 4),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 5),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 6),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 7),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 8),
-							TRUE
-						]
-					];
-					saveMissionProfileNamespace;
-				};
-			};		
-		} else {
-			if (10 in (missionNamespace getVariable 'QS_radioChannels')) then {
-				if (10 in (missionNamespace getVariable 'QS_client_radioChannels')) then {
-					[0,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-					missionProfileNamespace setVariable [
-						'QS_client_radioChannels_profile',
-						[
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 0),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 1),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 2),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 3),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 4),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 5),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 6),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 7),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 8),
-							FALSE
-						]
-					];
-					saveMissionProfileNamespace;
-				};
-			};		
-		};	
+		private _enabled = _state isEqualTo 1;
+		[2,[_enabled,_enabled]] call TGC_fnc_enableChannel;
+		[] call TGC_fnc_refreshChannels;
+		missionProfileNamespace setVariable ['QS_client_radioChannel_command',_enabled];
+		saveMissionProfileNamespace;
+		(_display displayCtrl 1826) ctrlSetText (if ((channelEnabled 2) # 0) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
 	};
 	/*/AO DYNAMIC/*/
 	if (_type isEqualTo 'Check_11') then {

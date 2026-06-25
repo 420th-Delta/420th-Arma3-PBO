@@ -34,6 +34,7 @@
 #define IDC_INPUT                   5
 #define IDC_BUTTONL                 6
 #define IDC_BUTTONR                 7
+#define IDC_BUTTON_RESET            8
 
 // ~ Color picker IDCs
 #define IDC_COLOR_GROUP_GRID        10
@@ -47,6 +48,10 @@
 #define IDC_COLOR_SLIDER_G          18
 #define IDC_COLOR_SLIDER_B          19
 #define IDC_COLOR_SLIDER_A          20
+#define IDC_COLOR_BUTTON_UNIFORM    21
+#define IDC_COLOR_BUTTON_VEST       22
+#define IDC_COLOR_BUTTON_BACKPACK   23
+#define IDC_COLOR_BUTTON_HELMET     24
 
 // ~ Color picker values used on both display and script
 #define VAL_CELL_SIZE 2
