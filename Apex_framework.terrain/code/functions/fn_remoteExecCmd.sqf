@@ -301,6 +301,9 @@ if (_type isEqualTo 'lockInventory') exitWith {
 if (_type isEqualTo 'lockDriver') exitWith {
 	_1 lockDriver _2;
 };
+if (_type isEqualTo 'moveOut') exitWith {
+	_1 moveOut _2;
+};
 if (_type isEqualTo 'switchLight') exitWith {
 	if (local _1) then {
 		if (!simulationEnabled _1) then {

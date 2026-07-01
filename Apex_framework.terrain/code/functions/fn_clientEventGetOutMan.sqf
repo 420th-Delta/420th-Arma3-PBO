@@ -17,6 +17,7 @@ Description:
 __________________________________________________*/
 
 params ['_unit','_position','_vehicle','_turret','_isEject'];
+['REMOVE_ACTIONS'] call QS_fnc_clientVehicleAccess;
 private _isLocal = local _vehicle;
 player enableAIFeature ['CHECKVISIBLE',TRUE];
 uiNamespace setVariable ['QS_robocop_timeout',diag_tickTime + 3];

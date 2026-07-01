@@ -14,6 +14,11 @@ Description:
 __________________________________________________/*/
 
 params ['_u1','_u2','_v'];
+private _newRole = assignedVehicleRole player;
+if (_newRole isNotEqualTo []) then {
+	['CHECK',player,(_newRole # 0),_v,(_newRole param [1,[]])] call QS_fnc_clientVehicleAccess;
+};
+['ACTIONS',_v] call QS_fnc_clientVehicleAccess;
 if (_v isKindOf 'Heli_Transport_04_base_F') then {
 	if (((assignedVehicleRole _u1) # 0) in ['driver','Turret']) then {
 		if (!(_u1 getUnitTrait 'QS_trait_pilot')) then {

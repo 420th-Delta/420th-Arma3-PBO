@@ -14,6 +14,8 @@ Description:
 __________________________________________________*/
 
 params ['_unit','_position','_vehicle','_turretPath'];
+['CHECK',_unit,_position,_vehicle,_turretPath] call QS_fnc_clientVehicleAccess;
+['ACTIONS',_vehicle] call QS_fnc_clientVehicleAccess;
 if (!simulationEnabled _vehicle) then {
 	_vehicle enableSimulation TRUE;
 };
