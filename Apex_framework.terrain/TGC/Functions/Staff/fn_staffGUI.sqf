@@ -53,6 +53,21 @@ with uiNamespace do {
         0 spawn {isNil TGC_fnc_staffChannelsGUI};
     }];
 
+    private _forceSideMission = _display ctrlCreate ["RscButtonMenu", -1, _group];
+    _forceSideMission ctrlSetPosition ([0.03, 0.2, 0.2, 0.08] call _scaleToGroup);
+    _forceSideMission ctrlSetStructuredText composeText [
+        parseText "<t size='0.25'>&#160;</t><br/>",
+        text "Force Side Mission" setAttributes [
+            "align", "center",
+            "font", "RobotoCondensed"
+        ]
+    ];
+    _forceSideMission ctrlCommit 0;
+    _forceSideMission ctrlAddEventHandler ["ButtonClick", {
+        closeDialog 1;
+        0 spawn {isNil TGC_fnc_staffSideMissionGUI};
+    }];
+
     private _close = _display ctrlCreate ["RscButtonMenu", 2];
     _close ctrlSetPosition [_groupX, _groupY + _height, 0.2, 0.04];
     _close ctrlSetText toUpper localize "$str_disp_cancel";

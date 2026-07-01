@@ -1105,6 +1105,9 @@ for '_x' from 0 to 1 step 0 do {
 	if (!alive _QS_POW) then {
 		_QS_missionFailed = TRUE;
 	};
+	if (missionNamespace getVariable ['QS_smAbort',FALSE]) then {
+		_QS_missionFailed = TRUE;
+	};
 	
 	if (_QS_missionFailed) exitWith {
 		['QS_IA_TASK_SM_0',FALSE,-1] call (missionNamespace getVariable 'QS_fnc_taskSetTimer');

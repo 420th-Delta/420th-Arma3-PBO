@@ -333,6 +333,19 @@ _sideMissionList = [
 	'QS_fnc_SMregenerator',0.3,
 	'QS_fnc_SMsecureRadar',0.1
 ];
+missionNamespace setVariable ['QS_sideMission_staffForceList',[
+	['Rescue POW','QS_fnc_SMRescuePOW'],
+	['Secure Urban Site','QS_fnc_SMsecureUrban'],
+	['Escort Vehicle','QS_fnc_SMEscortVehicle'],
+	['Priority AA','QS_fnc_SMPriorityAA'],
+	['Priority Artillery','QS_fnc_SMPriorityARTY'],
+	['Secure Intel UAV','QS_fnc_SMsecureIntelUAV'],
+	['Secure Intel Unit','QS_fnc_SMsecureIntelUnit'],
+	['Secure Intel Vehicle','QS_fnc_SMsecureIntelVehicle'],
+	['IDAP Recovery','QS_fnc_SMidapRecover'],
+	['Regenerator','QS_fnc_SMregenerator'],
+	['Secure Radar','QS_fnc_SMsecureRadar']
+],TRUE];
 _sideMissionRefreshAt = 2;
 _sideMissionListProxy = _sideMissionList;
 _sideMissionDelayFixed = 300;
@@ -2903,24 +2916,36 @@ for '_x' from 0 to 1 step 0 do {
 	/*/===================================== SECONDARY MISSION/*/
 
 	if (_sideMissions) then {
+		private _forcedSideMission = missionNamespace getVariable ['QS_forcedSideMission',''];
 		if (!(_sideMissionActive)) then {
 			if (
 				(_timeNow > 80) &&
 				{(!(missionNamespace getVariable ['QS_customAO_blockSideMissions',_false]))} &&
-				{(!(missionNamespace getVariable ['QS_smSuspend',_false]))} &&
-				{((_timeNow > _smDelay) || {(missionNamespace getVariable ['QS_forceSideMission',_false])})} &&
-				{((_allAICount < _unitCap) || {(_allPlayersCount < 20)} || {(missionNamespace getVariable ['QS_forceSideMission',_false])})}
+				{((!(missionNamespace getVariable ['QS_smSuspend',_false])) || {_forcedSideMission isNotEqualTo ''})} &&
+				{((_timeNow > _smDelay) || {(missionNamespace getVariable ['QS_forceSideMission',_false])} || {_forcedSideMission isNotEqualTo ''})} &&
+				{((_allAICount < _unitCap) || {(_allPlayersCount < 20)} || {(missionNamespace getVariable ['QS_forceSideMission',_false])} || {_forcedSideMission isNotEqualTo ''})}
 			) then {
 				if (missionNamespace getVariable 'QS_forceSideMission') then {
 					missionNamespace setVariable ['QS_forceSideMission',_false,_false];
 				};
 				_sideMissionActive = _true;
 				_sideMission = selectRandomWeighted _sideMissionListProxy;
+				if (_forcedSideMission isNotEqualTo '') then {
+					_sideMission = _forcedSideMission;
+					missionNamespace setVariable ['QS_forcedSideMission','',_false];
+					missionNamespace setVariable ['QS_forcedSideMissionActive',_true,_false];
+					missionNamespace setVariable ['QS_smAbort',_false,_true];
+				};
 				_currentSideMission = 0 spawn (missionNamespace getVariable _sideMission);
 			};
 		} else {
 			if (scriptDone _currentSideMission) then {
 				_smDelay = time + (_sideMissionDelayFixed + (random _sideMissionDelayRandom));
+				if (missionNamespace getVariable ['QS_forcedSideMissionActive',_false]) then {
+					missionNamespace setVariable ['QS_forcedSideMissionActive',_false,_false];
+					missionNamespace setVariable ['QS_smSuspend',_false,_true];
+					missionNamespace setVariable ['QS_smAbort',_false,_true];
+				};
 				_sideMissionActive = _false;
 			};
 		};

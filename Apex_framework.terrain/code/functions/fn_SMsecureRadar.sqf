@@ -116,7 +116,7 @@ missionNamespace setVariable ['QS_smSuccess',FALSE,TRUE];
 
 for '_x' from 0 to 1 step 0 do {
 
-	if (!alive (missionNamespace getVariable 'QS_sideObj')) exitWith {
+	if ((!alive (missionNamespace getVariable 'QS_sideObj')) || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 		
 		/*/------------------ DE-BRIEFING/*/
 

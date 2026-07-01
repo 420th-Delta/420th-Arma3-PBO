@@ -119,7 +119,21 @@ _fuzzyPos = [((_flatPos # 0) - 300) + (random 600),((_flatPos # 1) - 300) + (ran
 missionNamespace setVariable ['QS_smSuccess',FALSE,TRUE];
 waitUntil {
 	sleep 5;
-	(((_priorityTargets findIf {((canMove _x) && (alive _x))}) isEqualTo -1) || {(missionNamespace getVariable 'QS_smSuccess')})
+	(((_priorityTargets findIf {((canMove _x) && (alive _x))}) isEqualTo -1) || {(missionNamespace getVariable 'QS_smSuccess')} || {(missionNamespace getVariable ['QS_smAbort',FALSE])})
+};
+if (missionNamespace getVariable ['QS_smAbort',FALSE]) exitWith {
+	['TaskFailed',['',localize 'STR_QS_Notif_079']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
+	{
+		_x setMarkerPosLocal [-5000,-5000,0];
+		_x setMarkerAlpha 0;
+	} forEach ['QS_marker_sideMarker','QS_marker_sideCircle'];
+	[0,_flatPos] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');
+	{
+		0 = (missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
+	} count _enemiesArray;
+	{
+		0 = (missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
+	} count _unitsArray;
 };
 ['CompletedPriorityTarget',[localize 'STR_QS_Notif_099']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 {

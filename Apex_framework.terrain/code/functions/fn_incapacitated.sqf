@@ -54,8 +54,13 @@ if (!isNull _objectParent) then {
 	};
 };
 if (
-	(_unit getUnitTrait 'QS_trait_pilot') || 
-	{(_unit getUnitTrait 'QS_trait_fighterPilot')} || 
+	(
+		((_unit getVariable ['QS_unit_role','rifleman']) isNotEqualTo 'staff') &&
+		{
+			(_unit getUnitTrait 'QS_trait_pilot') ||
+			{(_unit getUnitTrait 'QS_trait_fighterPilot')}
+		}
+	) ||
 	{(((getTerrainHeightASL (getPosWorld _unit)) < -2) && (!isTouchingGround _unit))} || 
 	{((_unit getVariable ['QS_unit_side',WEST]) in [EAST,RESISTANCE,CIVILIAN])}
 ) exitWith {

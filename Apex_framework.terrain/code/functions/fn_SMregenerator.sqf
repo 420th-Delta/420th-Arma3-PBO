@@ -253,6 +253,9 @@ for '_x' from 0 to 1 step 0 do {
 	if (_playerCount > 30) then {_unitCount = 20;_groupSize = 6;};
 	if (_playerCount > 40) then {_unitCount = 24;_groupSize = 8;};
 	if (_playerCount > 50) then {_unitCount = 24;_groupSize = 8;};
+	if (missionNamespace getVariable ['QS_smAbort',FALSE]) exitWith {
+		[0,_spawnPosition] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');
+	};
 	if ((!alive _regenerator) || {(missionNamespace getVariable 'QS_smSuccess')}) exitWith {
 		[1,_spawnPosition] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');
 	};
@@ -377,7 +380,8 @@ for '_x' from 0 to 1 step 0 do {
 } count ['QS_marker_sideMarker','QS_marker_sideCircle'];
 waitUntil {
 	sleep 5;
-	((allPlayers findIf {(((_x distance2D _spawnPosition) < 300) && ((lifeState _x) in ['HEALTHY','INJURED']))}) isEqualTo -1)
+	((allPlayers findIf {(((_x distance2D _spawnPosition) < 300) && ((lifeState _x) in ['HEALTHY','INJURED']))}) isEqualTo -1) ||
+	(missionNamespace getVariable ['QS_smAbort',FALSE])
 };
 {
 	if (!isNull _x) then {

@@ -17,6 +17,7 @@ Description:
 __________________________________________________/*/
 
 _worldName = worldName;
+if ((player getVariable ['QS_unit_role','rifleman']) isEqualTo 'staff') exitWith {};
 /*/
 if (
 	(missionNamespace getVariable ['QS_missionConfig_zeusRespawnFlag',FALSE]) &&

@@ -205,9 +205,11 @@ if (_has_extDB3) then {
 	_extDB3_ready = true;
 };
 
+QS_script_dbWhitelistRefresher = scriptNull;
 if (_extDB3_ready && QS_missionConfig_dbWhitelistEnabled) then {
 	diag_log "Database whitelisting enabled";
 	QS_fnc_whitelist = compileFinal "call TGC_fnc_dbWhitelist";
+	// QS_script_dbWhitelistRefresher = 0 spawn TGC_fnc_dbWhitelistRefresher;
 } else {
 	diag_log "Database whitelisting disabled, using whitelist.sqf";
 	QS_fnc_whitelist = compileScript ['@Apex_cfg\whitelist.sqf',TRUE];
@@ -461,6 +463,9 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_aoSuspended',FALSE,TRUE],
 	['QS_aoCycleVar',FALSE,FALSE],
 	['QS_forceSideMission',FALSE,FALSE],
+	['QS_forcedSideMission','',FALSE],
+	['QS_forcedSideMissionActive',FALSE,FALSE],
+	['QS_smAbort',FALSE,TRUE],
 	['QS_smSuspend',FALSE,TRUE],
 	['QS_cycleCAS',FALSE,FALSE],
 	['QS_casSuspend',FALSE,FALSE],

@@ -263,6 +263,13 @@ _fuzzyPos = [((_spawnPosition # 0) - 300) + (random 600),((_spawnPosition # 1) -
 ['NewPriorityTarget',[localize 'STR_QS_Notif_096']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 missionNamespace setVariable ['QS_smSuccess',FALSE,TRUE];
 for '_x' from 0 to 1 step 0 do {
+	if (missionNamespace getVariable ['QS_smAbort',FALSE]) exitWith {
+		['TaskFailed',['',localize 'STR_QS_Notif_079']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
+		[0,_spawnPosition] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');
+		{
+			_x setMarkerAlpha 0;
+		} count ['QS_marker_sideMarker','QS_marker_sideCircle'];
+	};
 	if (((_aaHulls findIf {(alive _x)}) isEqualTo -1) || {(missionNamespace getVariable ['QS_smSuccess',FALSE])}) exitWith {
 		['CompletedPriorityTarget',[localize 'STR_QS_Notif_097']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 		[1,_spawnPosition] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');

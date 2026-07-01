@@ -159,7 +159,7 @@ for '_x' from 0 to 1 step 0 do {
 			deleteVehicle _uav;
 		};
 	};
-	if ((serverTime > _timeEnd) || {(!alive _uav)}) exitWith {
+	if ((serverTime > _timeEnd) || {(!alive _uav)} || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 		{
 			_x setMarkerPosLocal [-5000,-5000,0];
 			_x setMarkerAlpha 0;

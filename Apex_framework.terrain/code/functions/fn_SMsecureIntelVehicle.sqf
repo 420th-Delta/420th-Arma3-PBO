@@ -207,7 +207,7 @@ for '_x' from 0 to 1 step 0 do {
 
 	/*/------------------------------------------ IF VEHICLE IS DESTROYED [FAIL]/*/
 	
-	if (!alive _intelObj) exitWith {
+	if ((!alive _intelObj) || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 		sleep 0.3;
 		['sideChat',[WEST,'HQ'],localize 'STR_QS_Chat_073'] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 		missionNamespace setVariable ['QS_sideMissionUp',FALSE,TRUE];

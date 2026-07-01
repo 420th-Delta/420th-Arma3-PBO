@@ -166,26 +166,9 @@ class CfgRemoteExec {
 		class say3D {};         // mod compatibility
 		class setFuel {};       // required for zeus
 		class setRandomLip {};  // mod compatibility
+        class disablecollisionwith {allowedTargets = 0;};
+        class enablecollisionwith {allowedTargets = 0;};
 	};
-	/*
-	Generate a list of all functions from the given tags:
-
-	_tags = [];
-	flatten (
-		_tags apply {
-			_tag = _x;
-			_categories = 'true' configClasses (configFile >> 'CfgFunctions' >> _tag);
-			flatten (
-				_categories apply {
-					_functions = 'true' configClasses _x;
-					_functions apply {
-						format ['%1_fnc_%2', _tag, configName _x]
-					};
-				}
-			);
-		}
-	);
-	*/
 	class Functions {
 		mode = 1;
 		jip = 0;
@@ -229,13 +212,14 @@ class CfgRemoteExec {
 		class BIS_fnc_showNotification {allowedTargets = 1;};
 		class QS_fnc_remoteExec {allowedTargets = 0;};
 		class QS_fnc_remoteExecCmd {allowedTargets = 0;};
+		class QS_fnc_clientMenuDonatorSkins {allowedTargets = 1;};
+		class QS_fnc_serverGetDonatorSkins {allowedTargets = 2;};
 		class TGC_fnc_addCuratorAddons {allowedTargets = 2;};
+		class TGC_fnc_forceSideMission {allowedTargets = 2;};
 		class TGC_fnc_lockDroneByUID {};
 		class TGC_fnc_setChannelMasks {};
 		class TGC_fnc_setFriendlyName {};
 		class genix_fnc_menuloadoutreceive {};
-        class disablecollisionwith {};
-        class enablecollisionwith {};
         class hatg_fnc_cooldown {allowedTargets = 0;};
 	};
 };

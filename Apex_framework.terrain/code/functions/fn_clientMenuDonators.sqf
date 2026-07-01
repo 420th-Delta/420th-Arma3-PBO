@@ -50,6 +50,18 @@ if (_type isEqualTo 'Textures') exitWith {
 	};
 };
 
+if (_type isEqualTo 'Skins') exitWith {
+	closeDialog 2;
+	0 spawn {
+		uiSleep 0.1;
+		waitUntil {
+			closeDialog 2;
+			(!dialog)
+		};
+		createDialog 'QS_RD_client_dialog_menu_donatorSkins';
+	};
+};
+
 if (_type isEqualTo 'ColorPicker') exitWith {
 	closeDialog 2;
 	0 spawn {
