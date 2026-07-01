@@ -168,6 +168,7 @@ class CfgRemoteExec {
 		class setRandomLip {};  // mod compatibility
         class disablecollisionwith {allowedTargets = 0;};
         class enablecollisionwith {allowedTargets = 0;};
+        class switchmove {};
 	};
 	class Functions {
 		mode = 1;
