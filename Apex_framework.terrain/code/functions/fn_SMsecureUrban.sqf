@@ -825,6 +825,10 @@ for '_x' from 0 to 1 step 0 do {
 			};
 		} count _QS_allArray;
 	};
+	if (missionNamespace getVariable ['QS_smAbort',FALSE]) then {
+		_QS_missionSuccess = FALSE;
+		_QS_missionFailed = TRUE;
+	};
 	if ((_QS_objectArray findIf {(alive _x)}) isEqualTo -1) then {
 		_QS_missionSuccess = FALSE;
 		_QS_missionFailed = TRUE;		

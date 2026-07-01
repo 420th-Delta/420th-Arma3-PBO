@@ -4930,7 +4930,10 @@ for '_z' from 0 to 1 step 0 do {
 			
 			if (_QS_pilotBabysitter) then {
 				if ((count _allPlayers) >= 20) then {
-					if (_QS_player getUnitTrait 'QS_trait_pilot') then {
+					if (
+						(_QS_player getUnitTrait 'QS_trait_pilot') &&
+						{(_QS_player getVariable ['QS_unit_role','rifleman']) isNotEqualTo 'staff'}
+					) then {
 						if (time > _QS_secondsCounter) then {
 							_QS_secondsCounter = time + 1;
 							if (!(_QS_v2 isKindOf 'Air')) then {

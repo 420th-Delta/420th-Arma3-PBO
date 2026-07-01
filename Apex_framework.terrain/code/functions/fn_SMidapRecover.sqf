@@ -643,7 +643,7 @@ for '_x' from 0 to 1 step 0 do {
 		sleep 5;
 		[1,[0,0,0]] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');
 	};
-	if (_taskState isEqualTo 'FAILED') exitWith {
+	if ((_taskState isEqualTo 'FAILED') || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 		['SM_IDAP_BRIEF',[localize 'STR_QS_Notif_081',localize 'STR_QS_Notif_090']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 		sleep 5;
 		[0,[0,0,0]] spawn (missionNamespace getVariable 'QS_fnc_smDebrief');

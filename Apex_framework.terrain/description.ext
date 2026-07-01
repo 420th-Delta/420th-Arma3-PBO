@@ -355,6 +355,7 @@ class CfgFunctions {
 			class clientMenuContext {file = "code\functions\fn_clientMenuContext.sqf";};
 			class clientMenuDonatorFlags {file = "code\functions\fn_clientMenuDonatorFlags.sqf";};
 			class clientMenuDonatorColor {file = "code\functions\fn_clientMenuDonatorColor.sqf";};
+			class clientMenuDonatorSkins {file = "code\functions\fn_clientMenuDonatorSkins.sqf";};
 			class clientMenuDonatorTextures {file = "code\functions\fn_clientMenuDonatorTextures.sqf";};
 			class clientMenuDonators {file = "code\functions\fn_clientMenuDonators.sqf";};
 			class clientMenuEmotes {file = "code\functions\fn_clientMenuEmotes.sqf";};
@@ -636,6 +637,7 @@ class CfgFunctions {
 			class sectorScan {file = "code\functions\fn_sectorScan.sqf";};
 			class serverDetector {file = "code\functions\fn_serverDetector.sqf";};
 			class serverEventHandler {file = "code\functions\fn_serverEventHandler.sqf";};
+			class serverGetDonatorSkins {file = "code\functions\fn_serverGetDonatorSkins.sqf";};
 			class serverObjectsMapper {file = "code\functions\fn_serverObjectsMapper.sqf";};
 			class serverObjectsRecycler {file = "code\functions\fn_serverObjectsRecycler.sqf";};
 			class serverRestart {file = "code\functions\fn_serverRestart.sqf";};
@@ -3680,6 +3682,20 @@ class QS_RD_client_dialog_menu_donators {
 		};
 		class QS_RD_client_dialog_menu_donators_button_4: QS_RD_dialog_RscButton {
 			moving = 1;
+			idc = 1807;
+			text = "Skins";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.715 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.0340016 * safezoneH;
+			sizeEx = 0.03;
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['Skins',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonators');";
+			tooltip = "Purchased Cosmetic Commissary skins";
+		};
+		class QS_RD_client_dialog_menu_donators_button_5: QS_RD_dialog_RscButton {
+			moving = 1;
 			idc = 1810;
 			text = "$STR_QS_Dialogs_032";
 			x = 0.38 * safezoneW + safezoneX;
@@ -3907,6 +3923,95 @@ class QS_RD_client_dialog_menu_donatorTextures {
 			h = 0.185 * safezoneH;
 			sizeEx = 0.03;
 			colorBackground[] = {0,0,0,0.5};
+		};
+	};
+};
+class QS_RD_client_dialog_menu_donatorSkins {
+	idd = 5400;
+	movingEnable = 1;
+	enableSimulation = 1;
+	onLoad = "['onLoad',(_this # 0)] spawn (missionNamespace getVariable 'QS_fnc_clientMenuDonatorSkins');";
+	onUnload = "['onUnload',(_this # 0)] spawn (missionNamespace getVariable 'QS_fnc_clientMenuDonatorSkins');";
+	class controls {
+		class QS_RD_client_dialog_menu_donatorSkins_frame_1: QS_RD_dialog_RscFrame {
+			moving = 1;
+			idc = 1800;
+			x = 0.372583 * safezoneW + safezoneX;
+			y = 0.52 * safezoneH + safezoneY;
+			w = 0.145 * safezoneW;
+			h = 0.40 * safezoneH;
+			shadow = 0;
+			colorBackground[] = {0,0,0,0.7};
+			colorDisabled[] = {1,1,1,0.25};
+		};
+		class QS_RD_client_dialog_menu_donatorSkins_box_1: QS_RD_dialog_Box {
+			moving = 1;
+			idc = 1801;
+			x = 0.372583 * safezoneW + safezoneX;
+			y = 0.52 * safezoneH + safezoneY;
+			w = 0.145 * safezoneW;
+			h = 0.40 * safezoneH;
+		};
+		class QS_RD_client_dialog_menu_donatorSkins_text_1: QS_RD_dialog_RscText {
+			moving = 1;
+			idc = 1802;
+			text = "Skins";
+			x = 0.374500 * safezoneW + safezoneX;
+			y = 0.525 * safezoneH + safezoneY;
+			w = 0.139 * safezoneW;
+			h = 0.044 * safezoneH;
+			sizeEx = 0.04;
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorSkins_list: QS_RD_dialog_RscListBox {
+			moving = 1;
+			idc = 1804;
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.58 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.215 * safezoneH;
+			sizeEx = 0.03;
+			colorBackground[] = {0,0,0,0.5};
+		};
+		class QS_RD_client_dialog_menu_donatorSkins_button_apply: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1810;
+			text = "Apply";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.805 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.03 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['Apply',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorSkins');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorSkins_button_reset: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1811;
+			text = "Reset";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.84 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.03 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['Reset',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorSkins');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_donatorSkins_button_close: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1812;
+			text = "Close";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.875 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.03 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['Close',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuDonatorSkins');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
 		};
 	};
 };

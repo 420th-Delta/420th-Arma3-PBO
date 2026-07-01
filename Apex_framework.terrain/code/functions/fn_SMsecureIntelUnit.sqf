@@ -227,7 +227,7 @@ missionNamespace setVariable ['QS_sm_enemyDetected',FALSE,FALSE];
 for '_x' from 0 to 1 step 0 do {
 	/*/------------------------------------------ IF VEHICLE IS DESTROYED [FAIL]/*/
 	
-	if (!alive _intelObj) exitWith {
+	if ((!alive _intelObj) || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 
 		/*/---------- DE-BRIEF/*/
 

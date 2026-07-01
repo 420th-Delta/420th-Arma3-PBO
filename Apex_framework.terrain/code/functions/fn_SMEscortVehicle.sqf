@@ -367,9 +367,10 @@ private _technicalType = '';
 waitUntil {
 	sleep 3;
 	(!alive _vehicle) ||
+	(missionNamespace getVariable ['QS_smAbort',FALSE]) ||
 	(((getPosATL _vehicle) distance2D _startPosition) > _safezone_radius)
 };
-if (!alive _vehicle) exitWith {
+if ((!alive _vehicle) || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 	//comment 'Mission fail';
 	deleteMarker _marker0;
 	['QS_IA_TASK_SM_ESCORT'] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
@@ -895,7 +896,7 @@ for '_x' from 0 to 1 step 0 do {
 			_QS_manage_group_checkDelay = _timeNow + _QS_manage_group_delay;
 		};
 	};
-	if (!alive _vehicle) exitWith {
+	if ((!alive _vehicle) || {(missionNamespace getVariable ['QS_smAbort',FALSE])}) exitWith {
 		//comment 'Mission fail';
 		['SM_TRUCK',[localize 'STR_QS_Notif_081',format ['%1<br/>%2',localize 'STR_QS_Notif_080',localize 'STR_QS_Notif_079']]] remoteExec [_fuctionNotification,-2,FALSE];
 		sleep 5;
