@@ -351,6 +351,7 @@ class CfgFunctions {
 			class clientMenu {file = "code\functions\fn_clientMenu.sqf";};
 			class clientMenu2 {file = "code\functions\fn_clientMenu2.sqf";};
 			class clientMenuActionContext {file = "code\functions\fn_clientMenuActionContext.sqf";};
+			class clientVehicleAccess {file = "code\functions\fn_clientVehicleAccess.sqf";};
 			class clientMenuConsole {file = "code\functions\fn_clientMenuConsole.sqf";};
 			class clientMenuContext {file = "code\functions\fn_clientMenuContext.sqf";};
 			class clientMenuDonatorFlags {file = "code\functions\fn_clientMenuDonatorFlags.sqf";};
@@ -4822,6 +4823,24 @@ class QS_RD_client_dialog_menu_context {
 			shadow = 0;
 			colorText[] = {1,1,1,1};
 		};
+	};
+};
+
+class QS_RD_client_dialog_vehicle_access {
+	idd = 42001;
+	movingEnable = 1;
+	enableSimulation = 1;
+	onLoad = "['LOAD',(_this # 0)] call QS_fnc_clientVehicleAccess;";
+	class controls {
+		class Background: QS_RD_dialog_Box {idc = 42010; x = 0.35 * safezoneW + safezoneX; y = 0.25 * safezoneH + safezoneY; w = 0.30 * safezoneW; h = 0.50 * safezoneH;};
+		class Frame: QS_RD_dialog_RscFrame {idc = 42011; moving = 1; text = "Vehicle Access"; x = 0.35 * safezoneW + safezoneX; y = 0.25 * safezoneH + safezoneY; w = 0.30 * safezoneW; h = 0.50 * safezoneH;};
+		class Driver: QS_RD_dialog_RscButton {idc = 42012; x = 0.37 * safezoneW + safezoneX; y = 0.31 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "['TOGGLE','driver'] call QS_fnc_clientVehicleAccess;";};
+		class Gunner: QS_RD_dialog_RscButton {idc = 42013; x = 0.37 * safezoneW + safezoneX; y = 0.36 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "['TOGGLE','gunner'] call QS_fnc_clientVehicleAccess;";};
+		class Commander: QS_RD_dialog_RscButton {idc = 42014; x = 0.37 * safezoneW + safezoneX; y = 0.41 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "['TOGGLE','commander'] call QS_fnc_clientVehicleAccess;";};
+		class Passenger: QS_RD_dialog_RscButton {idc = 42015; x = 0.37 * safezoneW + safezoneX; y = 0.46 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "['TOGGLE','passenger'] call QS_fnc_clientVehicleAccess;";};
+		class EjectPassengers: QS_RD_dialog_RscButton {idc = 42016; text = "Eject All Passengers"; x = 0.37 * safezoneW + safezoneX; y = 0.53 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "['EJECT','passenger'] call QS_fnc_clientVehicleAccess;";};
+		class EjectExceptDriver: QS_RD_dialog_RscButton {idc = 42017; text = "Eject All Except Driver"; x = 0.37 * safezoneW + safezoneX; y = 0.58 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "['EJECT','exceptDriver'] call QS_fnc_clientVehicleAccess;";};
+		class Close: QS_RD_dialog_RscButton {idc = 42018; text = "Close"; x = 0.37 * safezoneW + safezoneX; y = 0.67 * safezoneH + safezoneY; w = 0.26 * safezoneW; h = 0.04 * safezoneH; onButtonClick = "closeDialog 2;";};
 	};
 };
 class QS_RD_client_dialog_menu_entry {
