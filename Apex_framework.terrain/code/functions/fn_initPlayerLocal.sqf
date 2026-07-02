@@ -856,13 +856,12 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 /*/================= Radio Channels/*/
 
 enableRadio TRUE;
-private _commandChannelEnabled = missionProfileNamespace getVariable ['QS_client_radioChannel_command',TRUE];
 {
 	_x call TGC_fnc_enableChannel;
 } count [
 	[0,[FALSE,FALSE]],
 	[1,[TRUE,_isAdmin]],
-	[2,[_commandChannelEnabled,_commandChannelEnabled]],
+	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
 	[5,[TRUE,TRUE]]
@@ -942,6 +941,13 @@ if (isNil {missionProfileNamespace getVariable 'QS_client_radioChannels_profile'
 				[1,9] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 			};
 		};
+	};
+};
+[4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+[] spawn {
+	while {TRUE} do {
+		uiSleep 1;
+		[4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 	};
 };
 if (missionNamespace getVariable ['QS_missionConfig_introMusic',TRUE]) then {

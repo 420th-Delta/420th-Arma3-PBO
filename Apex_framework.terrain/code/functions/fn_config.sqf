@@ -418,13 +418,14 @@ private _weaponsList = configFile >> 'CfgWeapons';
 		[
 			(radioChannelCreate [[0.4,1,1,1],'Staff channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,1,1],'Aircraft channel','%UNIT_VEH_NAME ' + '(%UNIT_NAME)',[],TRUE]),
-			(radioChannelCreate [[0.4,1,0.4,1],'Primary AO channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
-			(radioChannelCreate [[1,1,0.4,1],'Secondary AO channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
+			(radioChannelCreate [[0.4,1,0.4,1],'Main AO','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
+			(radioChannelCreate [[1,1,0.4,1],'Side Mission','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,0.4,1],'PLT Alpha channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,0.4,1],'PLT Bravo channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,0.4,1],'PLT Charlie channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.6,0.2,1],'General channel','%UNIT_NAME',[],TRUE]),
-			(radioChannelCreate [[1,0.84,0.2,1],'Donators','%UNIT_NAME',[],TRUE])
+			(radioChannelCreate [[1,0,1,1],'Donators','%UNIT_NAME',[],TRUE]),
+			(radioChannelCreate [[0.5,0.35,0,1],'Group Leaders','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE])
 		],
 		TRUE
 	],
@@ -881,7 +882,7 @@ _markers = nil;
 } count [
 	[0,[FALSE,FALSE]],
 	[1,[TRUE,FALSE]],
-	[2,[TRUE,TRUE]],
+	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
 	[5,[TRUE,TRUE]]

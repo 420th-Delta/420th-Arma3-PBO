@@ -101,14 +101,14 @@ if (_type isEqualTo 'onLoad') then {
 	(_display displayCtrl 1823) ctrlEnable _isDonator;
 	(_display displayCtrl 1824) ctrlEnable _isDonator;
 	(_display displayCtrl 1835) ctrlEnable _isDonator;
-	/*/CHANNEL 2 - COMMAND - 1825, 1826, 1836/*/
-	(_display displayCtrl 1825) ctrlSetText (localize 'str_channel_command');
-	(_display displayCtrl 1825) ctrlSetTooltip 'Command channel';
+	/*/CHANNEL 15 - GROUP LEADERS - 1825, 1826, 1836/*/
+	(_display displayCtrl 1825) ctrlSetText 'Group Leaders';
+	(_display displayCtrl 1825) ctrlSetTooltip 'Group Leaders channel';
 	(_display displayCtrl 1825) ctrlSetTextColor [1,1,1,1];
-	(_display displayCtrl 1826) ctrlSetText (if ((channelEnabled 2) # 0) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
+	(_display displayCtrl 1826) ctrlSetText (if (10 in (missionNamespace getVariable 'QS_client_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
 	(_display displayCtrl 1826) ctrlSetTextColor [1,1,1,1];
-	(_display displayCtrl 1836) cbSetChecked (missionProfileNamespace getVariable ['QS_client_radioChannel_command',TRUE]);
-	(_display displayCtrl 1836) ctrlSetTooltip 'Command channel';
+	(_display displayCtrl 1836) cbSetChecked (missionProfileNamespace getVariable ['QS_client_radioChannel_groupLeaders',FALSE]);
+	(_display displayCtrl 1836) ctrlSetTooltip 'Request access to the Group Leaders channel';
 	(_display displayCtrl 1836) ctrlEnable TRUE;
 	(_display displayCtrl 1825) ctrlEnable TRUE;
 	(_display displayCtrl 1826) ctrlEnable TRUE;
@@ -533,14 +533,12 @@ if (_type in [
 			};		
 		};	
 	};
-	/*/2 - COMMAND/*/
+	/*/15 - GROUP LEADERS/*/
 	if (_type isEqualTo 'Check_10') then {
-		private _enabled = _state isEqualTo 1;
-		[2,[_enabled,_enabled]] call TGC_fnc_enableChannel;
-		[] call TGC_fnc_refreshChannels;
-		missionProfileNamespace setVariable ['QS_client_radioChannel_command',_enabled];
+		missionProfileNamespace setVariable ['QS_client_radioChannel_groupLeaders',_state isEqualTo 1];
 		saveMissionProfileNamespace;
-		(_display displayCtrl 1826) ctrlSetText (if ((channelEnabled 2) # 0) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
+		[4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+		(_display displayCtrl 1826) ctrlSetText (if (10 in (missionNamespace getVariable 'QS_client_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
 	};
 	/*/AO DYNAMIC/*/
 	if (_type isEqualTo 'Check_11') then {
