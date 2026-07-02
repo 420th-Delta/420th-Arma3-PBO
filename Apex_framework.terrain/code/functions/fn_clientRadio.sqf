@@ -61,6 +61,13 @@ if (_type isEqualTo 0) then {
 						_x radioChannelRemove [player];
 					} forEach (missionNamespace getVariable 'QS_client_radioChannels');
 				};
+			} else {
+				if (_type isEqualTo 4) then {
+					/*/Group Leaders channel eligibility/*/
+					private _requested = missionProfileNamespace getVariable ['QS_client_radioChannel_groupLeaders',FALSE];
+					private _eligible = alive player && {player isEqualTo (leader (group player))};
+					[([0,1] select (_requested && _eligible)),_channel] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+				};
 			};
 		};
 	};

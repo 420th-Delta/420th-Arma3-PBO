@@ -40,6 +40,7 @@ joinUnassigned = 1;										/*/ 0 = players forced into role on join/*/
 showUAVFeed = 1;										/*/ Enables/Disables the UAV Feed./*/
 showGroupIndicator = 0;
 showSquadRadar = 0;
+disableChannels[] = {{2,true,true}};
 forceRotorLibSimulation = 0;							/*/ Advanced Flight Model /*/
 scriptedPlayer = 1;
 corpseManagerMode = 0;

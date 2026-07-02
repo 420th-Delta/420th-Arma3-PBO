@@ -7318,7 +7318,7 @@ _____________________________________________________________-->
             <Chinese>飛行員與UAV操作員使用</Chinese>
         </Key>
         <Key ID="STR_QS_Menu_063">
-            <Original>Primary AO</Original>
+            <Original>Main AO</Original>
             <Chinesesimp>主线战区频道</Chinesesimp>
             <Chinese>主線戰區頻道</Chinese>
         </Key>
@@ -7328,7 +7328,7 @@ _____________________________________________________________-->
             <Chinese>主線戰區頻道</Chinese>
         </Key>
         <Key ID="STR_QS_Menu_065">
-            <Original>Secondary AO</Original>
+            <Original>Side Mission</Original>
             <Chinesesimp>支线任务区域频道</Chinesesimp>
             <Chinese>支線任務區域頻道</Chinese>
         </Key>
