@@ -294,7 +294,7 @@ if (_case < 20) exitWith {
 	if (_case isEqualTo 15) exitWith {
 		params ['','_uid','_side','_role','_unit','_clientOwner'];
 		// To Do: Sanity checks
-		if (_clientOwner isEqualTo _rxID) then {
+		if ((_clientOwner isEqualTo _rxID) && {(owner _unit) isEqualTo _rxID}) then {
 			['HANDLE',['HANDLE_REQUEST_ROLE','',_side,_role,_unit]] call (missionNamespace getVariable 'QS_fnc_roles');
 		};
 	};
@@ -2426,6 +2426,24 @@ if (_case < 130) exitWith {
 		if (isDedicated) then {
 			params ['','_mode','_args'];
 			[_mode,_args] call QS_fnc_logisticsPackVehicle;
+		};
+	};
+	/*/ Role queue client event /*/
+	if (_case isEqualTo 121) then {
+		if (hasInterface) then {
+			private _event = _this # 1;
+			if (_event isEqualTo 'HINT') then {
+				['CLIENT_QUEUE_EVENT','HINT','',WEST,(_this # 2)] call (missionNamespace getVariable 'QS_fnc_roles');
+			} else {
+				['CLIENT_QUEUE_EVENT',_event,(_this param [2,'']),(_this param [3,WEST])] call (missionNamespace getVariable 'QS_fnc_roles');
+			};
+		};
+	};
+	/*/ Role queue response /*/
+	if (_case isEqualTo 122) then {
+		params ['','_response','_uid','_side','_role','_unit','_clientOwner'];
+		if (isServer && {(_clientOwner isEqualTo _rxID)} && {(owner _unit) isEqualTo _rxID}) then {
+			['QUEUE_RESPONSE',_response,_uid,_side,_role,_unit] call (missionNamespace getVariable 'QS_fnc_roles');
 		};
 	};
 };

@@ -571,7 +571,7 @@ waitUntil {
 					lnbAddRow [108,[_x # 0,_x # 1]];
 					lnbSetPicture [108,[_forEachIndex,2],(_x # 2)];
 					lnbSetTooltip [108,[_forEachIndex,0],(_x # 0)];
-					if ((!(_x # 4)) || {(((_x # 6) # 0) >= ((_x # 6) # 1))}) then {
+					if (!(_x # 4)) then {
 						lnbSetValue [108,[_forEachIndex,0],0];
 						lnbSetColor [108,[_forEachIndex,0],[0.5,0.5,0.5,1]];
 						lnbSetColor [108,[_forEachIndex,1],[0.5,0.5,0.5,1]];

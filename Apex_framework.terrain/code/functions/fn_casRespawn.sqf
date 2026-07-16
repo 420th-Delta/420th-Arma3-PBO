@@ -63,7 +63,7 @@ if (_missionConfig_CAS isEqualTo 3) then {
 	if (_aircraftPool >= (missionNamespace getVariable ['QS_CAS_jetAllowance_value',3])) exitWith {
 		if (isPlayer _pilot) then {
 			if (_pilot getUnitTrait 'QS_trait_fighterPilot') then {
-				['HANDLE',['HANDLE_REQUEST_ROLE','',(_pilot getVariable ['QS_unit_side',WEST]),'rifleman',_pilot]] call (missionNamespace getVariable 'QS_fnc_roles');
+				['HANDLE',['HANDLE_REQUEST_ROLE','',(_pilot getVariable ['QS_unit_side',WEST]),'rifleman',_pilot,FALSE,TRUE]] call (missionNamespace getVariable 'QS_fnc_roles');
 				_pilot spawn {
 					moveOut _this;
 					uiSleep 0.5;
