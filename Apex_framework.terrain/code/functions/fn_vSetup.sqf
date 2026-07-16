@@ -18,6 +18,9 @@ _t = typeOf _u;
 _t2 = toLowerANSI _t;
 _isSimpleObject = isSimpleObject _u;
 _u setVariable ['QS_vehicle',TRUE,(!isDedicated)];
+if (_t2 in ['b_supplycrate_f','b_cargonet_01_ammo_f']) then {
+	_u setVariable ['QS_logistics',TRUE,TRUE];
+};
 if (_t2 isKindOf 'Heli_Light_01_base_F') then {
 	for '_i' from 0 to 9 do {_u setObjectTextureGlobal [_i,'#(argb,8,8,3)color(0,0,0,0.6)'];};
 };
