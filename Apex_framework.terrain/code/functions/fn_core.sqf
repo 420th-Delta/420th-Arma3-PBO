@@ -2991,7 +2991,7 @@ for '_x' from 0 to 1 step 0 do {
 						if (isPlayer _casPilot) then {
 							if (_casPilot getUnitTrait 'QS_trait_fighterPilot') then {
 								missionNamespace setVariable ['QS_CAS_jetAllowance_gameover',_false,_false];
-								['HANDLE',['HANDLE_REQUEST_ROLE','',(_casPilot getVariable ['QS_unit_side',WEST]),'rifleman',_casPilot]] call (missionNamespace getVariable 'QS_fnc_roles');
+								['HANDLE',['HANDLE_REQUEST_ROLE','',(_casPilot getVariable ['QS_unit_side',WEST]),'rifleman',_casPilot,FALSE,TRUE]] call (missionNamespace getVariable 'QS_fnc_roles');
 								_casPilot spawn {
 									moveOut _this;
 									uiSleep 0.5;
