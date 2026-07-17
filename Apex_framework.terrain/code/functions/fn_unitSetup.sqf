@@ -14,6 +14,17 @@ Description:
 ______________________________________________________/*/
 
 _unit = _this;
+_unitType = toLowerANSI (typeOf _unit);
+
+// Hold non-sniper enemy infantry in a standing stance from initial setup.
+if (
+	(!isPlayer _unit) &&
+	{((side _unit) in [EAST,RESISTANCE])} &&
+	{(_unit isKindOf 'CAManBase')} &&
+	{(!((_unitType select [0,8]) in ['o_sniper','i_sniper']))}
+) then {
+	_unit setUnitPos 'Up';
+};
 if (
 	(!(missionNamespace getVariable ['QS_missionConfig_enemyRandGear',TRUE])) ||
 	{((missionNamespace getVariable ['QS_system_activeDLC','']) isNotEqualTo '')} ||
@@ -23,7 +34,6 @@ if (
 	_unit
 };
 _unit = _this;
-_unitType = toLowerANSI (typeOf _unit);
 private _weapons = [];
 private _optics = [];
 private _backpacks = [];
