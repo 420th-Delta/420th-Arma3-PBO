@@ -779,6 +779,14 @@ class CfgFunctions {
             class findLaserInstigators {};
             class initLaserHandlers { postInit = 1; };
         };
+        class PlayerProfile {
+            file = "420th\playerprofile";
+            class initPlayerProfile { postInit = 1; };
+            class playerProfileGUI {};
+            class processPlayerProfileQueue { postInit = 1; };
+            class receivePlayerProfile {};
+            class requestPlayerProfile {};
+        };
         class Setting {
             file = "TGC\Functions\Setting";
             class addSetting {};
