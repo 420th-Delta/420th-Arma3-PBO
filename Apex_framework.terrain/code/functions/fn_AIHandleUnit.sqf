@@ -35,6 +35,20 @@ if (
 };
 private _grp = group _unit;
 _objectParent = objectParent _unit;
+
+// Keep non-sniper enemy infantry standing. This is enforced by
+// the recurring AI handler because other mission behaviors can restore AUTO or
+// explicitly select DOWN after the unit's initial setup.
+private _unitType = toLowerANSI (typeOf _unit);
+if (
+	(isNull _objectParent) &&
+	{(!isPlayer _unit)} &&
+	{((side _unit) in [EAST,RESISTANCE])} &&
+	{(_unit isKindOf 'CAManBase')} &&
+	{(!((_unitType select [0,8]) in ['o_sniper','i_sniper']))}
+) then {
+	_unit setUnitPos 'Up';
+};
 if (!(_unit getVariable ['QS_AI_UNIT',FALSE])) then {
 	_unit setVariable ['QS_AI_UNIT',TRUE,FALSE];
 	_unit setVariable ['QS_AI_UNIT_rv',[(random 1),(random 1),(random 1)],FALSE];
