@@ -2446,4 +2446,18 @@ if (_case < 130) exitWith {
 			['QUEUE_RESPONSE',_response,_uid,_side,_role,_unit] call (missionNamespace getVariable 'QS_fnc_roles');
 		};
 	};
+	/*/ Player Profile request /*/
+	if (_case isEqualTo 123) then {
+		if (isServer && {_isRx}) then {
+			params ['','_target'];
+			[_target,_rxID] call TGC_fnc_requestPlayerProfile;
+		};
+	};
+	/*/ Player Profile response /*/
+	if (_case isEqualTo 124) then {
+		if (hasInterface && {_isRx} && {_rxID isEqualTo 2}) then {
+			params ['','_args'];
+			_args call TGC_fnc_receivePlayerProfile;
+		};
+	};
 };
