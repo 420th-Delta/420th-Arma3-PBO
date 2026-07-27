@@ -29,10 +29,7 @@ _event = player addEventHandler [
 			missionNamespace setVariable ['QS_client_stabilise_timeout',nil,FALSE];
 			missionNamespace setVariable ['QS_client_stabilise_entity',objNull,FALSE];
 		};
-		if (
-			(['medicdummyend',_anim,FALSE] call (missionNamespace getVariable 'QS_fnc_inString')) || 
-			((['medicother',_anim,FALSE] call (missionNamespace getVariable 'QS_fnc_inString')) && (!(['medicotherin',_anim,FALSE] call (missionNamespace getVariable 'QS_fnc_inString'))))
-		) then {
+		if (_anim regexMatch '^(.+)_medicother$') then {
 			player removeEventHandler [_thisEvent,_thisEventHandler];
 			if (alive player) then {
 				if ((lifeState player) in ['HEALTHY','INJURED']) then {

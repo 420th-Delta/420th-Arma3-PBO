@@ -170,7 +170,7 @@ if (_QS_actionName isEqualTo 'HealSoldier') exitWith {
 			{
 				params ['_unit','_anim'];
 				if ((lifeState _unit) in ['HEALTHY','INJURED']) then {
-					if (['medicdummyend',_anim,false] call (missionNamespace getVariable 'QS_fnc_inString')) then {
+					if (_anim regexMatch '^(.+)_medicother$') then {
 						_target = _unit getVariable ['QS_treat_target',objNull];
 						if (!isNull _target) then {
 							_unit setVariable ['QS_treat_target',objNull,FALSE];
