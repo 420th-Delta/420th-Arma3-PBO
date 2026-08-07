@@ -77,6 +77,8 @@ if (_type isEqualTo 'markers_base_hide_1') exitWith {
 		'QS_marker_veh_baseservice_01',
 		'QS_marker_veh_baseservice_02',
 		'QS_marker_veh_baseservice_03',
+		'QS_marker_veh_baseservice_04',
+		'QS_marker_veh_baseservice_05',
 		'QS_marker_gitmo',
 		'QS_marker_medevac_hq',
 		'QS_marker_base_toc',

@@ -25,6 +25,7 @@ if (
 ) then {
 	_unit setUnitPos 'Up';
 };
+[_unit] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 if (
 	(!(missionNamespace getVariable ['QS_missionConfig_enemyRandGear',TRUE])) ||
 	{((missionNamespace getVariable ['QS_system_activeDLC','']) isNotEqualTo '')} ||
@@ -537,6 +538,7 @@ if (!(_unitType in [
 {
 	_unit removeMagazines _x;
 } forEach ['chemlight_blue','chemlight_green','chemlight_red','chemlight_yellow'];
+[_unit] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 _unit enableAIFeature ['AUTOCOMBAT',TRUE];
 _unit enableFatigue FALSE;
 _unit enableStamina FALSE;

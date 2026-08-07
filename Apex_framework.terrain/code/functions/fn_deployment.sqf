@@ -249,9 +249,10 @@ if (_mode isEqualTo 'PRESET') exitWith {
 			[],
 			[WEST],
 			{
-				_spawnpos = (markerPos ['QS_marker_heli_spawn',TRUE]) vectorAdd [-5 + (random 10),-5 + (random 10),0];
-				QS_player setDir (random 360);
-				QS_player setPosASL _spawnpos;
+				private _spawnPos = markerPos ['QS_marker_heli_spawn',TRUE];
+				_spawnPos set [2,(_spawnPos # 2) + 0.1];
+				QS_player setDir (markerDir 'QS_marker_heli_spawn');
+				QS_player setPosATL _spawnPos;
 			},
 			{TRUE},
 			{
@@ -311,12 +312,9 @@ if (_mode isEqualTo 'PRESET') exitWith {
 			[],
 			[WEST],
 			{
-				// _spawnpos = (markerPos ['QS_marker_respawn_jetpilot',TRUE]);
-				// QS_player setDir (markerDir 'QS_marker_respawn_jetpilot');
-				// QS_player setPosASL _spawnpos;
-				_spawnpos = [14890.1,16545.5,20.4]; // CUSTOM LOCATION
-				QS_player setDir 314;
-				QS_player setPosWorld _spawnpos;
+				_spawnpos = markerPos ['QS_marker_respawn_jetpilot',TRUE];
+				QS_player setDir (markerDir 'QS_marker_respawn_jetpilot');
+				QS_player setPosASL _spawnpos;
 			},
 			{TRUE},
 			{

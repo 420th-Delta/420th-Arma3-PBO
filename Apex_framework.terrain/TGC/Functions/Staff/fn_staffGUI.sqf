@@ -38,34 +38,34 @@ with uiNamespace do {
     _title ctrlEnable false;
     _title ctrlCommit 0;
 
-    private _channels = _display ctrlCreate ["RscButtonMenu", -1, _group];
-    _channels ctrlSetPosition ([0.03, 0.1, 0.2, 0.08] call _scaleToGroup);
-    _channels ctrlSetStructuredText composeText [
+    private _sideMissions = _display ctrlCreate ["RscButtonMenu", -1, _group];
+    _sideMissions ctrlSetPosition ([0.03, 0.1, 0.2, 0.08] call _scaleToGroup);
+    _sideMissions ctrlSetStructuredText composeText [
         parseText "<t size='0.25'>&#160;</t><br/>",
-        text "Manage Channels" setAttributes [
+        text "Side Mission Management" setAttributes [
             "align", "center",
             "font", "RobotoCondensed"
         ]
     ];
-    _channels ctrlCommit 0;
-    _channels ctrlAddEventHandler ["ButtonClick", {
+    _sideMissions ctrlCommit 0;
+    _sideMissions ctrlAddEventHandler ["ButtonClick", {
         closeDialog 1;
-        0 spawn {isNil TGC_fnc_staffChannelsGUI};
+        0 spawn {isNil TGC_fnc_staffSideMissionManagementGUI};
     }];
 
-    private _forceSideMission = _display ctrlCreate ["RscButtonMenu", -1, _group];
-    _forceSideMission ctrlSetPosition ([0.03, 0.2, 0.2, 0.08] call _scaleToGroup);
-    _forceSideMission ctrlSetStructuredText composeText [
+    private _mainAO = _display ctrlCreate ["RscButtonMenu", -1, _group];
+    _mainAO ctrlSetPosition ([0.03, 0.2, 0.2, 0.08] call _scaleToGroup);
+    _mainAO ctrlSetStructuredText composeText [
         parseText "<t size='0.25'>&#160;</t><br/>",
-        text "Force Side Mission" setAttributes [
+        text "Main AO Management" setAttributes [
             "align", "center",
             "font", "RobotoCondensed"
         ]
     ];
-    _forceSideMission ctrlCommit 0;
-    _forceSideMission ctrlAddEventHandler ["ButtonClick", {
+    _mainAO ctrlCommit 0;
+    _mainAO ctrlAddEventHandler ["ButtonClick", {
         closeDialog 1;
-        0 spawn {isNil TGC_fnc_staffSideMissionGUI};
+        0 spawn {isNil TGC_fnc_staffMainAOGUI};
     }];
 
     private _close = _display ctrlCreate ["RscButtonMenu", 2];

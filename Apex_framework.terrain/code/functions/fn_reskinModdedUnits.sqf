@@ -152,6 +152,7 @@ for '_z' from 0 to 1 step 0 do {
 					};
 				};
 			};
+			[_x] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 		};
 	} foreach allunits;
 	sleep _sleepInterval;

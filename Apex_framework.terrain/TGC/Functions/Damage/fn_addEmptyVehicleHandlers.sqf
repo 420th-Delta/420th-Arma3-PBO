@@ -2,87 +2,98 @@
 Function: TGC_fnc_addEmptyVehicleHandlers
 
 Description:
-    Set up empty vehicle handlers.
+    Prevent players and BLUFOR-friendly AI from damaging an unoccupied Spawn
+    Menu vehicle. Install the object handlers idempotently and keep
+    HandleDamage last.
 
 Parameters:
     Object vehicle:
-        The vehicle to add handlers to.
+        Spawn Menu land, air, or sea vehicle to protect while its crew is empty.
 
 Author:
     thegamecracks
 
 */
-params ["_vehicle"];
-if (!isNil {_vehicle getVariable "TGC_vehicle_emptyEHs"}) exitWith {};
+params [["_vehicle", objNull, [objNull]]];
 
-private _damageEH = ["HandleDamage", _vehicle addEventHandler ["HandleDamage", {call {
+if (
+    (isNull _vehicle) ||
+    {(_vehicle getVariable ["QS_spawnMenu_spawnedBy", ""]) isEqualTo ""} ||
+    {((["LandVehicle", "Air", "Ship"] findIf {_vehicle isKindOf _x}) isEqualTo -1)}
+) exitWith {};
+
+private _existingLocalEH = _vehicle getVariable ["TGC_emptyVehicle_localEH", -1];
+if !(
+    (_existingLocalEH >= 0) &&
+    {(_vehicle getEventHandlerInfo ["Local", _existingLocalEH]) param [0, false]}
+) then {
+    private _localEH = _vehicle addEventHandler ["Local", {
+        params ["_vehicle", "_isLocal"];
+        if (_isLocal) then {
+            [_vehicle] call TGC_fnc_addEmptyVehicleHandlers;
+        };
+    }];
+    _vehicle setVariable ["TGC_emptyVehicle_localEH", _localEH];
+};
+
+private _existingCollisionEH = _vehicle getVariable ["TGC_emptyVehicle_collisionEH", -1];
+if !(
+    (_existingCollisionEH >= 0) &&
+    {(_vehicle getEventHandlerInfo ["EpeContactStart", _existingCollisionEH]) param [0, false]}
+) then {
+    private _collisionEH = _vehicle addEventHandler ["EpeContactStart", {
+        params ["_vehicle", "_collider"];
+        if (!local _vehicle || {(crew _vehicle) isNotEqualTo []}) exitWith {};
+
+        if (
+            [_vehicle, "", 0, _collider, "", -1, objNull, "", false]
+            call TGC_fnc_isProtectedEmptyVehicleDamage
+        ) then {
+            _vehicle setVariable ["TGC_playerDamageCollisionUntil", diag_tickTime + 1];
+        };
+    }];
+    _vehicle setVariable ["TGC_emptyVehicle_collisionEH", _collisionEH];
+};
+
+private _existingGetOutEH = _vehicle getVariable ["TGC_emptyVehicle_getOutEH", -1];
+if !(
+    (_existingGetOutEH >= 0) &&
+    {(_vehicle getEventHandlerInfo ["GetOut", _existingGetOutEH]) param [0, false]}
+) then {
+    private _getOutEH = _vehicle addEventHandler ["GetOut", {
+        params ["_vehicle"];
+        if ((crew _vehicle) isEqualTo []) then {
+            [_vehicle] call TGC_fnc_addEmptyVehicleHandlers;
+        };
+    }];
+    _vehicle setVariable ["TGC_emptyVehicle_getOutEH", _getOutEH];
+};
+
+private _existingDamageEH = _vehicle getVariable ["TGC_emptyVehicle_damageEH", -1];
+private _existingDamageEHInfo = if (_existingDamageEH >= 0) then {
+    _vehicle getEventHandlerInfo ["HandleDamage", _existingDamageEH]
+} else {
+    []
+};
+if (
+    (_existingDamageEHInfo param [0, false]) &&
+    {_existingDamageEHInfo param [1, false]}
+) exitWith {};
+
+if (_existingDamageEHInfo param [0, false]) then {
+    _vehicle removeEventHandler ["HandleDamage", _existingDamageEH];
+};
+
+private _damageEH = _vehicle addEventHandler ["HandleDamage", {call {
     params ["_vehicle", "", "", "", "", "_hitIndex"];
-    if (side group _vehicle isNotEqualTo sideUnknown) exitWith {}; // occupied
-    if (!call TGC_fnc_isFriendlyFire) exitWith {};
-    if (_hitIndex >= 0) then {_vehicle getHitIndex _hitIndex} else {damage _vehicle}
-}}]];
+    if ((_vehicle getVariable ["QS_spawnMenu_spawnedBy", ""]) isEqualTo "") exitWith {};
+    if ((crew _vehicle) isNotEqualTo []) exitWith {};
+    if !(_this call TGC_fnc_isProtectedEmptyVehicleDamage) exitWith {};
 
-// private _getInEH = ["GetIn", _vehicle addEventHandler ["GetIn", {
-//     params ["_vehicle", "", "_unit"];
-//     if (unitIsUAV _vehicle) exitWith {};
-//     if (_unit isKindOf "B_UAV_AI") exitWith {};
-//     private _targets = crew _vehicle select {local _x && {_x isKindOf "B_UAV_AI"}};
-//     {_vehicle deleteVehicleCrew _x} forEach _targets;
-// }]];
-
-// private _getOutEH = ["GetOut", _vehicle addEventHandler ["GetOut", {
-//     params ["_vehicle", "", "_unit"];
-//     if (side group _vehicle isNotEqualTo sideUnknown) exitWith {}; // occupied
-//     if (unitIsUAV _vehicle) exitWith {};
-//     if (_unit isKindOf "B_UAV_AI") exitWith {};
-
-//     private _side = _vehicle getVariable "TGC_vehicle_side";
-//     if (isNil "_side") exitWith {};
-
-//     // For vehicles with two or fewer seats like quadbikes, gunships, and jets,
-//     // taking up that seat will impede players from entering it.
-//     //
-//     // A workaround could be adding an action for players to delete our unit,
-//     // but it's easier to ignore them and only add units to vehicles with more seats.
-//     //
-//     // Note that most vanilla MBTs only have 3 seats.
-//     if (_vehicle emptyPositions "" < 3) exitWith {};
-
-//     private _group = grpNull;
-//     private _unit = objNull;
-//     private _createUnit = {
-//         _group = createGroup [_side, true];
-//         _unit = _group createUnit ["B_UAV_AI", [0,0,0], [], 0, "CAN_COLLIDE"];
-//         // [_unit] remoteExec ["TGC_fnc_setFriendlyName", 0, _unit];
-//         [_unit] joinSilent _group;
-//         _unit disableAI "ALL";
-//         _unit
-//     };
-
-//     private _turrets =
-//         fullCrew [_vehicle, "turret", true]
-//         select {isNull (_x # 0) && {isNull (_x # 5)}};
-
-//     switch (true) do {
-//         case (_vehicle emptyPositions "Cargo" > 0): {
-//             call _createUnit moveInCargo _vehicle;
-//         };
-//         case (_turrets isNotEqualTo []): {
-//             call _createUnit moveInTurret [_vehicle, _turrets # 0 # 3];
-//         };
-//         case (_vehicle emptyPositions "Commander" > 0): {
-//             call _createUnit moveInCommander _vehicle;
-//         };
-//         case (_vehicle emptyPositions "Gunner" > 0): {
-//             call _createUnit moveInGunner _vehicle;
-//         };
-//         // case (_vehicle emptyPositions "Driver" > 0): {
-//         //     call _createUnit moveInDriver _vehicle;
-//         // };
-//     };
-
-//     if (isNull objectParent _unit) then {deleteVehicle _unit}; // move in failed
-// }]];
-
-// _vehicle setVariable ["TGC_vehicle_emptyEHs", [_damageEH, _getInEH, _getOutEH]];
-_vehicle setVariable ["TGC_vehicle_emptyEHs", [_damageEH]];
+    if (_hitIndex >= 0) then {
+        _vehicle getHitIndex _hitIndex
+    } else {
+        damage _vehicle
+    }
+}}];
+_vehicle setVariable ["TGC_emptyVehicle_damageEH", _damageEH];

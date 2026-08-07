@@ -17,12 +17,28 @@ private ['_t','_text'];
 _t = cursorObject;
 if (
 	(!simulationEnabled _t) ||
-	{(!local _t)} ||
+	{
+		(!local _t) &&
+		{(_t getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo ''}
+	} ||
 	{(((vectorMagnitude (velocity _t)) * 3.6) > 1)} ||
-	{(((crew _t) findIf {(alive _x)}) isNotEqualTo -1)} ||
+	{
+		(((crew _t) findIf {(alive _x)}) isNotEqualTo -1) &&
+		{
+			(!unitIsUAV _t) ||
+			{(_t getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo ''} ||
+			{((crew _t) findIf {isPlayer _x}) isNotEqualTo -1}
+		}
+	} ||
 	{(diag_tickTime < (uiNamespace getVariable ['QS_RD_canRespawnVehicle',-1]))} ||
 	{(!(_t getVariable ['QS_RD_vehicleRespawnable',FALSE]))} ||
-	{((['LandVehicle','Air','Ship'] findIf { _t isKindOf _x }) isEqualTo -1)}
+	{
+		((['LandVehicle','Air','Ship'] findIf { _t isKindOf _x }) isEqualTo -1) &&
+		{
+			((_t getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo '') ||
+			{_t isKindOf 'CAManBase'}
+		}
+	}
 ) exitWith {};
 if ((getVehicleCargo _t) isNotEqualTo []) exitWith {
 	50 cutText [localize 'STR_QS_Text_122','PLAIN',0.3];
@@ -58,7 +74,14 @@ if (_result) then {
 	playSound 'ClickSoft';
 	50 cutText [localize 'STR_QS_Text_126','PLAIN DOWN',0.5];
 	([QS_player,'SAFE'] call QS_fnc_inZone) params ['_inSafezone','_safezoneLevel','_safezoneActive'];
-	if (((crew _t) findIf {(alive _x)}) isEqualTo -1) then {
+	if (
+		(((crew _t) findIf {(alive _x)}) isEqualTo -1) ||
+		{
+			(unitIsUAV _t) &&
+			{(_t getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo ''} &&
+			{((crew _t) findIf {isPlayer _x}) isEqualTo -1}
+		}
+	) then {
 		if (!_inSafezone) then {
 			_text = format [localize 'STR_QS_Chat_093',profileName,_displayName,(mapGridPosition player)];
 			['systemChat',_text] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];

@@ -132,7 +132,9 @@ if (_preset isEqualTo 6) then {
 		_grp = createVehicleCrew _vehicle;
 		_grp setBehaviourStrong 'COMBAT';
 		(crew _vehicle) doWatch ((_vehicle getRelPos [500,0]) vectorAdd [0,0,500]);
-		{ _x setSkill 1;  } forEach (units _grp);
+		{
+			_x setSkill 1;
+		} forEach (units _grp);
 		_vehicle addEventHandler [
 			'Fired',
 			{
@@ -230,7 +232,9 @@ if (_preset isEqualTo 7) then {
 		_vehicle enableDynamicSimulation FALSE;
 		_grp = createVehicleCrew _vehicle;
 		_grp setBehaviourStrong 'AWARE';
-		{ _x setSkill 1;  } forEach (units _grp);
+		{
+			_x setSkill 1;
+		} forEach (units _grp);
 		_vehicle addEventHandler [
 			'Deleted',
 			{

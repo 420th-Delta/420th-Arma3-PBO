@@ -569,14 +569,29 @@ if (!isStreamFriendlyUIEnabled) then {
 	(profileNamespace getVariable ['ApexFramework_3DGroupIconColor',(missionNamespace getVariable ['QS_missionConfig_3DIconColor',[0,125,255]])]) params ['_r','_g','_b'];
 	if (!isNull _cameraOn) then {
 		if (
-			((_player getSlotItemName 612) isNotEqualTo '') &&
+			FALSE && // Unit role and group-leader icons disabled; Team Name Tags handles unit identification.
+			{((_player getSlotItemName 612) isNotEqualTo '')} &&
 			{(missionNamespace getVariable ['QS_HUD_show3DHex',TRUE])}
 		) then {
+			private _getRoleIcon = {
+				params ['_unit'];
+				private _roleIcon = _unit getVariable ['QS_unit_role_icon',-1];
+				if (_roleIcon isEqualTo -1) then {
+					private _defaultRole = ['rifleman','medic'] select (_unit getUnitTrait 'medic');
+					_roleIcon = [
+						'GET_ROLE_ICONMAP',
+						(_unit getVariable ['QS_unit_role',_defaultRole]),
+						_unit
+					] call (missionNamespace getVariable 'QS_fnc_roles');
+				};
+				_roleIcon
+			};
 			{
 				if (
 					((worldToScreen (_x modelToWorldVisual [0,0,0])) isNotEqualTo []) &&
 					(cameraOn isNotEqualTo (vehicle _x))
 				) then {
+					private _roleIcon = [_x] call _getRoleIcon;
 					_alpha = [0.25 max (1 - ((((_cameraOn distance2D _x) / 1000)) % 1)),0.25] select ((_cameraOn distance2D _x) >= 1000);
 					_objectParent = objectParent _x;
 					_iconPos = if (isNull _objectParent) then {
@@ -588,7 +603,7 @@ if (!isStreamFriendlyUIEnabled) then {
 						private _teamID = (['','MAIN','RED','GREEN','BLUE','YELLOW'] find (assignedTeam _x)) max 1;
 						_noChannel = (getPlayerChannel _x) isEqualTo -1;
 						drawIcon3D [
-							'a3\ui_f\data\igui\cfg\cursors\select_ca.paa',
+							_roleIcon,
 							([
 								([_r,_g,_b,([1,0.75] select _noChannel)]),
 								([_r,_g,_b,([1,0.75] select _noChannel)]),
@@ -598,8 +613,8 @@ if (!isStreamFriendlyUIEnabled) then {
 								[1,1,0,([1,0.75] select _noChannel)]
 							] # _teamID),
 							_iconPos,
-							0.7,
-							0.7,
+							2.0,
+							2.0,
 							0,
 							(['',(format ['%1',((((units _player) find _x) + 1) max 1)])] select (isNull (objectParent _x))),
 							1,
@@ -610,11 +625,11 @@ if (!isStreamFriendlyUIEnabled) then {
 						];
 					} else {
 						drawIcon3D [
-							'a3\ui_f\data\igui\cfg\cursors\select_ca.paa',
+							_roleIcon,
 							[_r,_g,_b,([1,_alpha] select ((getPlayerChannel _x) isEqualTo -1))],
 							_iconPos,
-							0.5,
-							0.5,
+							1.0,
+							1.0,
 							0,
 							'',
 							0,
@@ -629,8 +644,8 @@ if (!isStreamFriendlyUIEnabled) then {
 							'a3\ui_f\data\igui\cfg\cursors\leader_ca.paa',
 							[_r,_g,_b,([1,_alpha] select ((getPlayerChannel _x) isEqualTo -1))],
 							_iconPos,
-							0.5,
-							0.5,
+							1.0,
+							1.0,
 							0,
 							'',
 							1,
@@ -642,6 +657,49 @@ if (!isStreamFriendlyUIEnabled) then {
 					};
 				};
 			} count ((units _player) - [_player]);
+
+			private _playerGroupUnits = units _player;
+			{
+				private _unit = _x;
+				if (
+					(_unit isNotEqualTo _player) &&
+					{!(_unit in _playerGroupUnits)} &&
+					{(side (group _unit)) isEqualTo (side (group _player))} &&
+					{(worldToScreen (_unit modelToWorldVisual [0,0,0])) isNotEqualTo []} &&
+					{_cameraOn isNotEqualTo (vehicle _unit)}
+				) then {
+					private _distance = _cameraOn distance2D _unit;
+					private _alpha = [
+						0.25 max (1 - (((_distance / 1000)) % 1)),
+						0.25
+					] select (_distance >= 1000);
+					private _objectParent = objectParent _unit;
+					private _roleIcon = [_unit] call _getRoleIcon;
+					private _iconPos = if (isNull _objectParent) then {
+						_unit modelToWorldVisual (selectionPosition [_unit,'spine3',11,TRUE])
+					} else {
+						_objectParent modelToWorldVisual (
+							_objectParent worldToModelVisual (
+								_unit modelToWorldVisual (selectionPosition [_unit,'spine3',11,TRUE])
+							)
+						)
+					};
+					drawIcon3D [
+						_roleIcon,
+						[0,0.3,0.6,_alpha],
+						_iconPos,
+						1.0,
+						1.0,
+						0,
+						'',
+						0,
+						0,
+						_font,
+						'center',
+						FALSE
+					];
+				};
+			} count allUnits;
 		};
 		if (freeLook) then {
 			private _v = objNull;
@@ -680,35 +738,23 @@ if (!isStreamFriendlyUIEnabled) then {
 					} else {
 						((_objectParent modelToWorldVisual (_objectParent worldToModelVisual (_x modelToWorldVisual (selectionPosition [_x,'head',11,TRUE])))) vectorAdd [0,0,0.5])
 					};
-					_unitName = (['AI',(name _unit)] select (isPlayer _unit));
-					if (_unit in [getCursorObjectParams # 0,cursorTarget]) then {
-						if (isPlayer _unit) then {
-							if ((_unit getVariable ['QS_ST_customDN','']) isNotEqualTo '') then {
-								_unitType = _unit getVariable ['QS_ST_customDN',''];
-							} else {
-								if ((_unit getVariable ['QS_unit_role_displayName',-1]) isEqualTo -1) then {
-									_unitType = ['GET_ROLE_DISPLAYNAME',(_unit getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_fnc_roles');
-								} else {
-									_unitType = _unit getVariable ['QS_unit_role_displayName','Rifleman'];
-								};
-							};
+					_unitName = (['',(name _unit)] select (isPlayer _unit));
+					if ((isPlayer _unit) && {_unit in [getCursorObjectParams # 0,cursorTarget]}) then {
+						if ((_unit getVariable ['QS_ST_customDN','']) isNotEqualTo '') then {
+							_unitType = _unit getVariable ['QS_ST_customDN',''];
 						} else {
-							if ((_unit getVariable ['QS_ST_customDN','']) isNotEqualTo '') then {
-								_unitType = _unit getVariable ['QS_ST_customDN',''];
+							if ((_unit getVariable ['QS_unit_role_displayName',-1]) isEqualTo -1) then {
+								_unitType = ['GET_ROLE_DISPLAYNAME',(_unit getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_fnc_roles');
 							} else {
-								_unitType = QS_hashmap_configfile getOrDefaultCall [
-									format ['cfgvehicles_%1_displayname',toLowerANSI (typeOf _unit)],
-									{getText ((configOf _unit) >> 'displayName')},
-									TRUE
-								];
+								_unitType = _unit getVariable ['QS_unit_role_displayName','Rifleman'];
 							};
 						};
 						_unitName = _unitName + (format [' (%1)',_unitType]);
 					};
-					if (_player getUnitTrait 'medic') then {
+					if ((_unitName isNotEqualTo '') && {_player getUnitTrait 'medic'}) then {
 						_unitName = format ['%1 (%2)',_unitName,(lifeState _unit)];
 					};
-					if (unitIsUav _objectParent) then {
+					if ((_unitName isNotEqualTo '') && {unitIsUav _objectParent}) then {
 						_uavControl = remoteControlled (effectiveCommander _objectParent);
 						if (!isNull _uavControl) then {
 							_unitName = name _uavControl;
@@ -716,7 +762,7 @@ if (!isStreamFriendlyUIEnabled) then {
 					};
 					_distance = _cameraOn distance2D _unit;
 					_alpha = 1 - (((_distance / 31)) % 1);
-					if (_alpha > 0) then {
+					if ((_unitName isNotEqualTo '') && {_alpha > 0}) then {
 						drawIcon3D [
 							'',
 							[0.75,0.75,0.75,_alpha],
@@ -785,12 +831,15 @@ if (!isStreamFriendlyUIEnabled) then {
 					if ((_unit isKindOf 'CAManBase') || {((effectiveCommander _unit) isKindOf 'CAManBase')}) then {
 						if ((_cameraOn distance2D _unit) >= 30) then {
 							if ((_cameraOn distance2D _unit) >= 300) then {
-								_unitName = format ['(%1)',localize 'STR_QS_Utility_029'];
+								_unitName = [
+									'',
+									format ['(%1)',localize 'STR_QS_Utility_029']
+								] select (isPlayer _unit);
 							} else {
 								if (isPlayer _unit) then {
 									_unitName = (name _unit) + (format [' (%1)',localize 'STR_QS_Utility_029']);
 								} else {
-									_unitName = format ['[%2] (%1)',localize 'STR_QS_Utility_029',localize 'STR_QS_Utility_030'];
+									_unitName = '';
 								};
 							};
 						} else {
@@ -802,16 +851,7 @@ if (!isStreamFriendlyUIEnabled) then {
 								};								
 								_unitName = (name _unit) + (format [' (%1)',_unitType]);
 							} else {
-								if ((_unit getVariable ['QS_ST_customDN','']) isNotEqualTo '') then {
-									_unitType = _unit getVariable ['QS_ST_customDN',''];
-								} else {
-									_unitType = QS_hashmap_configfile getOrDefaultCall [
-										format ['cfgvehicles_%1_displayname',toLowerANSI (typeOf _unit)],
-										{getText ((configOf _unit) >> 'displayName')},
-										TRUE
-									];
-								};
-								_unitName = (format ['[%1]',localize 'STR_QS_Utility_030']) + (format [' (%1)',_unitType]);
+								_unitName = '';
 							};
 						};
 						_alpha = [0.1 max (1 - ((((_cameraOn distance2D _unit) / 1000)) % 1)),0.1] select ((_cameraOn distance2D _unit) >= 1000);
@@ -856,7 +896,7 @@ if (!isStreamFriendlyUIEnabled) then {
 						_alpha = _alpha * _fade;
 						_cursorColor = _unit getVariable ['QS_ST_cursorIcon_color',[0.5,0.5,0.5,_alpha]];
 					};
-					if (_alpha > 0) then {
+					if ((_unitName isNotEqualTo '') && {_alpha > 0}) then {
 						drawIcon3D [
 							'',
 							_cursorColor,
@@ -920,7 +960,10 @@ if (!isStreamFriendlyUIEnabled) then {
 		showChat FALSE;
 	};
 };
-if ((missionNamespace getVariable ['QS_draw3D_projectiles',[]]) isNotEqualTo []) then {
+if (
+	!(missionNamespace getVariable ['QS_teamMapIcons_drawProjectile3D',FALSE]) &&
+	{(missionNamespace getVariable ['QS_draw3D_projectiles',[]]) isNotEqualTo []}
+) then {
 	private _scale = 1;
 	_array = missionNamespace getVariable ['QS_draw3D_projectiles',[]];
 	_deg = ((ceil _time) - _time) * 720;

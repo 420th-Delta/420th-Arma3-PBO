@@ -635,6 +635,7 @@ if (_type isEqualTo 'HANDLE_REQUEST_ROLE') exitWith {
 	if (_uid isEqualTo '') then {
 		_uid = getPlayerUID _unit;
 	};
+	private _previousRole = _unit getVariable ['QS_unit_role','rifleman'];
 	private _pCnt = count allPlayers;
 	private _roles = missionNamespace getVariable 'QS_unit_roles';
 	private _side_ID = _side call (missionNamespace getVariable 'QS_fnc_sideID');
@@ -771,6 +772,22 @@ if (_type isEqualTo 'HANDLE_REQUEST_ROLE') exitWith {
 			remoteExec ['QS_fnc_clientEventRespawn',_unit,FALSE];
 		};
 		_unit setVariable ['QS_unit_side',_side,TRUE];
+	};
+	if (
+		((toLowerANSI _previousRole) isEqualTo 'uav') &&
+		{(toLowerANSI _role) isNotEqualTo 'uav'}
+	) then {
+		{
+			private _uavGroup = group (effectiveCommander _x);
+			deleteVehicleCrew _x;
+			deleteVehicle _x;
+			if (!isNull _uavGroup && {(units _uavGroup) isEqualTo []}) then {
+				deleteGroup _uavGroup;
+			};
+		} forEach (vehicles select {
+			(unitIsUAV _x) &&
+			{(_x getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo _uid}
+		});
 	};
 	_unit setVariable ['QS_unit_role',_role,TRUE];
 	_unit setVariable ['QS_unit_role_netUpdate',TRUE,TRUE];

@@ -15,6 +15,35 @@ __________________________________________________/*/
 
 params ['_object','_cid','_uid','_name'];
 if ((_uid select [0,2]) isEqualTo 'HC') exitWith {};
+['DISCONNECT',_uid] call (missionNamespace getVariable 'QS_fnc_serverPrivateChannels');
+
+private _spawnMenuPersistentClasses = [
+	'box_nato_equip_f',
+	'b_cargonet_01_ammo_f',
+	'b_supplycrate_f'
+];
+{
+	private _spawnedEntity = _x;
+	if (
+		((_spawnedEntity getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo _uid) &&
+		{!((toLowerANSI (typeOf _spawnedEntity)) in _spawnMenuPersistentClasses)}
+	) then {
+		private _spawnedGroup = grpNull;
+		if (unitIsUAV _spawnedEntity) then {
+			_spawnedGroup = group (effectiveCommander _spawnedEntity);
+			deleteVehicleCrew _spawnedEntity;
+		} else {
+			if (_spawnedEntity isKindOf 'CAManBase') then {
+				_spawnedGroup = group _spawnedEntity;
+			};
+		};
+		deleteVehicle _spawnedEntity;
+		if (!isNull _spawnedGroup && {(units _spawnedGroup) isEqualTo []}) then {
+			deleteGroup _spawnedGroup;
+		};
+	};
+} forEach (allMissionObjects 'All');
+
 ['HANDLE',['HANDLE_DISCONNECT',_this]] call (missionNamespace getVariable 'QS_fnc_roles');
 if (!isNull (group _object)) then {
 	if (!isNull (objectParent _object)) then {

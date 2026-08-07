@@ -309,6 +309,7 @@ private _dn1 = '';
 
 _sideMissions = (missionNamespace getVariable ['QS_missionConfig_sideMissions',1]) isEqualTo 1;
 _sideMissionActive = FALSE;
+missionNamespace setVariable ['QS_sideMissionActive',_false,_false];
 _resumeScript = TRUE;
 _currentSideMission = '';
 /*/
@@ -2348,7 +2349,7 @@ for '_x' from 0 to 1 step 0 do {
 						};
 					} else {
 						if ((missionNamespace getVariable 'QS_mission_aoType') isEqualTo 'GRID') then {
-							if (['EVALUATE_AO',_grid_availableRegion_id,_grid_availableAO_id,''] call _fn_grid) then {
+							if ((['EVALUATE_AO',_grid_availableRegion_id,_grid_availableAO_id,''] call _fn_grid) || {missionNamespace getVariable ['QS_aoCycleVar',_false]}) then {
 								if (missionNamespace getVariable ['QS_grid_evalMarkers',_false]) then {
 									_grid_markerEvalTimeout = diag_tickTime + 30;
 									waitUntil {
@@ -2358,6 +2359,7 @@ for '_x' from 0 to 1 step 0 do {
 								};
 								_mainMissionActive = _false;
 								missionNamespace setVariable ['QS_grid_active',_false,_true];
+								missionNamespace setVariable ['QS_aoCycleVar',_false,_false];
 								diag_log '***** QS ***** DEBUG * GRID COMPLETE *****';
 								['AO_SETSTATE',_grid_availableRegion_id,_grid_availableAO_id,2] call _fn_grid;
 								_grid_availableAO_id = -1;
@@ -2929,6 +2931,7 @@ for '_x' from 0 to 1 step 0 do {
 					missionNamespace setVariable ['QS_forceSideMission',_false,_false];
 				};
 				_sideMissionActive = _true;
+				missionNamespace setVariable ['QS_sideMissionActive',_true,_false];
 				_sideMission = selectRandomWeighted _sideMissionListProxy;
 				if (_forcedSideMission isNotEqualTo '') then {
 					_sideMission = _forcedSideMission;
@@ -2943,10 +2946,14 @@ for '_x' from 0 to 1 step 0 do {
 				_smDelay = time + (_sideMissionDelayFixed + (random _sideMissionDelayRandom));
 				if (missionNamespace getVariable ['QS_forcedSideMissionActive',_false]) then {
 					missionNamespace setVariable ['QS_forcedSideMissionActive',_false,_false];
-					missionNamespace setVariable ['QS_smSuspend',_false,_true];
+					if (!(missionNamespace getVariable ['QS_smStaffPaused',_false])) then {
+						missionNamespace setVariable ['QS_smSuspend',_false,_true];
+					};
 					missionNamespace setVariable ['QS_smAbort',_false,_true];
 				};
 				_sideMissionActive = _false;
+				missionNamespace setVariable ['QS_sideMissionActive',_false,_false];
+				missionNamespace setVariable ['QS_smAbort',_false,_true];
 			};
 		};
 	};

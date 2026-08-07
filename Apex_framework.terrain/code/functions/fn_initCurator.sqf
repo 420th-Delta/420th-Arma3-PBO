@@ -165,6 +165,7 @@ if (_type isEqualTo 1) then {
 							_result = [localize 'STR_QS_Menu_137',localize 'STR_QS_Menu_138',localize 'STR_QS_Menu_139',localize 'STR_QS_Menu_114',(findDisplay 46),FALSE,FALSE] call (missionNamespace getVariable 'BIS_fnc_guiMessage');
 							if (_result) then {
 								missionNamespace setVariable ['QS_smSuspend',TRUE,TRUE];
+								missionNamespace setVariable ['QS_smStaffPaused',TRUE,FALSE];
 								50 cutText [localize 'STR_QS_Text_214','PLAIN DOWN',0.5];
 								_actionTarget setUserActionText [_actionID,localize 'STR_QS_Interact_104',(format ["<t size='3'>%1</t>",localize 'STR_QS_Interact_104'])];
 								['systemChat',(format ['%1 %2',profileName,localize 'STR_QS_Chat_130'])] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
@@ -173,6 +174,7 @@ if (_type isEqualTo 1) then {
 							_result = [localize 'STR_QS_Menu_141',localize 'STR_QS_Menu_138',localize 'STR_QS_Menu_140',localize 'STR_QS_Menu_114',(findDisplay 46),FALSE,FALSE] call (missionNamespace getVariable 'BIS_fnc_guiMessage');
 							if (_result) then {
 								missionNamespace setVariable ['QS_smSuspend',FALSE,TRUE];
+								missionNamespace setVariable ['QS_smStaffPaused',FALSE,FALSE];
 								50 cutText [localize 'STR_QS_Text_215','PLAIN DOWN',0.5];
 								_actionTarget setUserActionText [_actionID,localize 'STR_QS_Interact_088',(format ["<t size='3'>%1</t>",localize 'STR_QS_Interact_088'])];
 								['systemChat',(format ['%1 %2',profileName,localize 'STR_QS_Chat_131'])] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];

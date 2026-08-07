@@ -148,8 +148,8 @@ if (_list isNotEqualTo []) then {
 // Support for old/obsolete service markers
 _markerData = [
 	[['QS_marker_veh_baseservice_01','QS_marker_veh_fieldservice_01','QS_marker_veh_fieldservice_02','QS_marker_veh_fieldservice_03'],['LandVehicle']],
-	[['QS_marker_veh_baseservice_02','QS_marker_veh_fieldservice_04'],['Helicopter']],
-	[['QS_marker_veh_baseservice_03','QS_marker_veh_fieldservice_04'],['Plane']],
+	[['QS_marker_veh_baseservice_02','QS_marker_veh_baseservice_05','QS_marker_veh_fieldservice_04'],['Helicopter']],
+	[['QS_marker_veh_baseservice_03','QS_marker_veh_baseservice_04','QS_marker_veh_fieldservice_04'],['Plane']],
 	[['QS_marker_boats_1','QS_marker_boats_2'],['Ship']]
 ];
 {

@@ -200,6 +200,8 @@ private _weaponsList = configFile >> 'CfgWeapons';
 			'QS_marker_veh_baseservice_01',
 			'QS_marker_veh_baseservice_02',
 			'QS_marker_veh_baseservice_03',
+			'QS_marker_veh_baseservice_04',
+			'QS_marker_veh_baseservice_05',
 			'QS_marker_veh_fieldservice_01',
 			'QS_marker_veh_fieldservice_02',
 			'QS_marker_veh_fieldservice_03',
@@ -212,7 +214,9 @@ private _weaponsList = configFile >> 'CfgWeapons';
 		[
 			'QS_marker_veh_baseservice_01',
 			'QS_marker_veh_baseservice_02',
-			'QS_marker_veh_baseservice_03'
+			'QS_marker_veh_baseservice_03',
+			'QS_marker_veh_baseservice_04',
+			'QS_marker_veh_baseservice_05'
 		],
 		FALSE
 	],
@@ -229,14 +233,16 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	[
 		'QS_veh_heliservice_mkrs',
 		[
-			'QS_marker_veh_baseservice_02'
+			'QS_marker_veh_baseservice_02',
+			'QS_marker_veh_baseservice_05'
 		],
 		FALSE
 	],
 	[
 		'QS_veh_planeservice_mkrs',
 		[
-			'QS_marker_veh_baseservice_03'
+			'QS_marker_veh_baseservice_03',
+			'QS_marker_veh_baseservice_04'
 		],
 		FALSE
 	],
@@ -295,6 +301,22 @@ private _weaponsList = configFile >> 'CfgWeapons';
 				'a3\ui_f\data\igui\cfg\cursors\iconRepairAt_ca.paa',
 				[1,1,1,1],
 				(markerPos 'QS_marker_veh_baseservice_03'),
+				1.5,
+				1.5,
+				0
+			],
+			[
+				'a3\ui_f\data\igui\cfg\cursors\iconRepairAt_ca.paa',
+				[1,1,1,1],
+				(markerPos 'QS_marker_veh_baseservice_04'),
+				1.5,
+				1.5,
+				0
+			],
+			[
+				'a3\ui_f\data\igui\cfg\cursors\iconRepairAt_ca.paa',
+				[1,1,1,1],
+				(markerPos 'QS_marker_veh_baseservice_05'),
 				1.5,
 				1.5,
 				0
@@ -972,6 +994,7 @@ if (missionNamespace getVariable ['QS_missionConfig_introMusic',TRUE]) then {
 		};
 	};
 };
+['SYNC',[]] remoteExecCall ['QS_fnc_serverPrivateChannels',2];
 0 spawn (missionNamespace getVariable 'QS_fnc_clientCore');
 if (userInputDisabled) then {
 	disableUserInput FALSE;

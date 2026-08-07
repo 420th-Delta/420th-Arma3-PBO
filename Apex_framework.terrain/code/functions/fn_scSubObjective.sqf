@@ -221,6 +221,7 @@ if (_type isEqualTo 1) exitWith {
 			[(units _grp),2] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
 			{
 				_x setUnitLoadout (QS_core_units_map getOrDefault [toLowerANSI 'o_soldier_uav_f','o_soldier_uav_f']);
+				[_x] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 				_x allowDamage FALSE;
 				_x setUnitPosWeak (selectRandom ['UP','MIDDLE','UP']);
 				_x setVariable ['QS_hidden',TRUE,TRUE];

@@ -80,7 +80,7 @@ with uiNamespace do {
     _back ctrlCommit 0;
     _back ctrlAddEventHandler ["ButtonClick", {
         closeDialog 1;
-        0 spawn {isNil TGC_fnc_staffGUI};
+        0 spawn {isNil TGC_fnc_staffSideMissionManagementGUI};
     }];
 
     private _close = _display ctrlCreate ["RscButtonMenu", 2];

@@ -13,11 +13,12 @@ Description:
 	https://community.bistudio.com/wiki/Description.ext
 ____________________________________________/*/
 
-missionProductVersion = "1.5.6";
-missionProductStatus = "Stable";											// "Stable" // "Beta" // "Dev"
-missionProductDate = "14.11.2023";
-author = "Quiksilver";																															/*/ Visible when loading mission/*/
-onLoadName = __EVAL(format ["%1 %2 %3",localize "STR_QS_Utility_011","&",localize "STR_QS_Utility_012"]);			// Invade & Annex			/*/ Visible when loading mission/*/
+briefingName = "Invade & Annex: Apex Edition";
+missionProductVersion = "";
+missionProductStatus = "Stable";
+missionProductDate = "";
+author = "Quiksilver";
+onLoadName = "Invade & Annex";
 onLoadMission = "";
 loadScreen = __EVAL(selectRandom ["media\images\loadScreens\loading_0.jpg","media\images\loadScreens\loading_1.paa","media\images\loadScreens\loading_2.paa","media\images\loadScreens\loading_3.paa","media\images\loadScreens\loading_4.paa","media\images\loadScreens\loading_5.paa","media\images\loadScreens\loading_6.paa","media\images\loadScreens\loading_7.paa","media\images\loadScreens\loading_8.paa","media\images\loadScreens\loading_9.paa"]);
 overviewPicture = __EVAL(selectRandom ["media\images\loadScreens\loading_0.jpg","media\images\loadScreens\loading_1.paa","media\images\loadScreens\loading_2.paa","media\images\loadScreens\loading_3.paa","media\images\loadScreens\loading_4.paa","media\images\loadScreens\loading_5.paa","media\images\loadScreens\loading_6.paa","media\images\loadScreens\loading_7.paa","media\images\loadScreens\loading_8.paa","media\images\loadScreens\loading_9.paa"]);
@@ -374,10 +375,20 @@ class CfgFunctions {
 			class clientMenuMain {file = "code\functions\fn_clientMenuMain.sqf";};
 			class clientMenuOptions {file = "code\functions\fn_clientMenuOptions.sqf";};
 			class clientMenuPlayerBuild {file = "code\functions\fn_clientMenuPlayerBuild.sqf";};
+			class clientMenuPrivateChannels {file = "code\functions\fn_clientMenuPrivateChannels.sqf";};
 			class clientMenuRadio {file = "code\functions\fn_clientMenuRadio.sqf";};
 			class clientMenuRSS {file = "code\functions\fn_clientMenuRSS.sqf";};
 			class clientMenuStaff {file = "code\functions\fn_clientMenuStaff.sqf";};
 			class clientMenuSupporters {file = "code\functions\fn_clientMenuSupporters.sqf";};
+			class spawnMenu {file = "code\functions\fn_spawnMenu.sqf";};
+			class spawnMenuInit {file = "code\functions\fn_spawnMenuInit.sqf"; postInit = 1;};
+			class spawnMenuServerSpawn {file = "code\functions\fn_spawnMenuServerSpawn.sqf";};
+			class spawnMenuVehicleAllowed {file = "code\functions\fn_spawnMenuVehicleAllowed.sqf";};
+			class simpleFloatary {file = "code\functions\fn_simpleFloatary.sqf"; postInit = 1;};
+			class simpleFloataryAddActions {file = "code\functions\fn_simpleFloataryAddActions.sqf";};
+			class teamMapIcons {file = "code\functions\fn_teamMapIcons.sqf"; postInit = 1;};
+			class teamMapIntel {file = "code\functions\fn_teamMapIntel.sqf"; postInit = 1;};
+			class teamNameTags {file = "code\functions\fn_teamNameTags.sqf"; postInit = 1;};
 			class clientMenuUnloadCargo {file = "code\functions\fn_clientMenuUnloadCargo.sqf";};
 			class clientMenuUTexture {file = "code\functions\fn_clientMenuUTexture.sqf";};
 			class clientMenuVTexture {file = "code\functions\fn_clientMenuVTexture.sqf";};
@@ -548,8 +559,8 @@ class CfgFunctions {
 			class hCommMenu {file = "code\functions\fn_hCommMenu.sqf";};
 			class highCommand {file = "code\functions\fn_highCommand.sqf";};
 			class hint {file = "code\functions\fn_hint.sqf";};
-			class icons {file = "code\functions\fn_icons.sqf";};
-			class iconsLite {file = "code\functions\fn_iconsLite.sqf";};
+			// class icons {file = "code\functions\fn_icons.sqf";};
+			// class iconsLite {file = "code\functions\fn_iconsLite.sqf";};
 			class inAnyZone {file = "code\functions\fn_inAnyZone.sqf";};
 			class incapacitated {file = "code\functions\fn_incapacitated.sqf";};
 			class inHouse {file = "code\functions\fn_inHouse.sqf";};
@@ -612,6 +623,7 @@ class CfgFunctions {
 			class remoteExec {file = "code\functions\fn_remoteExec.sqf";};
 			class remoteExecCmd {file = "code\functions\fn_remoteExecCmd.sqf";};
 			class removeWeapon {file = "code\functions\fn_removeWeapon.sqf";};
+			class removeEnemySmokeGrenades {file = "code\functions\fn_removeEnemySmokeGrenades.sqf";};
 			class replaceWithVehicle {file = "code\functions\fn_replaceWithVehicle.sqf";};
 			class replenishServices {file = "code\functions\fn_replenishServices.sqf";};
 			class reskinModdedUnits {file = "code\functions\fn_reskinModdedUnits.sqf";};
@@ -640,6 +652,7 @@ class CfgFunctions {
 			class serverDetector {file = "code\functions\fn_serverDetector.sqf";};
 			class serverEventHandler {file = "code\functions\fn_serverEventHandler.sqf";};
 			class serverGetDonatorSkins {file = "code\functions\fn_serverGetDonatorSkins.sqf";};
+			class serverPrivateChannels {file = "code\functions\fn_serverPrivateChannels.sqf";};
 			class serverObjectsMapper {file = "code\functions\fn_serverObjectsMapper.sqf";};
 			class serverObjectsRecycler {file = "code\functions\fn_serverObjectsRecycler.sqf";};
 			class serverRestart {file = "code\functions\fn_serverRestart.sqf";};
@@ -760,7 +773,14 @@ class CfgFunctions {
         class Damage {
             file = "TGC\Functions\Damage";
             class addEmptyVehicleHandlers {};
+            class addFriendlyAIHandlers {};
+            class addSpawnMenuVehicleHandlers {};
+            class initFriendlyAIProtection { postInit = 1; };
+            class isFriendlyAI {};
             class isFriendlyFire {};
+            class isPlayerControlled {};
+            class isPlayerDamage {};
+            class isProtectedEmptyVehicleDamage {};
         };
         class Database {
             file = "TGC\Functions\Database";
@@ -796,9 +816,13 @@ class CfgFunctions {
             class forceSideMission {};
             class initStaffKeybinds { postInit = 1; };
             class isStaff {};
+            class manageMainAO {};
+            class manageSideMissions {};
             class staffChannelsGUI {};
             class staffGUI {};
+            class staffMainAOGUI {};
             class staffSideMissionGUI {};
+            class staffSideMissionManagementGUI {};
         };
     };
 };
@@ -2508,7 +2532,7 @@ class QS_RD_client_dialog_menu_main {
 			x = 0.372583 * safezoneW + safezoneX;
 			y = 0.52 * safezoneH + safezoneY;
 			w = 0.145 * safezoneW;
-			h = 0.445 * safezoneH;
+			h = 0.465 * safezoneH;
 			shadow = 0;
 			colorBackground[] = {0,0,0,0.7};
 			colorDisabled[] = {1,1,1,0.25};
@@ -2519,7 +2543,7 @@ class QS_RD_client_dialog_menu_main {
 			x = 0.372583 * safezoneW + safezoneX;
 			y = 0.52 * safezoneH + safezoneY;
 			w = 0.145 * safezoneW;
-			h = 0.445 * safezoneH;
+			h = 0.465 * safezoneH;
 		};
 		class QS_RD_client_dialog_menu_main_text_1: QS_RD_dialog_RscText {
 			moving = 1;
@@ -2587,7 +2611,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1601;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.69 * safezoneH + safezoneY;
+			y = 0.685 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2601,7 +2625,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1602;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.735 * safezoneH + safezoneY;
+			y = 0.725 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2615,7 +2639,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1603;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.78 * safezoneH + safezoneY;
+			y = 0.765 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2629,7 +2653,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1605;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.825 * safezoneH + safezoneY;
+			y = 0.805 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2642,7 +2666,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1604;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.915 * safezoneH + safezoneY;
+			y = 0.945 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2655,13 +2679,229 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1606;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.87 * safezoneH + safezoneY;
+			y = 0.845 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
 			onButtonClick = "['B7',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');";
 			shadow = 0;
 			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_main_button_8: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1607;
+			text = "Private Channels";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.885 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.0340016 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['B8',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+	};
+};
+class QS_RD_client_dialog_menu_privateChannels {
+	idd = 43000;
+	movingEnable = 1;
+	enableSimulation = 1;
+	onLoad = "['onLoad',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+	onUnload = "['onUnload',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+	class controls {
+		class Background: QS_RD_dialog_Box {
+			idc = -1;
+			x = 0.20 * safezoneW + safezoneX;
+			y = 0.20 * safezoneH + safezoneY;
+			w = 0.60 * safezoneW;
+			h = 0.60 * safezoneH;
+			colorBackground[] = {0,0,0,0.85};
+		};
+		class Frame: QS_RD_dialog_RscFrame {
+			idc = -1;
+			moving = 1;
+			text = "Private Channels";
+			x = 0.20 * safezoneW + safezoneX;
+			y = 0.20 * safezoneH + safezoneY;
+			w = 0.60 * safezoneW;
+			h = 0.60 * safezoneH;
+			colorBackground[] = {0,0,0,0};
+		};
+		class ChannelHeader: QS_RD_dialog_RscText {
+			idc = -1;
+			text = "Channels You Can Access";
+			x = 0.22 * safezoneW + safezoneX;
+			y = 0.24 * safezoneH + safezoneY;
+			w = 0.25 * safezoneW;
+			h = 0.035 * safezoneH;
+			colorBackground[] = {0,0,0,0};
+			colorText[] = {1,1,1,1};
+		};
+		class ChannelList: QS_RD_dialog_RscListBox {
+			idc = 4301;
+			x = 0.22 * safezoneW + safezoneX;
+			y = 0.28 * safezoneH + safezoneY;
+			w = 0.25 * safezoneW;
+			h = 0.40 * safezoneH;
+			sizeEx = 0.03;
+			onLBSelChanged = "['SELECT_CHANNEL',(_this # 0),(_this # 1)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class LeaveButton: QS_RD_dialog_RscButton {
+			idc = 4302;
+			text = "Leave Channel";
+			x = 0.22 * safezoneW + safezoneX;
+			y = 0.70 * safezoneH + safezoneY;
+			w = 0.25 * safezoneW;
+			h = 0.045 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['LEAVE',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class NameHeader: QS_RD_dialog_RscText {
+			idc = -1;
+			text = "Channel Name";
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.24 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.035 * safezoneH;
+			colorBackground[] = {0,0,0,0};
+			colorText[] = {1,1,1,1};
+		};
+		class NameEdit: QS_RD_dialog_RscEdit {
+			idc = 4303;
+			style = 0;
+			text = "Private Channel";
+			maxChars = 32;
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.28 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.04 * safezoneH;
+			colorBackground[] = {0.12,0.12,0.12,1};
+			onKillFocus = "['RENAME',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+			tooltip = "Owners can change the channel name here";
+		};
+		class InviteButton: QS_RD_dialog_RscButton {
+			idc = 4304;
+			text = "Invite";
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.335 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.04 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['OPEN_INVITE',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class CreateDeleteButton: QS_RD_dialog_RscButton {
+			idc = 4305;
+			text = "Create";
+			x = 0.64 * safezoneW + safezoneX;
+			y = 0.335 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.04 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['CREATE_DELETE',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class MemberHeader: QS_RD_dialog_RscText {
+			idc = -1;
+			text = "Players With Access";
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.39 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.035 * safezoneH;
+			colorBackground[] = {0,0,0,0};
+			colorText[] = {1,1,1,1};
+		};
+		class MemberList: QS_RD_dialog_RscListBox {
+			idc = 4306;
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.43 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.20 * safezoneH;
+			sizeEx = 0.03;
+			onLBSelChanged = "['MEMBER_SELECTED',(_this # 0),(_this # 1)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class EjectButton: QS_RD_dialog_RscButton {
+			idc = 4307;
+			text = "Eject";
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.645 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.04 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['EJECT',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class Status: QS_RD_dialog_RscText {
+			idc = 4308;
+			text = "";
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.69 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.03 * safezoneH;
+			sizeEx = 0.025;
+			colorBackground[] = {0,0,0,0};
+			colorText[] = {0.75,0.9,1,1};
+		};
+		class CloseButton: QS_RD_dialog_RscButton {
+			idc = 2;
+			text = "Close";
+			x = 0.50 * safezoneW + safezoneX;
+			y = 0.73 * safezoneH + safezoneY;
+			w = 0.27 * safezoneW;
+			h = 0.045 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "closeDialog 2;";
+		};
+	};
+};
+class QS_RD_client_dialog_menu_privateChannelInvite {
+	idd = 43100;
+	movingEnable = 1;
+	enableSimulation = 1;
+	onLoad = "['INVITE_LOAD',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+	class controls {
+		class Background: QS_RD_dialog_Box {
+			idc = -1;
+			x = 0.35 * safezoneW + safezoneX;
+			y = 0.25 * safezoneH + safezoneY;
+			w = 0.30 * safezoneW;
+			h = 0.50 * safezoneH;
+			colorBackground[] = {0,0,0,0.85};
+		};
+		class Frame: QS_RD_dialog_RscFrame {
+			idc = -1;
+			moving = 1;
+			text = "Invite Player";
+			x = 0.35 * safezoneW + safezoneX;
+			y = 0.25 * safezoneH + safezoneY;
+			w = 0.30 * safezoneW;
+			h = 0.50 * safezoneH;
+			colorBackground[] = {0,0,0,0};
+		};
+		class PlayerList: QS_RD_dialog_RscListBox {
+			idc = 4311;
+			x = 0.37 * safezoneW + safezoneX;
+			y = 0.30 * safezoneH + safezoneY;
+			w = 0.26 * safezoneW;
+			h = 0.34 * safezoneH;
+			sizeEx = 0.03;
+		};
+		class InviteButton: QS_RD_dialog_RscButton {
+			idc = 4312;
+			text = "Invite";
+			x = 0.37 * safezoneW + safezoneX;
+			y = 0.66 * safezoneH + safezoneY;
+			w = 0.125 * safezoneW;
+			h = 0.05 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['INVITE_SEND',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
+		};
+		class BackButton: QS_RD_dialog_RscButton {
+			idc = 2;
+			text = "Back";
+			x = 0.505 * safezoneW + safezoneX;
+			y = 0.66 * safezoneH + safezoneY;
+			w = 0.125 * safezoneW;
+			h = 0.05 * safezoneH;
+			colorText[] = {1,1,1,1};
+			onButtonClick = "['INVITE_BACK',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');";
 		};
 	};
 };
@@ -6797,4 +7037,5 @@ class RscTitles {
 		};
 	};
 };
+#include "code\dialogs\spawnMenu.hpp"
 dev = "Quiksilver";

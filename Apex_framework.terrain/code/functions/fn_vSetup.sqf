@@ -716,7 +716,11 @@ if (isDedicated) then {
 		{
 			params ['_vehicle','_isLocal'];
 			if (_isLocal) then {
-				_vehicle addEventHandler ['HandleDamage',{call QS_fnc_clientVehicleEventHandleDamage}];
+				if ((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') then {
+					[_vehicle] call TGC_fnc_addSpawnMenuVehicleHandlers;
+				} else {
+					_vehicle addEventHandler ['HandleDamage',{call QS_fnc_clientVehicleEventHandleDamage}];
+				};
 				if (
 					(lockedDriver _vehicle) &&
 					(!(_vehicle getVariable ['QS_driver_disabled',FALSE]))
@@ -731,6 +735,7 @@ if (isDedicated) then {
 					_vehicle setVariable ['QS_lockedInventory',FALSE,TRUE];
 				};
 			} else {
+				if ((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') exitWith {};
 				_vehicle removeAllEventHandlers 'HandleDamage';
 			};
 		}

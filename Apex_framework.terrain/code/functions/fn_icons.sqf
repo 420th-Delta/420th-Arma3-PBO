@@ -69,7 +69,7 @@ _QS_ST_enableGroupIcons = player getUnitTrait 'QS_trait_HQ';							// BOOL. TRUE
 
 // These are overridden by custom scripted systems
 disableMapIndicators [
-	TRUE,				// --- Friendly
+	FALSE,				// --- Friendly
 	TRUE,				// --- Enemy
 	TRUE,				// --- Mines
 	TRUE				// --- Tactical Ping
@@ -1862,7 +1862,6 @@ if (_QS_ST_X # 1) then {
 				if (['311',(str _x),FALSE] call (missionNamespace getVariable 'QS_fnc_inString')) then {
 					if (!isNull (_x displayCtrl 101)) exitWith {
 						_gps = (_x displayCtrl 101);
-						_gps ctrlRemoveAllEventHandlers 'Draw';
 						_gps ctrlAddEventHandler ['Draw',(format ['call %1',(_QS_ST_X # 50)])];
 						_exit = TRUE;
 					};

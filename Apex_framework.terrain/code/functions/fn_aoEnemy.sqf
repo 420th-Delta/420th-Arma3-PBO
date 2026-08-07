@@ -385,6 +385,7 @@ if ((random 1) > _staticChance) then {
 			if (worldName in ['Tanoa','Enoch']) then {
 				if ((call (missionNamespace getVariable 'QS_fnc_getActiveDLC')) isEqualTo '') then {
 					(gunner _object) setUnitLoadout 'o_t_soldier_f';
+					[(gunner _object)] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 				};
 			};
 			_object enableDynamicSimulation TRUE;
@@ -773,6 +774,7 @@ if ((call (missionNamespace getVariable 'QS_fnc_getActiveDLC')) isEqualTo '') th
 		]
 	] select (worldName in ['Tanoa','Enoch']);
 	_commander setUnitLoadout (selectRandom _loadouts);
+	[_commander] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 };
 {
 	_commander enableAIFeature _x;

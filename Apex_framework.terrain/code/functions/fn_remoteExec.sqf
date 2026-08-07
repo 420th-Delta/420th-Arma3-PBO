@@ -320,6 +320,14 @@ if (_case < 20) exitWith {
 				};
 			};
 			if (_object isEqualType objNull) then {
+				private _spawnMenuUavGroup = grpNull;
+				if (
+					(unitIsUAV _object) &&
+					{(_object getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo ''}
+				) then {
+					_spawnMenuUavGroup = group (effectiveCommander _object);
+					deleteVehicleCrew _object;
+				};
 				if ((attachedObjects _object) isNotEqualTo []) then {
 					{
 						missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),FALSE];
@@ -329,6 +337,12 @@ if (_case < 20) exitWith {
 				};
 				missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),FALSE];
 				deleteVehicle _object;
+				if (
+					!isNull _spawnMenuUavGroup &&
+					{(units _spawnMenuUavGroup) isEqualTo []}
+				) then {
+					deleteGroup _spawnMenuUavGroup;
+				};
 			} else {
 				if (_object isEqualType []) then {
 					private _obj = objNull;
@@ -2458,6 +2472,20 @@ if (_case < 130) exitWith {
 		if (hasInterface && {_isRx} && {_rxID isEqualTo 2}) then {
 			params ['','_args'];
 			_args call TGC_fnc_receivePlayerProfile;
+		};
+	};
+	/*/ Init player client response /*/
+	if (_case isEqualTo 125) then {
+		if (hasInterface && {_isRx} && {_rxID isEqualTo 2}) then {
+			params ['','_args'];
+			_args params ['_atClientMisc','_supporterLevel','_loginVal','_notifyWhitelist'];
+			missionNamespace setVariable ['QS_atClientMisc',_atClientMisc,FALSE];
+			player setVariable ['QS_ClientSupporterLevel',_supporterLevel,FALSE];
+			player setVariable ['QS_5551212',_loginVal,FALSE];
+			0 spawn (missionNamespace getVariable 'QS_fnc_initPlayerLocal');
+			if (_notifyWhitelist) then {
+				0 spawn (missionNamespace getVariable 'QS_fnc_leaderboardNotifyWhitelist');
+			};
 		};
 	};
 };

@@ -2320,12 +2320,16 @@ for '_z' from 0 to 1 step 0 do {
 				} else {
 					if (
 						([0,_cursorTarget,_objNull] call _fn_getCustomCargoParams) && 
-						{([4,_cursorTarget,_QS_v2] call _fn_getCustomCargoParams)} &&
+						{
+							([4,_cursorTarget,_QS_v2] call _fn_getCustomCargoParams) ||
+							{_cursorTarget getVariable ['QS_spawnMenu_dragCarryOverride',_false]}
+						} &&
 						{(!(_cursorTarget getVariable ['QS_logistics_immovable',_false]))} &&
 						{
 							(
 								(([_cursorTarget] call _fn_getObjectVolume) < _maxCarryVolume) ||
-								((['StaticWeapon'] findIf { _cursorTarget isKindOf _x }) isNotEqualTo -1)
+								((['StaticWeapon'] findIf { _cursorTarget isKindOf _x }) isNotEqualTo -1) ||
+								(_cursorTarget getVariable ['QS_spawnMenu_dragCarryOverride',_false])
 							)
 						}
 					) then {
@@ -2388,9 +2392,20 @@ for '_z' from 0 to 1 step 0 do {
 				{(_cursorDistance < 3.5)} &&
 				{(_cursorTarget isKindOf 'CAManBase')} &&
 				{(_cursorTarget isNotEqualTo _QS_player)} &&
-				{(_QS_player isEqualTo (leader (group _QS_player)))} &&
+				{
+					(_QS_player isEqualTo (leader (group _QS_player))) ||
+					{
+						(_cursorTarget getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo
+						(getPlayerUID _QS_player)
+					}
+				} &&
 				{((group _cursorTarget) isEqualTo (group _QS_player))} &&
-				{(_cursorTarget getVariable ['QS_RD_dismissable',_false])}
+				{(_cursorTarget getVariable ['QS_RD_dismissable',_false])} &&
+				{
+					private _spawnMenuOwnerUID = _cursorTarget getVariable ['QS_spawnMenu_spawnedBy',''];
+					(_spawnMenuOwnerUID isEqualTo '') ||
+					{_spawnMenuOwnerUID isEqualTo (getPlayerUID _QS_player)}
+				}
 			) then {
 				if (!(_QS_interaction_dismiss)) then {
 					_QS_interaction_dismiss = _true;
@@ -2410,18 +2425,40 @@ for '_z' from 0 to 1 step 0 do {
 				_extendedContext &&
 				{_noObjectParent} &&
 				{(alive _cursorObject)} &&
-				{(local _cursorObject)} &&
+				{
+					(local _cursorObject) ||
+					{(_cursorObject getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo ''}
+				} &&
 				{(isNull (isVehicleCargo _cursorObject))} &&
 				{(isNull (attachedTo _cursorObject))} &&
 				{(_cursorObjectDistance <= 2)} &&
-				{((['LandVehicle','Air','Ship'] findIf { _cursorObject isKindOf _x }) isNotEqualTo -1)} &&
+				{
+					((['LandVehicle','Air','Ship'] findIf { _cursorObject isKindOf _x }) isNotEqualTo -1) ||
+					{
+						((_cursorObject getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') &&
+						{!(_cursorObject isKindOf 'CAManBase')}
+					}
+				} &&
 				{(_QS_uiTime > (uiNamespace getVariable ['QS_RD_canRespawnVehicle',-1]))} &&
 				{(_cursorObject getVariable ['QS_RD_vehicleRespawnable',_false])} &&
 				{(!(_cursorObject getVariable ['QS_disableRespawnAction',_false]))} &&
 				{(!(_cursorObject getVariable ['QS_logistics_wreck',_false]))} &&
 				{(!(_cursorObject getVariable ['QS_lockedInventory',_false]))} &&
-				{(!lockedDriver _cursorObject)} &&
-				{((crew _cursorObject) isEqualTo [])}
+				{
+					(!lockedDriver _cursorObject) ||
+					{
+						(unitIsUAV _cursorObject) &&
+						{(_cursorObject getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo ''}
+					}
+				} &&
+				{
+					((crew _cursorObject) isEqualTo []) ||
+					{
+						(unitIsUAV _cursorObject) &&
+						{(_cursorObject getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo ''} &&
+						{((crew _cursorObject) findIf {isPlayer _x}) isEqualTo -1}
+					}
+				}
 			) then {
 				if (!(_QS_interaction_respawnVehicle)) then {
 					_QS_interaction_respawnVehicle = _true;

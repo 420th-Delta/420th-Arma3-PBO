@@ -74,11 +74,12 @@ __________________________________________________________*/
 	['Red Crystal','a3\data_f\flags\flag_rcrystal_co.paa','Bohemia Interactive'],
 	['Prisoners of War','a3\data_f\flags\flag_pow_co.paa','Bohemia Interactive'],
 	['Race Flag','a3\signs_f\signspecial\data\checker_flag_co.paa','Bohemia Interactive'],
-	['Australia','media\images\general\flag_australia.jpg','Mission'],
-	['New Zealand','media\images\general\flag_new_zealand.jpg','Mission'],
-	['South Africa','media\images\general\flag_south_africa.jpg','Mission'],
-	['Gadsden','media\images\general\flag_gadsden.jpg','Mission'],
-	['Kekistani','media\images\general\flag_kekistani.jpg','Mission'],
-	['Lego','media\images\general\flag_lego.jpg','Mission'],
-	['Pride','media\images\general\flag_pride.jpg','Mission']
+	['Australia','media\images\flags\flag_australia.jpg','Mission'],
+	['New Zealand','media\images\flags\flag_new_zealand.jpg','Mission'],
+	['South Africa','media\images\flags\flag_south_africa.jpg','Mission'],
+	['Gadsden','media\images\flags\flag_gadsden.jpg','Mission'],
+	['Kekistani','media\images\flags\flag_kekistani.jpg','Mission'],
+	['Lego','media\images\flags\flag_lego.jpg','Mission'],
+	['Pride','media\images\flags\flag_pride.jpg','Mission'],
+	['82nd','media\images\flags\82nd_AB.paa','Mission']
 ]

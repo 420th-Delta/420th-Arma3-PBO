@@ -59,7 +59,7 @@ _this spawn {
 		{(!(_vehicle getVariable ['QS_missionObject_protected',FALSE]))}
 	) exitWith {};
 	private _vehicleType = typeOf _vehicle;
-	private _spawnPosition = (ASLToAGL (getPosASL _vehicle)) vectorAdd [0,0,([0.1,0] select (surfaceIsWater (getPosASL _vehicle)))];
+	private _spawnPosition = ASLToAGL (getPosASL _vehicle);
 	private _spawnDirection = getDir _vehicle;
 	private _isRespawning = FALSE;
 	private _canRespawnAfter = 0;

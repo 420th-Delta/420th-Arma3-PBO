@@ -106,14 +106,6 @@ if (_notifyWhitelist) then {
 	(missionProfileNamespace getVariable 'QS_whitelists_toInform') deleteAt ((missionProfileNamespace getVariable ['QS_whitelists_toInform',[]]) find _uid);
 };
 [
-	[[_uid,_cid,_val,_jip],_sLevel,_loginVal,_notifyWhitelist],
-	{
-		missionNamespace setVariable ['QS_atClientMisc',(_this # 0),FALSE];
-		player setVariable ['QS_ClientSupporterLevel',(_this # 1),FALSE];
-		player setVariable ['QS_5551212',(_this # 2),FALSE];
-		0 spawn (missionNamespace getVariable 'QS_fnc_initPlayerLocal');
-		if (_this # 3) then {
-			0 spawn (missionNamespace getVariable 'QS_fnc_leaderboardNotifyWhitelist');
-		};
-	}
-] remoteExec ['call',_cid,FALSE];
+	125,
+	[[_uid,_cid,_val,_jip],_sLevel,_loginVal,_notifyWhitelist]
+] remoteExec ['QS_fnc_remoteExec',_cid,FALSE];

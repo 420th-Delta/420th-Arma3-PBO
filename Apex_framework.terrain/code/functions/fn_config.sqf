@@ -409,6 +409,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_sniper_whitelist',{[]},TRUE],
 	['QS_pilot_blacklist',[],TRUE],
 	['QS_spectator_whitelist',[],TRUE],
+	['QS_privateChannels_enabled',FALSE,TRUE],
 	['QS_arsenals',[],TRUE],
 	['QS_billboards',[],FALSE],
 	['QS_activeRegion',-1,FALSE],
@@ -416,7 +417,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	[
 		'QS_radioChannels',
 		[
-			(radioChannelCreate [[0.4,1,1,1],'Staff channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
+			(radioChannelCreate [[0.7,0,0,1],'Staff channel','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,0.4,1,1],'Aircraft channel','%UNIT_VEH_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[0.4,1,0.4,1],'Main AO','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
 			(radioChannelCreate [[1,1,0.4,1],'Side Mission','%UNIT_GRP_NAME ' + '(%UNIT_NAME)',[],TRUE]),
@@ -468,6 +469,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_forcedSideMissionActive',FALSE,FALSE],
 	['QS_smAbort',FALSE,TRUE],
 	['QS_smSuspend',FALSE,TRUE],
+	['QS_smStaffPaused',FALSE,FALSE],
 	['QS_cycleCAS',FALSE,FALSE],
 	['QS_casSuspend',FALSE,FALSE],
 	['QS_smSuccess',FALSE,FALSE],

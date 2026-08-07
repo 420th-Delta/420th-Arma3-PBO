@@ -18,6 +18,7 @@ missionNamespace setVariable ['QS_analytics_entities_respawned',((missionNamespa
 missionNamespace setVariable ['QS_system_entitiesRespawned',((missionNamespace getVariable ['QS_system_entitiesRespawned',0]) + 1),FALSE];
 if (!isNull _newEntity) then {
 	if (isPlayer _newEntity) then {
+		['SERVER_SYNC',_newEntity] call (missionNamespace getVariable 'QS_fnc_serverPrivateChannels');
 		missionNamespace setVariable ['QS_playerRespawnCountServer',((missionNamespace getVariable 'QS_playerRespawnCountServer') + 1),FALSE];
 		if (_newEntity getUnitTrait 'QS_trait_fighterPilot') then {
 			if (_oldEntity isEqualTo QS_fighterPilot) then {

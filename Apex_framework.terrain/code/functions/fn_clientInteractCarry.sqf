@@ -77,6 +77,7 @@ if (_t isKindOf 'CAManBase') then {
 	//};
 } else {
 	//comment 'Crate carrying';
+	private _hasSpawnMenuDragCarryOverride = _t getVariable ['QS_spawnMenu_dragCarryOverride',FALSE];
 	// Static Weapon object volume band-aid fix
 	if (
 		(_t isKindOf 'StaticWeapon') &&
@@ -87,7 +88,10 @@ if (_t isKindOf 'CAManBase') then {
 	};
 	if (
 		([0,_t,objNull] call (missionNamespace getVariable 'QS_fnc_getCustomCargoParams')) &&
-		{([4,_t,(vehicle player)] call (missionNamespace getVariable 'QS_fnc_getCustomCargoParams'))} &&
+		{
+			([4,_t,(vehicle player)] call (missionNamespace getVariable 'QS_fnc_getCustomCargoParams')) ||
+			{_hasSpawnMenuDragCarryOverride}
+		} &&
 		{(!((getPlayerUID player) in QS_blacklist_logistics))}
 	) then {
 		if ((stance player) isEqualTo 'STAND') then {

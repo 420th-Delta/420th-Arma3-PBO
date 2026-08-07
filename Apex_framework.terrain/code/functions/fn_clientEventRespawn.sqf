@@ -15,6 +15,7 @@ _______________________________________________/*/
 
 params [['_newUnit',player],['_oldUnit',objNull]];
 QS_player = missionNamespace getVariable ['bis_fnc_moduleRemoteControl_unit',_newUnit];
+['SYNC',[]] remoteExecCall ['QS_fnc_serverPrivateChannels',2];
 simulWeatherSync;
 if (captive player) then {
 	player setCaptive FALSE;

@@ -19,6 +19,11 @@ if (
 	(!(_t isKindOf 'CAManBase')) ||
 	(!(_t in (units (group player))))
 ) exitWith {};
+private _spawnMenuOwnerUID = _t getVariable ['QS_spawnMenu_spawnedBy',''];
+if (
+	(_spawnMenuOwnerUID isNotEqualTo '') &&
+	{_spawnMenuOwnerUID isNotEqualTo (getPlayerUID player)}
+) exitWith {};
 50 cutText [(format [localize 'STR_QS_Text_104',(name _t)]),'PLAIN DOWN',0.5];
 player playActionNow 'gestureHi';
 _virtualParent = _t getVariable ['QS_virtualCargoParent',objNull];

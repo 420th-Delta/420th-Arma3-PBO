@@ -1132,5 +1132,23 @@ if (_case isEqualType '') then {
 			/*/title string/*/ 				'%1'
 		];
 	};
+	if (_case isEqualTo '420') then {
+		_return = [
+			/*/color array/*/ 				[(profileNamespace getVariable ['IGUI_TEXT_RGB_R',0]),(profileNamespace getVariable ['IGUI_TEXT_RGB_G',1]),(profileNamespace getVariable ['IGUI_TEXT_RGB_B',1]),(profileNamespace getVariable ['IGUI_TEXT_RGB_A',0.8])],
+			/*/colorIconPicture array/*/	[(profileNamespace getVariable ['IGUI_TEXT_RGB_R',0]),(profileNamespace getVariable ['IGUI_TEXT_RGB_G',1]),(profileNamespace getVariable ['IGUI_TEXT_RGB_B',1]),(profileNamespace getVariable ['IGUI_TEXT_RGB_A',0.8])],
+			/*/colorIconText array/*/ 		[(profileNamespace getVariable ['IGUI_TEXT_RGB_R',0]),(profileNamespace getVariable ['IGUI_TEXT_RGB_G',1]),(profileNamespace getVariable ['IGUI_TEXT_RGB_B',1]),(profileNamespace getVariable ['IGUI_TEXT_RGB_A',0.8])],
+			/*/description string/*/ 		'%2',
+			/*/difficulties array/*/ 		[],
+			/*/duration number/*/ 			5,
+			/*/iconPicture string/*/ 		'media\images\general\logo_420th.paa',
+			/*/iconText string/*/ 			'',
+			/*/iconSize number/*/			1,
+			/*/priority number/*/ 			0,
+			/*/sound string/*/ 				'QS_audio_notification_2',
+			/*/soundClose string/*/ 		'QS_audio_notification_2Close',
+			/*/soundRadio string/*/ 		'',
+			/*/title string/*/ 				''
+		];
+	};
 };
 _return;

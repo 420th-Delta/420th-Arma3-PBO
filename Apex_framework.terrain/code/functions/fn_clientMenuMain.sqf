@@ -44,6 +44,9 @@ if (_type isEqualTo 'onLoad') exitWith {
 	(_display displayCtrl 1606) ctrlSetText 'Donators';
 	(_display displayCtrl 1606) ctrlSetToolTip 'Donator options';
 	(_display displayCtrl 1606) ctrlEnable (((toLowerANSI (player getVariable ['QS_unit_role',''])) isEqualTo 'donator') || {((getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist')))});
+	(_display displayCtrl 1607) ctrlSetText 'Private Channels';
+	(_display displayCtrl 1607) ctrlSetToolTip 'Private Channels require Arma 3 version 2.22';
+	(_display displayCtrl 1607) ctrlEnable (missionNamespace getVariable ['QS_privateChannels_enabled',FALSE]);
 };
 if (_type isEqualTo 'onUnload') exitWith {
 	closeDialog 2;
@@ -124,5 +127,18 @@ if (_type isEqualTo 'B7') exitWith {
 			(!dialog)
 		};
 		createDialog 'QS_RD_client_dialog_menu_donators';
+	};
+};
+if (_type isEqualTo 'B8') exitWith {
+	if !(missionNamespace getVariable ['QS_privateChannels_enabled',FALSE]) exitWith {};
+	closeDialog 2;
+	['onUnload'] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');
+	0 spawn {
+		uiSleep 0.1;
+		waitUntil {
+			closeDialog 2;
+			(!dialog)
+		};
+		createDialog 'QS_RD_client_dialog_menu_privateChannels';
 	};
 };

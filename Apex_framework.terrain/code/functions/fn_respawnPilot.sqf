@@ -99,8 +99,10 @@ if (player getUnitTrait 'QS_trait_pilot') then {
 				player setPosWorld [1947.32,5820.64,5.50144];
 			};
 		} else {
-			player setDir (random 360);
-			player setPos (markerPos ['QS_marker_respawn_helipilot',TRUE]);		// position AGL. https://community.bistudio.com/wiki/markerPos . see alternative syntax
+			private _spawnPos = markerPos ['QS_marker_respawn_helipilot',TRUE];
+			_spawnPos set [2,(_spawnPos # 2) + 0.1];
+			player setDir (markerDir 'QS_marker_respawn_helipilot');
+			player setPosATL _spawnPos;
 		};
 	};
 };

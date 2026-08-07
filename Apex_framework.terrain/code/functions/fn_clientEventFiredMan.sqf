@@ -148,6 +148,9 @@ if (_weapon isEqualTo 'Throw') then {
 				50 cutText [localize 'STR_QS_Text_015','PLAIN DOWN',0.5];
 			};
 		};
+		if (!isNull _projectile) then {
+			_projectile setVariable ['TGC_playerPlacedExplosiveUID',getPlayerUID _unit,TRUE];
+		};
 	} else {
 		_projectile addEventHandler ['HitPart',{call (missionNamespace getVariable 'QS_fnc_clientProjectileEventHitPart')}];
 		if (isNull (objectParent _unit)) then {

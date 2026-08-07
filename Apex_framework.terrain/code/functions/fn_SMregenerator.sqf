@@ -163,6 +163,7 @@ for '_x' from 0 to (_tankCount - 1) step 1 do {
 		{
 			_x setUnitTrait ['engineer',TRUE,FALSE];
 			_x setUnitLoadout (QS_core_units_map getOrDefault [toLowerANSI 'O_engineer_F','O_engineer_F']);
+			[_x] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 			_all pushBack _x;
 		} forEach (crew _tank);
 		_tanks pushBack _tank;

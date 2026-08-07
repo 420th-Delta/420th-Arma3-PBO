@@ -242,6 +242,7 @@ if (_object isKindOf 'CAManBase') exitWith {
 		_result = QS_core_units_map getOrDefault [_typeL,''];
 		if (_result isNotEqualTo '') then {
 			_object setUnitLoadout _result;
+			[_object] call (missionNamespace getVariable 'QS_fnc_removeEnemySmokeGrenades');
 		};
 	};
 };

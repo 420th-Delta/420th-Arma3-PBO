@@ -50,17 +50,20 @@ if (_type isEqualTo 'Data') exitWith {
 	if (isNull _display) exitWith {};
 	lbClear 1804;
 	{
-		_x params ['_displayName','_textures'];
+		_x params [['_displayName',''],['_textureSlots',[]],['_vehicleName',''],['_vehicleClasses',[]]];
 		private _index = lbAdd [1804,_displayName];
-		lbSetData [1804,_index,str _textures];
+		lbSetData [1804,_index,str [_textureSlots,_vehicleClasses,_vehicleName]];
 		private _preview = '';
 		{
-			if (fileExists _x) exitWith {
-				_preview = _x;
-			};
-		} forEach _textures;
+			{
+				if (fileExists _x) exitWith {
+					_preview = _x;
+				};
+			} forEach _x;
+			if (_preview isNotEqualTo '') exitWith {};
+		} forEach _textureSlots;
 		lbSetPicture [1804,_index,_preview];
-		lbSetTooltip [1804,_index,(_textures joinString ' | ')];
+		lbSetTooltip [1804,_index,_vehicleName];
 	} forEach _data;
 	if (_data isEqualTo []) then {
 		private _emptyIndex = lbAdd [1804,'No purchased skins found'];
@@ -75,17 +78,34 @@ if (_type isEqualTo 'Data') exitWith {
 if (_type isEqualTo 'Apply') exitWith {
 	private _index = lbCurSel 1804;
 	if (_index isEqualTo -1) exitWith {};
-	private _textures = parseSimpleArray (lbData [1804,_index]);
-	private _texture = '';
+	(parseSimpleArray (lbData [1804,_index])) params [['_textureSlots',[]],['_vehicleClasses',[]],['_vehicleName','']];
+	private _resolvedTextures = [];
+	private _missingTexture = FALSE;
 	{
-		if (fileExists _x) exitWith {
-			_texture = _x;
+		private _texture = '';
+		{
+			if (fileExists _x) exitWith {
+				_texture = _x;
+			};
+		} forEach _x;
+		if (_texture isEqualTo '') exitWith {
+			_missingTexture = TRUE;
 		};
-	} forEach _textures;
-	if (_texture isEqualTo '') exitWith {
+		_resolvedTextures pushBack _texture;
+	} forEach _textureSlots;
+	if (_missingTexture || {_resolvedTextures isEqualTo []}) exitWith {
 		(missionNamespace getVariable 'QS_managed_hints') pushBack [5,FALSE,6,-1,'This purchased skin has not been installed on the game server yet.',[],-1];
 	};
 	(call _fn_getTarget) params ['_target','_targetName'];
+	if (_vehicleClasses isEqualTo []) exitWith {
+		(missionNamespace getVariable 'QS_managed_hints') pushBack [5,FALSE,6,-1,'This purchased skin does not specify a compatible vehicle class.',[],-1];
+	};
+	private _targetClass = toLowerANSI (typeOf _target);
+	if ((_vehicleClasses findIf {(toLowerANSI _x) isEqualTo _targetClass}) isEqualTo -1) exitWith {
+		private _compatibleVehicle = ['the configured vehicle',_vehicleName] select (_vehicleName isNotEqualTo '');
+		private _text = parseText (format ['This skin can only be applied to %1.',_compatibleVehicle]);
+		(missionNamespace getVariable 'QS_managed_hints') pushBack [5,FALSE,6,-1,_text,[],-1];
+	};
 	private _identity = [typeOf _target,uniform player] select (_target isEqualTo player);
 	private _original = _target getVariable ['QS_commissarySkin_original',[]];
 	if ((_original isEqualTo []) || {(_original # 0) isNotEqualTo _identity}) then {
@@ -95,9 +115,9 @@ if (_type isEqualTo 'Apply') exitWith {
 		};
 		_target setVariable ['QS_commissarySkin_original',[_identity,_textures],FALSE];
 	};
-	for '_i' from 0 to (([_target] call _fn_getTextureSlotCount) - 1) do {
-		_target setObjectTextureGlobal [_i,_texture];
-	};
+	{
+		_target setObjectTextureGlobal [_forEachIndex,_x];
+	} forEach _resolvedTextures;
 	private _text = parseText (format ['Applied %1 to your %2.',lbText [1804,_index],_targetName]);
 	(missionNamespace getVariable 'QS_managed_hints') pushBack [5,FALSE,5,-1,_text,[],-1];
 };

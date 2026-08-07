@@ -31,12 +31,9 @@ if (_type isEqualTo 1) then {
 	};
 	if ((_vehicle getVariable ['QS_client_vehicleEventHandlers',[]]) isEqualTo []) then {
 		private _vehicleEventHandlers = [];
-		{
-			_vehicleEventHandlers pushBack [(_x # 0),(_vehicle addEventHandler _x)];
-		} forEach [
+		private _eventHandlersToAdd = [
 			['Killed',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventKilled')}],
 			['Hit',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventHit')}],
-			['HandleDamage',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventHandleDamage')}],
 			['IncomingMissile',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventIncomingMissile')}],
 			['Fired',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventFired')}],
 			['EpeContactStart',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventEpeContactStart')}],
@@ -47,6 +44,14 @@ if (_type isEqualTo 1) then {
 			['CargoLoaded',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventCargoLoaded')}],
 			['CargoUnloaded',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventCargoUnloaded')}]
 		];
+		if ((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo '') then {
+			_eventHandlersToAdd pushBack ['HandleDamage',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventHandleDamage')}];
+		} else {
+			[_vehicle] call TGC_fnc_addSpawnMenuVehicleHandlers;
+		};
+		{
+			_vehicleEventHandlers pushBack [(_x # 0),(_vehicle addEventHandler _x)];
+		} forEach _eventHandlersToAdd;
 		if (_vehicle isKindOf 'Air') then {
 			{
 				_vehicleEventHandlers pushBack [(_x # 0),(_vehicle addEventHandler _x)];
@@ -67,5 +72,4 @@ if (_type isEqualTo 1) then {
 	if (isNil {_vehicle getVariable 'TGC_vehicle_side'} && {!isNull player}) then {
 		_vehicle setVariable ['TGC_vehicle_side', side group player, true];
 	};
-	_vehicle call TGC_fnc_addEmptyVehicleHandlers;
 };

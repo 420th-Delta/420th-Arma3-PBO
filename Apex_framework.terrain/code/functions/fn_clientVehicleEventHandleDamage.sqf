@@ -14,7 +14,19 @@ Description:
 ____________________________________________*/
 
 if (!(local (_this # 0))) exitWith {};
-params ['_vehicle','_selectionName','_damage','_source','_projectile','','_instigator','_hitPoint','_directHit'];
+params ['_vehicle','_selectionName','_damage','_source','_projectile','_hitIndex','_instigator','_hitPoint','_directHit'];
+if (
+	((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') &&
+	((crew _vehicle) isEqualTo []) &&
+	{_this call TGC_fnc_isProtectedEmptyVehicleDamage}
+) exitWith {
+	if (_hitIndex >= 0) then {
+		_vehicle getHitIndex _hitIndex
+	} else {
+		damage _vehicle
+	}
+};
+_oldDamage = [(_vehicle getHit _selectionName),(damage _vehicle)] select (_selectionName isEqualTo '');
 _szArray = if (diag_tickTime > (_vehicle getVariable ['QS_zones_eventHD_checkInterval',-1])) then {
 	_vehicle setVariable ['QS_zones_eventHD_checkInterval',diag_tickTime + 2,FALSE];
 	_result = [_vehicle,'SAFE'] call QS_fnc_inZone;
@@ -26,7 +38,10 @@ _szArray = if (diag_tickTime > (_vehicle getVariable ['QS_zones_eventHD_checkInt
 _szArray params ['_inSafezone','_safezoneLevel','_safezoneActive'];
 private _scale = 1;
 private _aircraft_crit = FALSE;
-_oldDamage = [(_vehicle getHit _selectionName),(damage _vehicle)] select (_selectionName isEqualTo '');
+if (
+	((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') &&
+	{call TGC_fnc_isFriendlyFire}
+) exitWith {_oldDamage};
 if (!isNull _instigator) then {
 	if (
 		(!(_vehicle in [_source,_instigator])) &&

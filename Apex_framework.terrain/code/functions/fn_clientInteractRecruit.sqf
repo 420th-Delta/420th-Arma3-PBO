@@ -77,15 +77,6 @@ _t enableAIFeature ['COVER',FALSE];
 _t setVariable ['QS_unit_isRecruited',TRUE,TRUE];
 _t setVariable ['TGC_recruit_owner',player,TRUE];
 _t addEventHandler [
-	'HandleDamage',
-	{
-		params ['_unit','','_damage','_source','','_hitPartIndex','_instigator',''];
-		_oldDamage = if (_hitPartIndex isEqualTo -1) then {(damage _unit)} else {(_unit getHitIndex _hitPartIndex)};
-		_damage = _oldDamage + (_damage - _oldDamage) * 0.333;
-		_damage;
-	}
-];
-_t addEventHandler [
 	'FiredMan',
 	{
 		if (alive (getAttackTarget (_this # 0))) then {
