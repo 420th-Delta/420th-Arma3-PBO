@@ -31,6 +31,7 @@ _requestTimes set [_requestOwner, diag_tickTime];
 private _uid = getPlayerUID _target;
 if (_uid isEqualTo "") exitWith {};
 private _playerName = name _target;
+diag_log format ["TGC_fnc_requestPlayerProfile: accepted request for %1 (%2) from owner %3", _playerName, _uid, _requestOwner];
 
 // Database functions reject RemoteExec-derived calls. Hand the validated request
 // to the server-owned worker created during postInit instead.

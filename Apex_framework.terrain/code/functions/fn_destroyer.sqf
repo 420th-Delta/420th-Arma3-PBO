@@ -381,8 +381,7 @@ if (_type isEqualTo 'DEFENSE') exitWith {
 						'Fired',
 						{
 							params ['','','','','','','_projectile',''];
-							missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-							missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+							[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 						}
 					];
 					_turret addEventHandler [
@@ -392,12 +391,11 @@ if (_type isEqualTo 'DEFENSE') exitWith {
 							if (_isLocal) then {
 								_entity removeAllEventHandlers 'Fired';
 								_entity addEventHandler [
-									'Fired',
-									{
-										params ['','','','','','','_projectile',''];
-										missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-										missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
-									}
+								'Fired',
+								{
+									params ['','','','','','','_projectile',''];
+									[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
+								}
 								];
 							};
 						}

@@ -207,6 +207,10 @@ if (_type isEqualTo 'MANAGE') exitWith {
 if (_type isEqualTo 'INIT') exitWith {
 	_sleep = _this # 1;
 	if (scriptDone (missionNamespace getVariable 'QS_virtualSectors_script')) then {
+		missionNamespace setVariable ['QS_virtualSectors_netLastScore',nil,FALSE];
+		missionNamespace setVariable ['QS_virtualSectors_netLastData',nil,FALSE];
+		missionNamespace setVariable ['QS_virtualSectors_netNextSync',-1,FALSE];
+		missionNamespace setVariable ['QS_virtualSectors_netFullSyncAt',-1,FALSE];
 		missionNamespace setVariable [
 			'QS_virtualSectors_script',
 			(
@@ -244,6 +248,10 @@ if (_type isEqualTo 'EXIT') exitWith {
 	missionNamespace setVariable ['QS_virtualSectors_enabled',FALSE,TRUE];
 	missionNamespace setVariable ['QS_virtualSectors_data',[],FALSE];
 	missionNamespace setVariable ['QS_virtualSectors_data_public',[],TRUE];
+	missionNamespace setVariable ['QS_virtualSectors_netLastScore',nil,FALSE];
+	missionNamespace setVariable ['QS_virtualSectors_netLastData',nil,FALSE];
+	missionNamespace setVariable ['QS_virtualSectors_netNextSync',-1,FALSE];
+	missionNamespace setVariable ['QS_virtualSectors_netFullSyncAt',-1,FALSE];
 };
 if (_type isEqualTo 'ADD') exitWith {
 	_sectorData = _this # 1;
@@ -369,6 +377,32 @@ if (_type isEqualTo 'ACT') exitWith {
 	};
 };
 if (_type isEqualTo 'PROPAGATE') exitWith {
-	missionNamespace setVariable ['QS_virtualSectors_scoreSides',(missionNamespace getVariable 'QS_virtualSectors_scoreSides'),TRUE];
-	missionNamespace setVariable ['QS_virtualSectors_data_public',(missionNamespace getVariable 'QS_virtualSectors_data_public'),TRUE];
+	private _tickTime = diag_tickTime;
+	if (_tickTime < (missionNamespace getVariable ['QS_virtualSectors_netNextSync',-1])) exitWith {};
+	private _scoreSides = missionNamespace getVariable ['QS_virtualSectors_scoreSides',[0,0,0,0,0]];
+	private _sectorDataPublic = missionNamespace getVariable ['QS_virtualSectors_data_public',[]];
+	private _lastScoreSides = missionNamespace getVariable ['QS_virtualSectors_netLastScore',[]];
+	private _lastSectorDataPublic = missionNamespace getVariable ['QS_virtualSectors_netLastData',[]];
+	private _forceFullSync = _tickTime >= (missionNamespace getVariable ['QS_virtualSectors_netFullSyncAt',-1]);
+	private _scoreChanged = !(_scoreSides isEqualTo _lastScoreSides);
+	private _sectorDataChanged = !(_sectorDataPublic isEqualTo _lastSectorDataPublic);
+	private _clientOwners = (allPlayers select {!(_x isKindOf 'HeadlessClient_F')}) apply {owner _x};
+	_clientOwners = _clientOwners arrayIntersect _clientOwners;
+	private _publicTargets = if (_clientOwners isEqualTo []) then {FALSE} else {_clientOwners};
+	missionNamespace setVariable [
+		'QS_virtualSectors_netNextSync',
+		_tickTime + (missionNamespace getVariable ['QS_virtualSectors_netSyncInterval',2]),
+		FALSE
+	];
+	if (_forceFullSync) then {
+		missionNamespace setVariable ['QS_virtualSectors_netFullSyncAt',_tickTime + 15,FALSE];
+	};
+	if (_scoreChanged || _forceFullSync) then {
+		missionNamespace setVariable ['QS_virtualSectors_scoreSides',_scoreSides,_publicTargets];
+		missionNamespace setVariable ['QS_virtualSectors_netLastScore',+_scoreSides,FALSE];
+	};
+	if (_sectorDataChanged || _forceFullSync) then {
+		missionNamespace setVariable ['QS_virtualSectors_data_public',_sectorDataPublic,_publicTargets];
+		missionNamespace setVariable ['QS_virtualSectors_netLastData',+_sectorDataPublic,FALSE];
+	};
 };

@@ -923,7 +923,8 @@ if (
 						if (!isNull _targetBuilding) then {
 							_QS_script = [_grp,[_targetBuilding,(count (_targetBuilding buildingPos -1))],240] spawn (missionNamespace getVariable 'QS_fnc_searchNearbyBuilding');
 							missionNamespace setVariable ['QS_AI_scripts_moveToBldg',((missionNamespace getVariable 'QS_AI_scripts_moveToBldg') + [serverTime + 240]),QS_system_AI_owners];
-							_grp setVariable ['QS_AI_GRP_SCRIPT',_QS_script,QS_system_AI_owners];
+							// SCRIPT handles are local to their spawning machine and cannot be efficiently network-serialized.
+							_grp setVariable ['QS_AI_GRP_SCRIPT',_QS_script,FALSE];
 							_defaultMove = FALSE;
 						};
 					};

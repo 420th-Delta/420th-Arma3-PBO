@@ -35,6 +35,9 @@ if !(
     private _collisionEH = _unit addEventHandler ["EpeContactStart", {
         params ["_unit", "_collider"];
         if (!local _unit) exitWith {};
+        private _now = diag_tickTime;
+        if (_now < (_unit getVariable ["TGC_collisionCheckAfter", -1])) exitWith {};
+        _unit setVariable ["TGC_collisionCheckAfter", _now + 0.05];
 
         if ([_collider] call TGC_fnc_isPlayerControlled) then {
             _unit setVariable ["TGC_playerDamageCollisionUntil", diag_tickTime + 1];

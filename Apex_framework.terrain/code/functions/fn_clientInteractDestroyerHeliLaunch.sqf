@@ -42,12 +42,7 @@ if (isDedicated) exitWith {
 	};
 	if (_obstructed) exitWith {
 		missionNamespace setVariable ['QS_destroyer_heliLaunch',FALSE,TRUE];
-		[[_obstructions],{
-			params ['_obstructions'];
-			_obstructions = _obstructions apply {(getText ((configOf _x) >> 'displayName'))};
-			_obstruction = _obstructions # 0;
-			50 cutText [format ['%1 - %2',localize 'STR_QS_Text_102',_obstruction],'PLAIN',0.333];
-		}] remoteExec ['call',_clientOwner];
+		[[_obstructions],{params ['_obstructions'];_obstructions = _obstructions apply {(getText ((configOf _x) >> 'displayName'))};_obstruction = _obstructions # 0;50 cutText [format ['%1 - %2',localize 'STR_QS_Text_102',_obstruction],'PLAIN',0.333];}] remoteExec ['call',_clientOwner];
 	};
 	if (!alive QS_destroyer_heli) exitWith {
 		missionNamespace setVariable ['QS_destroyer_heliLaunch',FALSE,TRUE];

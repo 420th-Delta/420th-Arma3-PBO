@@ -120,26 +120,7 @@ if (_state isEqualTo 0) exitWith {
 						_entity removeEventHandler ['HandleDamage',(_entity getVariable ['QS_wreck_damageHandler1',-1])];
 						_entity setVariable ['QS_wreck_damageHandler1',-1,FALSE];
 					};
-					[
-						[_entity],
-						{
-							params ['_entity'];
-							if ((_entity getVariable ['QS_wreck_damageHandler0',-1]) isEqualTo -1) then {
-								_entity setVariable [
-									'QS_wreck_damageHandler0',
-									(_entity addEventHandler ['Local',{call QS_fnc_wreckHandleLocal}]),
-									FALSE
-								];
-							};
-							if ((_entity getVariable ['QS_wreck_damageHandler1',-1]) isEqualTo -1) then {
-								_entity setVariable [
-									'QS_wreck_damageHandler1',
-									(_entity addEventHandler ['HandleDamage',{call QS_fnc_wreckHandleDamage}]),
-									FALSE
-								];
-							};
-						}
-					] remoteExec ['call',_entity,FALSE];
+					[[_entity],{params ['_entity'];if ((_entity getVariable ['QS_wreck_damageHandler0',-1]) isEqualTo -1) then {_entity setVariable ['QS_wreck_damageHandler0',(_entity addEventHandler ['Local',{call QS_fnc_wreckHandleLocal}]),FALSE];};if ((_entity getVariable ['QS_wreck_damageHandler1',-1]) isEqualTo -1) then {_entity setVariable ['QS_wreck_damageHandler1',(_entity addEventHandler ['HandleDamage',{call QS_fnc_wreckHandleDamage}]),FALSE];};}] remoteExec ['call',_entity,FALSE];
 				};
 			}
 		],
@@ -178,33 +159,7 @@ if (_state isEqualTo 0) exitWith {
 			];
 		};
 	} else {
-		[
-			[_entity],
-			{
-				params ['_entity'];
-				_grp = assignedGroup _entity; 
-				if (!isNull _grp) then {
-					_grp leaveVehicle _entity;
-				};
-				if (isDamageAllowed _entity) then {
-					_entity allowDamage FALSE;
-				};
-				if ((_entity getVariable ['QS_wreck_damageHandler0',-1]) isEqualTo -1) then {
-					_entity setVariable [
-						'QS_wreck_damageHandler0',
-						(_entity addEventHandler ['Local',{call QS_fnc_wreckHandleLocal}]),
-						FALSE
-					];
-				};
-				if ((_entity getVariable ['QS_wreck_damageHandler1',-1]) isEqualTo -1) then {
-					_entity setVariable [
-						'QS_wreck_damageHandler1',
-						(_entity addEventHandler ['HandleDamage',{call QS_fnc_wreckHandleDamage}]),
-						FALSE
-					];
-				};
-			}
-		] remoteExec ['call',_entity,FALSE];
+		[[_entity],{params ['_entity'];_grp = assignedGroup _entity;if (!isNull _grp) then {_grp leaveVehicle _entity;};if (isDamageAllowed _entity) then {_entity allowDamage FALSE;};}] remoteExec ['call',_entity,FALSE];
 	};
 	{
 		_entity setVariable _x;
@@ -291,24 +246,7 @@ if (_state isEqualTo 2) exitWith {
 			};
 		};
 	} else {
-		[
-			[_entity],
-			{
-				params ['_entity'];
-				//systemChat format ['%1 is no longer a wreck',(typeOf _entity)];
-				if (
-					(local _entity) &&
-					(!isDamageAllowed _entity) &&
-					((['Air','LandVehicle','Ship'] findIf { _entity isKindOf _x }) isNotEqualTo -1)
-				) then {
-					_entity allowDamage TRUE;
-				};
-				if ((_entity getVariable ['QS_wreck_damageHandler1',-1]) isNotEqualTo -1) then {
-					_entity removeEventHandler ['HandleDamage',(_entity getVariable ['QS_wreck_damageHandler1',-1])];
-					_entity setVariable ['QS_wreck_damageHandler1',-1,FALSE];
-				};
-			}
-		] remoteExec ['call',-2,FALSE];
+		[[_entity],{params ['_entity'];if ((local _entity)&&(!isDamageAllowed _entity)) then {_entity allowDamage TRUE;};}] remoteExec ['call',-2,FALSE];
 	};
 	_marker = _entity getVariable ['QS_wreck_marker',''];
 	if (_marker isNotEqualTo '') then {

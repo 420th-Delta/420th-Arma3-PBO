@@ -38,6 +38,7 @@ for "_i" from 0 to 1 step 0 do {
 	try {
 		private _whitelists = ["getWhitelists"] call TGC_fnc_dbQuery;
 		_whitelists = [_whitelists] call _parseWhitelistsFromUsers;
+		diag_log format ["TGC_fnc_dbWhitelistRefresher: loaded %1 whitelist entries", count _whitelists];
 		QS_whitelist_data = createHashMap;
 		{
 			_x params ["_id", "_role"];

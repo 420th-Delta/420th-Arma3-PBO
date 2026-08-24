@@ -2,7 +2,7 @@
 Function: TGC_fnc_initPlayerProfile
 
 Description:
-    Add local action-menu entries for viewing player profiles.
+    Add local action-menu entries for viewing other players' profiles.
 
 Author:
     420th
@@ -19,38 +19,9 @@ waitUntil {
     !isNull player
 };
 
-private _selfActionUnit = objNull;
-private _selfActionID = -1;
 private _targetActions = [];
 
 while {hasInterface} do {
-    // The player's object changes on respawn, so move the self action to the new unit.
-    if (player isNotEqualTo _selfActionUnit) then {
-        if (!isNull _selfActionUnit && {_selfActionID >= 0}) then {
-            _selfActionUnit removeAction _selfActionID;
-        };
-
-        _selfActionUnit = player;
-        _selfActionID = player addAction [
-            "My Profile",
-            {
-                params ["", "_caller"];
-                systemChat "Loading Player Profile...";
-                [123, _caller] remoteExecCall ["QS_fnc_remoteExec", 2, false];
-            },
-            nil,
-            1.5,
-            false,
-            true,
-            "",
-            "alive _this",
-            -1,
-            false,
-            "",
-            ""
-        ];
-    };
-
     private _players = allPlayers - entities "HeadlessClient_F";
 
     // Remove actions for disconnected players, corpses, and the local player's old object.

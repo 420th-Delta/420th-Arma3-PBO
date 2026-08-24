@@ -13,6 +13,10 @@ Description:
 	Hangar
 _______________________________________*/
 
+if ((getMissionConfigValue ['disableHangarLoadouts',0]) isEqualTo 1) exitWith {
+	50 cutText ['Hangar loadout selection is disabled.','PLAIN DOWN',0.5];
+};
+
 _hangarTarget = cameraOn;
 _validHangarTypes = (call (missionNamespace getVariable 'QS_data_planeLoadouts')) apply { toLowerANSI (_x # 0) };
 _customPylonPresets = (missionNamespace getVariable ['QS_missionConfig_pylonPresets',0]) isEqualTo 1;

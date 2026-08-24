@@ -14,28 +14,25 @@ Description:
 __________________________________________________*/
 
 params ['_parent','_child',['_isCustom',FALSE]];
+
+private _transaction = -1;
 if (!isNull _parent) then {
-	if (local _parent) then {
-		if (_isCustom) then {
-			_parent setMass ((getMass _parent) - (getMass _child));
-		};
-	} else {
-		[_parent,objNull] remoteExec ['QS_fnc_eventCargoUnloaded',_parent,FALSE];
+	_transaction = (_parent getVariable ['QS_cargoUnload_transaction',0]) + 1;
+	_parent setVariable ['QS_cargoUnload_transaction',_transaction,FALSE];
+};
+
+[_parent,_child,_isCustom,_transaction] spawn {
+	params ['_parent','_child','_isCustom','_transaction'];
+	uiSleep 0.05;
+
+	if (
+		(!isNull _parent) &&
+		{(_parent getVariable ['QS_cargoUnload_transaction',-1]) isEqualTo _transaction}
+	) then {
+		[_parent,_child,_isCustom] remoteExec ['QS_fnc_finishCargoParentUnload',_parent,FALSE];
+	};
+
+	if (!isNull _child) then {
+		[_child] remoteExec ['QS_fnc_finishCargoChildUnload',_child,FALSE];
 	};
 };
-if (!isNull _child) then {
-	if (local _child) then {
-		if (isEngineOn _child) then {
-			_child engineOn FALSE;
-		};
-		if (
-			(_child isKindOf 'StaticWeapon') ||
-			{(_child isKindOf 'Reammobox_F')}
-		) then {
-			_child allowDamage (_child getVariable ['cargo_isDamageAllowed',TRUE]);
-		};
-	} else {
-		[objNull,_child] remoteExec ['QS_fnc_eventCargoUnloaded',_child,FALSE];
-	};
-};
-[_parent,TRUE,TRUE] call QS_fnc_updateCenterOfMass;

@@ -762,12 +762,7 @@ for '_x' from 0 to 1 step 0 do {
 			if (_currentSceneChance isEqualTo 0) then {
 				if ((((units WEST) inAreaArray [_housePosition,15,15,0,FALSE,-1])) isNotEqualTo []) then {
 					if (((((units EAST) + (units RESISTANCE)) inAreaArray [_housePosition,15,15,0,FALSE,-1])) isEqualTo []) then {
-						[
-							[],
-							{
-								50 cutText [localize 'STR_QS_Text_247','PLAIN DOWN',0.75];
-							}
-						] remoteExec ['call',(allPlayers inAreaArray [_housePosition,300,300,0,FALSE]),FALSE];
+						[[],{50 cutText [localize 'STR_QS_Text_247','PLAIN DOWN',0.75];}] remoteExec ['call',(allPlayers inAreaArray [_housePosition,300,300,0,FALSE]),FALSE];
 						['SM_IDAP_UPDATE',[localize 'STR_QS_Notif_091',localize 'STR_QS_Notif_093']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 						
 						_findNewLocation = TRUE;
@@ -788,12 +783,7 @@ for '_x' from 0 to 1 step 0 do {
 							if (!(_suppliesFound)) then {
 								_suppliesFound = TRUE;
 								['SM_IDAP_UPDATE',[localize 'STR_QS_Notif_091',localize 'STR_QS_Notif_094']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
-								[
-									[],
-									{
-										50 cutText [localize 'STR_QS_Text_248','PLAIN DOWN',0.75];
-									}
-								] remoteExec ['call',(allPlayers inAreaArray [_housePosition,300,300,0,FALSE]),FALSE];
+								[[],{50 cutText [localize 'STR_QS_Text_248','PLAIN DOWN',0.75];}] remoteExec ['call',(allPlayers inAreaArray [_housePosition,300,300,0,FALSE]),FALSE];
 							};
 							_crateAttachedTo = attachedTo _crate;
 							_crateState = 'ATTACHED';

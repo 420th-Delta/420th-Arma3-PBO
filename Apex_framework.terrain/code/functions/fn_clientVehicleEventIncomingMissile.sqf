@@ -16,15 +16,14 @@ __________________________________________________________*/
 params ['_vehicle','_ammo','_shooter','_instigator','_projectile'];
 if (!isNull _projectile) then {
 	if (((missionNamespace getVariable ['QS_vehicle_incomingMissiles',[]]) findIf {(_projectile isEqualTo (_x # 0))}) isEqualTo -1) then {
-		missionNamespace setVariable ['QS_vehicle_incomingMissiles',((missionNamespace getVariable 'QS_vehicle_incomingMissiles') select {(!isNull (_x # 0))}),FALSE];
-		missionNamespace setVariable ['QS_vehicle_incomingMissiles',((missionNamespace getVariable 'QS_vehicle_incomingMissiles') + [[_projectile,_shooter]]),FALSE];
+		private _incomingMissiles = (missionNamespace getVariable 'QS_vehicle_incomingMissiles') select {(!isNull (_x # 0))};
+		_incomingMissiles pushBack [_projectile,_shooter];
+		if ((count _incomingMissiles) > 64) then {
+			_incomingMissiles = _incomingMissiles select [((count _incomingMissiles) - 64),64];
+		};
+		missionNamespace setVariable ['QS_vehicle_incomingMissiles',_incomingMissiles,FALSE];
 	};
-	if (!(_projectile in (missionNamespace getVariable 'QS_draw2D_projectiles'))) then {
-		missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),FALSE];
-	};
-	if (!(_projectile in (missionNamespace getVariable 'QS_draw3D_projectiles'))) then {
-		missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),FALSE];
-	};
+	[_projectile,TRUE,TRUE,FALSE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 	if ((missionNamespace getVariable ['QS_missionConfig_APS',3]) in [2,3]) then {
 		if (_vehicle isKindOf 'LandVehicle') then {
 			if (!local _shooter) then {

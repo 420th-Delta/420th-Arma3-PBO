@@ -14,15 +14,12 @@ Description:
 ________________________________________________________________*/
 
 params ['_color','_unit','_projectile'];
-if (isDedicated || {!hasInterface}) exitWith {
-	QS_managed_flares pushBack [_flare,diag_tickTime + 45];
-	QS_managed_flares pushBack [_projectile,diag_tickTime + 45];
-};
+if (isDedicated || {!hasInterface}) exitWith {};
 if (
 	(isNull _projectile) ||
 	{(((cameraOn distance2D _projectile) >= 5000) && (isNull curatorCamera))}
 ) exitWith {};
-_flare = createVehicleLocal ['#lightpoint',getPosWorld _projectile];
+private _flare = createVehicleLocal ['#lightpoint',getPosWorld _projectile];
 QS_managed_flares pushBack [_flare,diag_tickTime + 45];
 QS_managed_flares pushBack [_projectile,diag_tickTime + 45];
 [1,_flare,[_projectile,[0,0,0]]] call QS_fnc_eventAttach;

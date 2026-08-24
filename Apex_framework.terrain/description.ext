@@ -62,6 +62,7 @@ allowProfileGlasses = 0;								// When set to 0 will stop glasses set in player
 overrideFeedback = 1; 									// 0: force default handling, 1+: allow custom handling.
 unsafeCVL=1;											// Setting to 0 will disable nighttime AO illumination (ambient fire).  https://community.bistudio.com/wiki/createVehicleLocal
 debriefing = 1;
+disableHangarLoadouts = 1;							// 1 disables hangar pylon/loadout selection mission-wide.
 
 windyCoef = 0.60;										// How strong is wind sound at altitude. https://community.bistudio.com/wiki/enableEnvironment
 
@@ -83,7 +84,7 @@ respawnOnStart = 0;
 zeusCompositionScriptLevel = 2;
 
 // Security - CfgRemoteExec + CfgDisabledCommands
-#include "code\config\security.hpp"						// Delete this line if you are having issues with Mod/DLC compatibility. This file contains CfgRemoteExec + CfgDisabledCommands
+// #include "code\config\security.hpp"						// Delete this line if you are having issues with Mod/DLC compatibility. This file contains CfgRemoteExec + CfgDisabledCommands
 
 // Pylon Manager
 class CfgPylonManager
@@ -98,6 +99,7 @@ blacklistedMagazines[] = {"rhs_weap_cbu87","rhs_weap_cbu89","rhs_weap_cbu100","B
 //rearmRange = 20;
 };
 
+enableDebugConsole[] = { "76561198000424164", "76561198017084053", "76561198123202265" };
 
 // CfgFunctions
 class CfgFunctions {
@@ -223,6 +225,7 @@ class CfgFunctions {
 			class clientEventExplosion {file = "code\functions\fn_clientEventExplosion.sqf";};
 			class clientEventFired {file = "code\functions\fn_clientEventFired.sqf";};
 			class clientEventFiredMan {file = "code\functions\fn_clientEventFiredMan.sqf";};
+			class clientTrackProjectile {file = "code\functions\fn_clientTrackProjectile.sqf";};
 			class clientEventFiredNear {file = "code\functions\fn_clientEventFiredNear.sqf";};
 			class clientEventFiredPrevent {file = "code\functions\fn_clientEventFiredPrevent.sqf";};
 			class clientEventGestureChanged {file = "code\functions\fn_clientEventGestureChanged.sqf";};
@@ -373,6 +376,7 @@ class CfgFunctions {
 			class clientMenuLeaderboard {file = "code\functions\fn_clientMenuLeaderboard.sqf";};
 			class clientMenuLoadout {file = "code\functions\fn_clientMenuLoadout.sqf";};
 			class clientMenuMain {file = "code\functions\fn_clientMenuMain.sqf";};
+			class clientMenuPMC {file = "code\functions\fn_clientMenuPMC.sqf";};
 			class clientMenuOptions {file = "code\functions\fn_clientMenuOptions.sqf";};
 			class clientMenuPlayerBuild {file = "code\functions\fn_clientMenuPlayerBuild.sqf";};
 			class clientMenuPrivateChannels {file = "code\functions\fn_clientMenuPrivateChannels.sqf";};
@@ -382,6 +386,8 @@ class CfgFunctions {
 			class clientMenuSupporters {file = "code\functions\fn_clientMenuSupporters.sqf";};
 			class spawnMenu {file = "code\functions\fn_spawnMenu.sqf";};
 			class spawnMenuInit {file = "code\functions\fn_spawnMenuInit.sqf"; postInit = 1;};
+			class spawnMenuJoinAI {file = "code\functions\fn_spawnMenuJoinAI.sqf";};
+			class spawnMenuManagedVehicleInit {file = "code\functions\fn_spawnMenuManagedVehicleInit.sqf";};
 			class spawnMenuServerSpawn {file = "code\functions\fn_spawnMenuServerSpawn.sqf";};
 			class spawnMenuVehicleAllowed {file = "code\functions\fn_spawnMenuVehicleAllowed.sqf";};
 			class simpleFloatary {file = "code\functions\fn_simpleFloatary.sqf"; postInit = 1;};
@@ -396,6 +402,7 @@ class CfgFunctions {
 			class clientMissionStatus {file = "code\functions\fn_clientMissionStatus.sqf";};
 			class clientProgressVisualization {file = "code\functions\fn_clientProgressVisualization.sqf";};
 			class clientProjectileEventHitPart {file = "code\functions\fn_clientProjectileEventHitPart.sqf";};
+			class clientProjectileMapIcons {file = "code\functions\fn_clientProjectileMapIcons.sqf";};
 			class clientProjectileManager {file = "code\functions\fn_clientProjectileManager.sqf";};
 			class clientRadio {file = "code\functions\fn_clientRadio.sqf";};
 			class clientRepackMagazines {file = "code\functions\fn_clientRepackMagazines.sqf";};
@@ -470,6 +477,8 @@ class CfgFunctions {
 			class eventBuildingChanged {file = "code\functions\fn_eventBuildingChanged.sqf";};
 			class eventCargoLoaded {file = "code\functions\fn_eventCargoLoaded.sqf";}; 
 			class eventCargoUnloaded {file = "code\functions\fn_eventCargoUnloaded.sqf";}; 
+			class finishCargoChildUnload {file = "code\functions\fn_finishCargoChildUnload.sqf";};
+			class finishCargoParentUnload {file = "code\functions\fn_finishCargoParentUnload.sqf";};
 			class eventEachFrame {file = "code\functions\fn_eventEachFrame.sqf";};
 			class eventEachFrame2 {file = "code\functions\fn_eventEachFrame2.sqf";};
 			class eventEntityCreated {file = "code\functions\fn_eventEntityCreated.sqf";};
@@ -650,8 +659,10 @@ class CfgFunctions {
 			class secondsToString {file = "code\functions\fn_secondsToString.sqf";};
 			class sectorScan {file = "code\functions\fn_sectorScan.sqf";};
 			class serverDetector {file = "code\functions\fn_serverDetector.sqf";};
+			class serverAIIntelDelta {file = "code\functions\fn_serverAIIntelDelta.sqf";};
 			class serverEventHandler {file = "code\functions\fn_serverEventHandler.sqf";};
 			class serverGetDonatorSkins {file = "code\functions\fn_serverGetDonatorSkins.sqf";};
+			class serverPMC {file = "code\functions\fn_serverPMC.sqf";};
 			class serverPrivateChannels {file = "code\functions\fn_serverPrivateChannels.sqf";};
 			class serverObjectsMapper {file = "code\functions\fn_serverObjectsMapper.sqf";};
 			class serverObjectsRecycler {file = "code\functions\fn_serverObjectsRecycler.sqf";};
@@ -756,6 +767,7 @@ class CfgFunctions {
 			class zeusMission {file = "code\functions\fn_zeusMission.sqf";};
 			class zoneManager {file = "code\functions\fn_zoneManager.sqf";};
 			class zonePreset {file = "code\functions\fn_zonePreset.sqf";};
+			class deleteOutOfBoundsLoop {file = "code\functions\fn_deleteOutOfBoundsLoop.sqf"; postInit = 1;};
 		};
 	};
     class TGC {
@@ -818,11 +830,13 @@ class CfgFunctions {
             class isStaff {};
             class manageMainAO {};
             class manageSideMissions {};
+            class manageWeather {};
             class staffChannelsGUI {};
             class staffGUI {};
             class staffMainAOGUI {};
             class staffSideMissionGUI {};
             class staffSideMissionManagementGUI {};
+            class staffWeatherGUI {};
         };
     };
 };
@@ -2530,9 +2544,9 @@ class QS_RD_client_dialog_menu_main {
 			moving = 1;
 			idc = 1800;
 			x = 0.372583 * safezoneW + safezoneX;
-			y = 0.52 * safezoneH + safezoneY;
+			y = 0.42 * safezoneH + safezoneY;
 			w = 0.145 * safezoneW;
-			h = 0.465 * safezoneH;
+			h = 0.565 * safezoneH;
 			shadow = 0;
 			colorBackground[] = {0,0,0,0.7};
 			colorDisabled[] = {1,1,1,0.25};
@@ -2541,16 +2555,16 @@ class QS_RD_client_dialog_menu_main {
 			moving = 1;
 			idc = 1801;
 			x = 0.372583 * safezoneW + safezoneX;
-			y = 0.52 * safezoneH + safezoneY;
+			y = 0.42 * safezoneH + safezoneY;
 			w = 0.145 * safezoneW;
-			h = 0.465 * safezoneH;
+			h = 0.565 * safezoneH;
 		};
 		class QS_RD_client_dialog_menu_main_text_1: QS_RD_dialog_RscText {
 			moving = 1;
 			idc = 1000;
 			text = "$STR_QS_Dialogs_019";
 			x = 0.374500 * safezoneW + safezoneX;
-			y = 0.525 * safezoneH + safezoneY;
+			y = 0.425 * safezoneH + safezoneY;
 			w = 0.0955624 * safezoneW;
 			h = 0.044 * safezoneH;
 			sizeEx = 0.04;
@@ -2562,7 +2576,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1200;
 			text = "media\images\insignia\comm_patch.paa";
 			x = 0.479294 * safezoneW + safezoneX;
-			y = 0.525 * safezoneH + safezoneY;
+			y = 0.425 * safezoneH + safezoneY;
 			w = 0.030 * safezoneW;
 			h = 0.050 * safezoneH;
 			shadow = 0;
@@ -2571,7 +2585,7 @@ class QS_RD_client_dialog_menu_main {
 			moving = 1;
 			idc = 1002;
 			x = 0.375000 * safezoneW + safezoneX;
-			y = 0.58 * safezoneH + safezoneY;
+			y = 0.48 * safezoneH + safezoneY;
 			w = 0.14 * safezoneW;
 			h = 0.025 * safezoneH;
 			sizeEx = 0.028;
@@ -2584,7 +2598,7 @@ class QS_RD_client_dialog_menu_main {
 			moving = 1;
 			idc = 1001;
 			x = 0.375000 * safezoneW + safezoneX;
-			y = 0.61 * safezoneH + safezoneY;
+			y = 0.51 * safezoneH + safezoneY;
 			w = 0.14 * safezoneW;
 			h = 0.025 * safezoneH;
 			sizeEx = 0.028;
@@ -2598,7 +2612,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1600;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.645 * safezoneH + safezoneY;
+			y = 0.555 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2611,7 +2625,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1601;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.685 * safezoneH + safezoneY;
+			y = 0.5925 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2625,7 +2639,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1602;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.725 * safezoneH + safezoneY;
+			y = 0.63 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2639,7 +2653,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1603;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.765 * safezoneH + safezoneY;
+			y = 0.6675 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2653,7 +2667,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1605;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.805 * safezoneH + safezoneY;
+			y = 0.705 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2679,7 +2693,7 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1606;
 			text = "";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.845 * safezoneH + safezoneY;
+			y = 0.7425 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
@@ -2692,11 +2706,50 @@ class QS_RD_client_dialog_menu_main {
 			idc = 1607;
 			text = "Private Channels";
 			x = 0.38 * safezoneW + safezoneX;
-			y = 0.885 * safezoneH + safezoneY;
+			y = 0.78 * safezoneH + safezoneY;
 			w = 0.13 * safezoneW;
 			h = 0.0340016 * safezoneH;
 			sizeEx = 0.03;
 			onButtonClick = "['B8',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_main_button_9: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1608;
+			text = "My Profile";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.8175 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.0340016 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['B9',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_main_button_10: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1609;
+			text = "PMC";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.855 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.0340016 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['B10',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');";
+			shadow = 0;
+			colorText[] = {1,1,1,1};
+		};
+		class QS_RD_client_dialog_menu_main_button_11: QS_RD_dialog_RscButton {
+			moving = 1;
+			idc = 1610;
+			text = "PMC Skins";
+			x = 0.38 * safezoneW + safezoneX;
+			y = 0.8925 * safezoneH + safezoneY;
+			w = 0.13 * safezoneW;
+			h = 0.0340016 * safezoneH;
+			sizeEx = 0.03;
+			onButtonClick = "['B11',(_this # 0)] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');";
 			shadow = 0;
 			colorText[] = {1,1,1,1};
 		};
@@ -7038,4 +7091,5 @@ class RscTitles {
 	};
 };
 #include "code\dialogs\spawnMenu.hpp"
+#include "code\dialogs\pmc.hpp"
 dev = "Quiksilver";

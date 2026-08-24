@@ -61,12 +61,36 @@ if (_killed isKindOf 'Man') then {
 		if (_inSafezone && _safezoneActive) then {
 			
 		} else {
-			createVehicle [
-				[
+			// EntityKilled is unscheduled and a secondary explosion can synchronously
+			// kill more fuel vehicles, recursively re-entering this handler.  Admit a
+			// small number per second and create them from scheduled context.
+			private _explosionNow = diag_tickTime;
+			private _explosionState = serverNamespace getVariable [
+				'QS_secondaryExplosionBudget',
+				[_explosionNow,0]
+			];
+			_explosionState params ['_explosionWindow','_explosionCount'];
+			if ((_explosionNow - _explosionWindow) >= 1) then {
+				_explosionWindow = _explosionNow;
+				_explosionCount = 0;
+			};
+			if (_explosionCount < 4) then {
+				_explosionCount = _explosionCount + 1;
+				private _explosionType = [
 					'HelicopterExploSmall',
 					(selectRandomWeighted ['HelicopterExploSmall',0.5,'HelicopterExploBig',1,'Bo_Mk82',0.1])
-				] select ((getMass _killed) > 5000),
-				(ASLToAGL (getPosASL _killed))
+				] select ((getMass _killed) > 5000);
+				[_explosionType,ASLToAGL (getPosASL _killed)] spawn {
+					params ['_explosionType','_explosionPosition'];
+					uiSleep 0.01;
+					if (diag_fps > 8) then {
+						createVehicle [_explosionType,_explosionPosition];
+					};
+				};
+			};
+			serverNamespace setVariable [
+				'QS_secondaryExplosionBudget',
+				[_explosionWindow,_explosionCount]
 			];
 		};
 	};
@@ -181,13 +205,20 @@ if (isPlayer _killed) then {
 			};
 		};
 		if (_killed isKindOf 'AllVehicles') then {
-			{
-				if (alive _x) then {
-					[0,_x] call QS_fnc_eventAttach;
-					_x setDamage [1,FALSE];
-					deleteVehicle _x;
+			private _attachedObjects = attachedObjects _killed;
+			if (_attachedObjects isNotEqualTo []) then {
+				[_attachedObjects] spawn {
+					params ['_attachedObjects'];
+					{
+						if (alive _x) then {
+							[0,_x] call QS_fnc_eventAttach;
+							_x setDamage [1,FALSE];
+							deleteVehicle _x;
+							uiSleep 0.01;
+						};
+					} forEach _attachedObjects;
 				};
-			} count (attachedObjects _killed);
+			};
 		};
 	};
 };

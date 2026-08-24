@@ -19,6 +19,12 @@ ______________________________________*/
 
 disableSerialization;
 params ['_type1'];
+if ((getMissionConfigValue ['disableHangarLoadouts',0]) isEqualTo 1) exitWith {
+	uiNamespace setVariable ['QS_client_menuHangar_target',objNull];
+	if (dialog) then {
+		closeDialog 2;
+	};
+};
 if (_type1 isEqualTo 'onLoad') exitWith {
 	params ['','_display1'];
 	_ownedDLCs = (getDLCs 1) + [0];

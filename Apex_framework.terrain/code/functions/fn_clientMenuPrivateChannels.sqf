@@ -215,6 +215,9 @@ if (_mode isEqualTo 'SELECT_CHANNEL') exitWith {
 };
 
 if (_mode isEqualTo 'CREATE_DELETE') exitWith {
+	if !(missionNamespace getVariable ['QS_privateChannels_enabled',FALSE]) exitWith {
+		['NOTICE','Private Channels are disabled on this client. Rejoin after the server enables the feature.'] call (missionNamespace getVariable 'QS_fnc_clientMenuPrivateChannels');
+	};
 	private _display = ctrlParent _data;
 	private _channels = localNamespace getVariable ['QS_privateChannels_snapshot',[]];
 	private _ownedIndex = _channels findIf {(_x # 0) isEqualTo (getPlayerUID player)};

@@ -1,18 +1,5 @@
-SLT_fnc_RE_Server = { 
- params["_arguments","_code"]; 
- _varName = ("SLT"+str (round random 10000)); 
- 
- TempCode = compile ("if(!isServer) exitWith{};_this call "+str _code+"; "+(_varName+" = nil;")); 
- TempArgs = _arguments; 
- 
- call compile (_varName +" = [TempArgs,TempCode]; 
- publicVariable '"+_varName+"'; 
- 
- [[], { 
- ("+_varName+" select 0) spawn ("+_varName+" select 1); 
- }] remoteExec ['spawn',2];"); 
-}; 
- 
+SLT_fnc_RE_Server = { params ["_arguments","_code"]; _varName = ("SLT" + str (round random 10000)); TempCode = compile ("if(!isServer) exitWith{};_this call " + str _code + "; " + (_varName + " = nil;")); TempArgs = _arguments; call compile (_varName + " = [TempArgs,TempCode]; publicVariable '" + _varName + "'; [[], {(" + _varName + " select 0) spawn (" + _varName + " select 1);}] remoteExec ['spawn',2];"); };
+
 with uiNamespace do {SLTScriptDisplayName = "Team Map Icons";}; 
  
 SLT_fnc_enableScript = { 
@@ -537,26 +524,17 @@ SLT_fnc_enableScript = {
  }; 
  
 SLT_fnc_disableScript = { 
- {} remoteExec ['BIS_fnc_call',0,'TeamMapIcons']; 
- { 
-  (findDisplay 12 displayCtrl 51) ctrlRemoveEventHandler ['Draw',TeamMapEvent]; 
-  if (!isNil 'TeamMapClickEvent') then {removeMissionEventHandler ['MapSingleClick',TeamMapClickEvent];};
-  {
-   if (!isNull (_x select 0)) then {
-    (_x select 0) ctrlRemoveEventHandler ['Draw',_x select 1];
-   };
-  } forEach (missionNamespace getVariable ['TeamMapGPSEvents',[]]);
-  if (!isNil 'TeamMapGPSMonitor') then {terminate TeamMapGPSMonitor;};
-  removeMissionEventHandler ['EachFrame',TeamMapMissionEvent]; 
-  TeamMapEvent = nil; 
-  TeamMapClickEvent = nil;
-  TeamMapGPSEvents = nil;
-  TeamMapGPSMonitor = nil;
-  TeamMapMissionEvent = nil; 
-  TMISelectedVehicle = nil;
-  TMIVisibleVehicleIcons = nil;
- } remoteExec ['BIS_fnc_call',0]; 
-}; 
+ {} remoteExec ['BIS_fnc_call',0,'TeamMapIcons'];
+ {
+ (findDisplay 12 displayCtrl 51) ctrlRemoveEventHandler ['Draw',missionNamespace getVariable ['TeamMapEvent',-1]];
+ if (!isNil 'TeamMapClickEvent') then {removeMissionEventHandler ['MapSingleClick',TeamMapClickEvent];};
+ {if (!isNull (_x # 0)) then {(_x # 0) ctrlRemoveEventHandler ['Draw',_x # 1];};} forEach (missionNamespace getVariable ['TeamMapGPSEvents',[]]);
+ if (!isNil 'TeamMapGPSMonitor') then {terminate TeamMapGPSMonitor;};
+ if (!isNil 'TeamMapMissionEvent') then {removeMissionEventHandler ['EachFrame',TeamMapMissionEvent];};
+ TeamMapEvent = nil; TeamMapClickEvent = nil; TeamMapGPSEvents = nil; TeamMapGPSMonitor = nil; TeamMapMissionEvent = nil;
+ TMISelectedVehicle = nil; TMIVisibleVehicleIcons = nil;
+ } remoteExec ['BIS_fnc_call',0];
+};
  
 SLT_fnc_init = { 
  params[["_useToggleOptions",true]]; 

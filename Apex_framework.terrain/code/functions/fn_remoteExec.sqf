@@ -13,10 +13,150 @@ Description:
 	Scripted Remote Executions
 __________________________________________________/*/
 
-_case = _this # 0;
-_isRx = isRemoteExecuted;
-_isRxJ = isRemoteExecutedJIP;
-_rxID = remoteExecutedOwner;
+if (!(_this isEqualType [])) exitWith {};
+private _case = _this param [0,-999,[0]];
+private _isRx = isRemoteExecuted;
+private _isRxJ = isRemoteExecutedJIP;
+private _rxID = remoteExecutedOwner;
+
+/*
+	Only police requests arriving from a client at the server. Server-originated
+	broadcasts and the few intentional local calls to this dispatcher must retain
+	their existing behaviour. The structural walk is deliberately bounded so the
+	validator itself cannot become an unscheduled workload.
+*/
+private _clientToServer = isServer && {_isRx} && {!_isRxJ} && {_rxID > 2};
+private _rejectRequest = FALSE;
+private _rejectReason = '';
+if (_clientToServer) then {
+	private _pending = [[_this,0]];
+	private _nodes = 0;
+	private _stringCharacters = 0;
+	private _hashMapType = createHashMap;
+	private _codeType = {};
+	while {(!_rejectRequest) && {_pending isNotEqualTo []}} do {
+		private _entry = _pending deleteAt ((count _pending) - 1);
+		private _value = _entry # 0;
+		private _depth = _entry # 1;
+		if (_value isEqualType []) then {
+			if ((_depth > 8) || {(count _value) > 256}) then {
+				_rejectRequest = TRUE;
+				_rejectReason = 'payload shape';
+			} else {
+				_nodes = _nodes + (count _value);
+				if (_nodes > 2048) then {
+					_rejectRequest = TRUE;
+					_rejectReason = 'payload nodes';
+				} else {
+					{
+						if (_x isEqualType []) then {
+							_pending pushBack [_x,_depth + 1];
+						} else {
+							if ((_x isEqualType _hashMapType) || {_x isEqualType _codeType}) exitWith {
+								_rejectRequest = TRUE;
+								_rejectReason = 'payload type';
+							};
+							if (_x isEqualType '') then {
+								_stringCharacters = _stringCharacters + (count _x);
+								if (((count _x) > 32768) || {_stringCharacters > 131072}) exitWith {
+									_rejectRequest = TRUE;
+									_rejectReason = 'string length';
+								};
+							};
+						};
+					} forEach _value;
+				};
+			};
+		};
+	};
+
+	private _rateMap = missionNamespace getVariable ['QS_remoteExec_rateMap',createHashMap];
+	if ((count _rateMap) > 128) then {
+		_rateMap = createHashMap;
+	};
+	private _rateKey = str _rxID;
+	private _now = diag_tickTime;
+	private _rateState = _rateMap getOrDefault [_rateKey,[_now,0,-10,0]];
+	if ((_now - (_rateState # 0)) >= 1) then {
+		_rateState set [0,_now];
+		_rateState set [1,0];
+		_rateState set [3,0];
+	};
+	_rateState set [1,(_rateState # 1) + 1];
+	private _isHeavyRequest = _case in [24,39,69,71,75,106,107,108,109,111,112,115,117,118,119,120,123];
+	if (_isHeavyRequest) then {
+		_rateState set [3,(_rateState param [3,0,[0]]) + 1];
+	};
+	if (((_rateState # 1) > 120) || {_isHeavyRequest && {(_rateState # 3) > 20}}) then {
+		_rejectRequest = TRUE;
+		_rejectReason = 'rate limit';
+	};
+	_rateMap set [_rateKey,_rateState];
+	missionNamespace setVariable ['QS_remoteExec_rateMap',_rateMap,FALSE];
+
+	/* Bind the most dangerous global object operations to the actual sender. */
+	if ((!_rejectRequest) && {_case in [39,69,71]}) then {
+		private _sender = (allPlayers select {((owner _x) isEqualTo _rxID) && {!(_x isKindOf 'HeadlessClient_F')}}) param [0,objNull];
+		if (isNull _sender) then {
+			_rejectRequest = TRUE;
+			_rejectReason = 'sender';
+		} else {
+			if (_case isEqualTo 39) then {
+				private _object = _this param [1,objNull,[objNull]];
+				private _state = _this param [2,FALSE,[FALSE]];
+				private _puid = _this param [4,'',['']];
+				if (
+					((count _this) < 5) ||
+					{!((_this # 2) isEqualType FALSE)} ||
+					{isNull _object} ||
+					{(_puid isNotEqualTo (getPlayerUID _sender))} ||
+					{((_sender distance2D _object) > 100)}
+				) then {
+					_rejectRequest = TRUE;
+					_rejectReason = 'case 39 ownership';
+				};
+			};
+			if (_case isEqualTo 69) then {
+				private _vehicle = _this param [1,objNull,[objNull]];
+				private _claimedOwner = _this param [2,-1,[0]];
+				private _claimedPlayer = _this param [3,objNull,[objNull]];
+				private _puid = _this param [4,'',['']];
+				if (
+					((count _this) < 6) ||
+					{!((_this # 5) isEqualType FALSE)} ||
+					{isNull _vehicle} ||
+					{(_claimedOwner isNotEqualTo _rxID)} ||
+					{(_claimedPlayer isNotEqualTo _sender)} ||
+					{(_puid isNotEqualTo (getPlayerUID _sender))} ||
+					{((_sender distance2D _vehicle) > 25)}
+				) then {
+					_rejectRequest = TRUE;
+					_rejectReason = 'case 69 ownership';
+				};
+			};
+			if (_case isEqualTo 71) then {
+				private _object = _this param [1,objNull,[objNull]];
+				if (((count _this) < 3) || {!((_this # 2) isEqualType FALSE)} || {isNull _object} || {((_sender distance2D _object) > 100)}) then {
+					_rejectRequest = TRUE;
+					_rejectReason = 'case 71 ownership';
+				};
+			};
+		};
+	};
+
+	if (_rejectRequest) then {
+		private _rateMap = missionNamespace getVariable ['QS_remoteExec_rateMap',createHashMap];
+		private _rateKey = str _rxID;
+		private _rateState = _rateMap getOrDefault [_rateKey,[diag_tickTime,0,-10]];
+		if ((diag_tickTime - (_rateState # 2)) >= 10) then {
+			_rateState set [2,diag_tickTime];
+			_rateMap set [_rateKey,_rateState];
+			missionNamespace setVariable ['QS_remoteExec_rateMap',_rateMap,FALSE];
+			diag_log format ['***** REMOTE EXECUTION REJECTED ***** owner %1 case %2 (%3)',_rxID,_case,_rejectReason];
+		};
+	};
+};
+if (_rejectRequest) exitWith {};
 if (_case < 10) exitWith {
 	if (_case isEqualTo -2) then {
 		_build = getMissionConfigValue ['missionProductStatus','Stable'];
@@ -312,11 +452,19 @@ if (_case < 20) exitWith {
 				_respawningVehicle &&
 				(!(_object getVariable ['QS_logistics_wreck',FALSE]))
 			) then {
-				_vIndex = (serverNamespace getVariable 'QS_v_Monitor') findIf { (_x # 0) isEqualTo _object };
+				_vIndex = (serverNamespace getVariable 'QS_v_Monitor') findIf {
+					(_x isEqualType []) &&
+					{(_x # 0) isEqualTo _object}
+				};
 				if (_vIndex isNotEqualTo -1) then {
-					_element = (serverNamespace getVariable 'QS_v_Monitor') # _vIndex;
-					_element set [7,TRUE];		// Bypass respawn delay to respawn vehicle immediately
-					(serverNamespace getVariable 'QS_v_Monitor') set [_vIndex,_element];
+					if ((_object getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') then {
+						// Spawn Menu respawn retires the player's managed vehicle and frees its slot.
+						(serverNamespace getVariable 'QS_v_Monitor') set [_vIndex,FALSE];
+					} else {
+						_element = (serverNamespace getVariable 'QS_v_Monitor') # _vIndex;
+						_element set [7,TRUE];		// Bypass respawn delay to respawn vehicle immediately
+						(serverNamespace getVariable 'QS_v_Monitor') set [_vIndex,_element];
+					};
 				};
 			};
 			if (_object isEqualType objNull) then {
@@ -577,13 +725,7 @@ if (_case < 30) exitWith {
 				deleteVehicle _unit;
 				_agent setPosWorld _unitPos;
 				if (isDedicated) then {
-					[
-						[_agent],
-						{
-							params ['_agent'];
-							player reveal [_agent,4];
-						}
-					] remoteExec ['call',(allPlayers inAreaArray [_agent,30,30,0,FALSE]),FALSE];
+					[141,_agent] remoteExec ['QS_fnc_remoteExec',(allPlayers inAreaArray [_agent,30,30,0,FALSE]),FALSE];
 				};
 			};
 		};
@@ -626,9 +768,25 @@ if (_case < 30) exitWith {
 					if (_targetLocality isEqualTo 2) then {
 						_args call _code;
 					} else {
-						[_args,_code] remoteExec ['call',_targetLocality,FALSE];
+						// The server is the trusted broker for developer console code. Compile
+						// the string on each destination instead of trying to remoteExec a
+						// non-serializable code value.
+						if ((_targetLocality isEqualTo 0) || {_targetLocality > 2}) then {
+							private _remoteTarget = [-2,_targetLocality] select (_targetLocality > 2);
+							[22,_args,_string,_type,_executor,_executorUID,_executorProfileName,_executorProfileNameSteam,_executorOwner,_targetLocality] remoteExec ['QS_fnc_remoteExec',_remoteTarget,FALSE];
+						} else {
+							diag_log format ['***** DEV CONSOLE ***** Remote arbitrary-code target %1 rejected *****',_targetLocality];
+						};
 					};
 				};
+			};
+		};
+		if (!isDedicated && {_isRx} && {_rxID isEqualTo 2}) then {
+			private _args = _this param [1,[],[[]]];
+			private _string = _this param [2,'',['']];
+			private _code = compile _string;
+			if (_code isEqualType {}) then {
+				_args call _code;
 			};
 		};
 	};
@@ -659,29 +817,48 @@ if (_case < 30) exitWith {
 		_towedVehicle = _this # 1;
 		_state = _this # 2;
 		if (_state) then {
-			if (!isDedicated) then {
+			if (isDedicated) then {
+				private _towLocalEH = _towedVehicle getVariable ['QS_tow_localEH',-1];
+				if (_towLocalEH isNotEqualTo -1) then {
+					_towedVehicle removeEventHandler ['Local',_towLocalEH];
+					_towedVehicle setVariable ['QS_tow_localEH',-1,FALSE];
+				};
+			} else {
 				player enableCollisionWith _towedVehicle;
 			};
 		} else {
 			if (isDedicated) then {
-				_towedVehicle addEventHandler [
+				private _towLocalEH = _towedVehicle getVariable ['QS_tow_localEH',-1];
+				if (_towLocalEH isNotEqualTo -1) then {
+					_towedVehicle removeEventHandler ['Local',_towLocalEH];
+				};
+				_towLocalEH = _towedVehicle addEventHandler [
 					'Local',
 					{
 						params ['_towedVehicle','_isLocal'];
+						if (!_isLocal) exitWith {};
 						private ['_center','_vehicle','_position','_posToSet'];
-						if (_isLocal) then {
-							[26,_towedVehicle,TRUE] remoteExec ['QS_fnc_remoteExec',-2,FALSE];
-							_towedVehicle removeEventHandler [_thisEvent,_thisEventHandler];
-						};
+						[26,_towedVehicle,TRUE] remoteExec ['QS_fnc_remoteExec',-2,FALSE];
+						_towedVehicle removeEventHandler [_thisEvent,_thisEventHandler];
+						_towedVehicle setVariable ['QS_tow_localEH',-1,FALSE];
 						if (!isNull (attachedTo _towedVehicle)) then {
 							_vehicle = attachedTo _towedVehicle;
 							_center = getPosWorld _towedVehicle;
-							for '_x' from 0 to 1 step 0 do {
-								_position = _center findEmptyPosition [0,40,(typeOf _towedVehicle)];
-								if (_position isEqualTo []) then {
-									_position = [_center,0,50,(sizeOf (typeOf _towedVehicle)),0,0.5,0] call (missionNamespace getVariable 'QS_fnc_findSafePos');
+							private _centerAGL = ASLToAGL _center;
+							_position = [];
+							private _searchDeadline = diag_tickTime + 0.025;
+							for '_attempt' from 0 to 11 do {
+								if (diag_tickTime > _searchDeadline) exitWith {};
+								private _radius = 8 + (8 * floor (_attempt / 3));
+								private _candidate = _centerAGL getPos [_radius,((getDir _vehicle) + 135 + (_attempt * 120)) mod 360];
+								if ((lineIntersectsSurfaces [(AGLToASL (_vehicle modelToWorld [0,0,0])),(AGLToASL _candidate),_vehicle,_towedVehicle,TRUE,1,'GEOM']) isEqualTo []) exitWith {
+									_position = _candidate;
 								};
-								if ((lineIntersectsSurfaces [(AGLToASL (_vehicle modelToWorld [0,0,0])),(AGLToASL _position),_vehicle,_towedVehicle,TRUE,1,'GEOM']) isEqualTo []) exitWith {};
+							};
+							if (_position isEqualTo []) then {
+								/* Staying put and detaching is safer than an unbounded search or a distant teleport. */
+								_position = _centerAGL;
+								diag_log format ['***** TOW DETACH ***** No clear bounded position for %1; detached in place',_towedVehicle];
 							};
 							_position set [2,(_center # 2)];
 							_posToSet = [(_position # 0),(_position # 1),((_position # 2)+0.35)];
@@ -698,6 +875,7 @@ if (_case < 30) exitWith {
 						_towedVehicle enableVehicleCargo TRUE;
 					}
 				];
+				_towedVehicle setVariable ['QS_tow_localEH',_towLocalEH,FALSE];
 			};
 		};
 	};
@@ -862,20 +1040,7 @@ if (_case < 40) exitWith {
 				_vehicle enableSimulationGlobal TRUE;
 				if (_vehicle isKindOf 'Ship') then {
 					(missionNamespace getVariable 'QS_garbageCollector') pushBack [_vehicle,'DELAYED_DISCREET',(time + 180)];
-					[
-						[_vehicle],
-						{
-							params ['_vehicle'];
-							_vehicle setVariable ['QS_RD_vehicleRespawnable',TRUE,TRUE];
-							if (local _vehicle) then {
-								_vehicle setFuel (0.05 + (random 0.1));
-							};
-							clearItemCargoGlobal _vehicle;
-							player moveInCargo _vehicle;
-							player setVariable ['QS_client_createdBoat',_vehicle,TRUE];
-							_vehicle enableSimulation TRUE;
-						}
-					] remoteExec ['call',_owner,FALSE];
+					[143,_vehicle] remoteExec ['QS_fnc_remoteExec',_owner,FALSE];
 				};
 			};
 		};
@@ -969,9 +1134,13 @@ if (_case < 50) exitWith {
 	};
 	/*/===== Unload Cargo Global/*/
 	if (_case isEqualTo 45) then {
-		params ['','_vehicle','_requestedObject','_azi','_position','_clientOwner'];
-		if (local _requestedObject) then {
-			_timeout = diag_tickTime + 5;
+		params ['','_vehicle','_requestedObject','_azi','_position','_clientOwner',['_positionOnly',FALSE],['_attempt',0]];
+		if (!local _requestedObject) exitWith {
+			if (_attempt < 2) then {
+				[45,_vehicle,_requestedObject,_azi,_position,_clientOwner,_positionOnly,(_attempt + 1)] remoteExec ['QS_fnc_remoteExec',_requestedObject,FALSE];
+			};
+		};
+		if (!_positionOnly) then {
 			if (!isNull (isVehicleCargo _requestedObject)) then {
 				objNull setVehicleCargo _requestedObject;
 			} else {
@@ -984,10 +1153,13 @@ if (_case < 50) exitWith {
 					};
 				};
 			};
-			waitUntil {((isNull (attachedTo _requestedObject)) || (diag_tickTime > _timeout))};
-			_requestedObject setVectorDirAndUp _azi;
-			_requestedObject setPosASL _position;
+			uiSleep 0.05;
 		};
+		if (!local _requestedObject) exitWith {
+			[45,_vehicle,_requestedObject,_azi,_position,_clientOwner,TRUE,0] remoteExec ['QS_fnc_remoteExec',_requestedObject,FALSE];
+		};
+		_requestedObject setVectorDirAndUp _azi;
+		_requestedObject setPosASL _position;
 	};
 	/*/===== Add Player Score/*/
 	if (_case isEqualTo 46) then {
@@ -1061,12 +1233,7 @@ if (_case < 60) exitWith {
 							deleteVehicle _object;
 						};
 					} else {
-						[_object,{ 
-							_this allowDamage FALSE;
-							_buildables = (localNamespace getVariable ['QS_list_playerLocalBuildables',[]]) select {!isNull _x};
-							_buildables pushBackUnique _this;
-							localNamespace setVariable ['QS_list_playerLocalBuildables',_buildables];
-						}] remoteExec ['call',_object];
+						[144,_object] remoteExec ['QS_fnc_remoteExec',_object,FALSE];
 					};
 				}
 			];
@@ -1403,7 +1570,11 @@ if (_case < 70) exitWith {
 	if (_case isEqualTo 69) then {
 		params ['','_vehicle','','','','_isSimpleObject'];
 		if (_isSimpleObject) then {
-			_this call (missionNamespace getVariable 'QS_fnc_replaceWithVehicle');
+			if (_clientToServer && {!canSuspend}) then {
+				_this spawn (missionNamespace getVariable 'QS_fnc_replaceWithVehicle');
+			} else {
+				_this call (missionNamespace getVariable 'QS_fnc_replaceWithVehicle');
+			};
 		} else {
 			_vehicle lock 0;
 			_vehicle lockInventory FALSE;
@@ -1567,10 +1738,14 @@ if (_case < 80) exitWith {
 		if ((toLowerANSI _functionName) in [
 			'ar_rappel_all_cargo','ar_hint','ar_rappel_from_heli','ar_hide_object_global','ar_client_rappel_from_heli','ar_enable_rappelling_animation','ar_enable_rappelling_animation_client'
 		]) then {
-			if (_isCall) then {
-				_params call (missionNamespace getVariable [_functionName,{}]);
-			} else {
+			if (_clientToServer) then {
 				_params spawn (missionNamespace getVariable [_functionName,{}]);
+			} else {
+				if (_isCall) then {
+					_params call (missionNamespace getVariable [_functionName,{}]);
+				} else {
+					_params spawn (missionNamespace getVariable [_functionName,{}]);
+				};
 			};
 		};
 	};
@@ -1842,7 +2017,7 @@ if (_case < 90) exitWith {
 							if (local _unit) then {
 								_unit moveInCargo (attachedTo _vehicle);
 							} else {
-								[[_unit,(attachedTo _vehicle)],{(_this # 0) moveInCargo (_this # 1);}] remoteExec ['call',_unit,FALSE];
+								[145,_unit,(attachedTo _vehicle)] remoteExec ['QS_fnc_remoteExec',_unit,FALSE];
 							};
 						} else {
 							_unit setPosASL ((attachedTo _vehicle) modelToWorldWorld ((attachedTo _vehicle) selectionPosition 'pos cargo'));
@@ -2173,8 +2348,14 @@ if (_case < 100) exitWith {
 		};
 	};
 	if (_case isEqualTo 98) then {
+		private _claimedOwner = _this param [1,-1,[0]];
+		private _headlessOwners = (entities 'HeadlessClient_F') apply {owner _x};
+		_headlessOwners = _headlessOwners arrayIntersect _headlessOwners;
+		if !(_claimedOwner in _headlessOwners) exitWith {};
+		if (_clientToServer && {_rxID isNotEqualTo _claimedOwner}) exitWith {};
 		private _grp = grpNull;
 		private _var = '';
+		private _syncedGroups = 0;
 		{
 			if (
 				(local _x) &&
@@ -2183,9 +2364,13 @@ if (_case < 100) exitWith {
 				_grp = _x;
 				{
 					_var = _x;
-					_grp setVariable [_var,_grp getVariable _var,_rxID];
-				} forEach (allVariables _grp);
+					if !(_var in ['QS_AI_GRP_HC_LocalEH','QS_AI_GRP_HC_AgentLocalEH']) then {
+						_grp setVariable [_var,_grp getVariable _var,_claimedOwner];
+					};
+				} forEach ((allVariables _grp) select [0,128]);
+				_syncedGroups = _syncedGroups + 1;
 			};
+			if (_syncedGroups >= 256) exitWith {};
 		} forEach allGroups;
 	};
 	if (_case isEqualTo 99) then {
@@ -2225,12 +2410,19 @@ if (_case < 110) exitWith {
 	if (_case isEqualTo 103) then {
 		if (hasInterface) then {
 			params ['','_target','_ammo','_vehicle','_projectile',['_detectionRange',5000],['_warningRange',100]];
-			if (!(_projectile in (missionNamespace getVariable ['QS_draw2D_projectiles',[]]))) then {
-				(missionNamespace getVariable 'QS_draw2D_projectiles') pushBack _projectile;
+			private _trackProjectile = {
+				params ['_variableName','_projectile'];
+				private _projectiles = (missionNamespace getVariable [_variableName,[]]) select {!isNull _x};
+				if (!isNull _projectile) then {
+					_projectiles pushBackUnique _projectile;
+				};
+				if ((count _projectiles) > 128) then {
+					_projectiles deleteRange [0,(count _projectiles) - 128];
+				};
+				missionNamespace setVariable [_variableName,_projectiles,FALSE];
 			};
-			if (!(_projectile in (missionNamespace getVariable ['QS_draw3D_projectiles',[]]))) then {
-				(missionNamespace getVariable 'QS_draw3D_projectiles') pushBack _projectile;
-			};
+			['QS_draw2D_projectiles',_projectile] call _trackProjectile;
+			['QS_draw3D_projectiles',_projectile] call _trackProjectile;
 			private _nearestSensorAsset = objNull;
 			private _shipExists = (!isNull (missionNamespace getVariable ['QS_destroyerObject',objNull])) || (!isNull (missionNamespace getVariable ['QS_carrierObject',objNull]));
 			private _v = objNull;
@@ -2305,34 +2497,37 @@ if (_case < 110) exitWith {
 		_args call (missionNamespace getVariable 'QS_fnc_fire');
 	};
 	if (_case isEqualTo 105) then {
-		// Executed globally on all machines
-		params ['','_vehicle','_loadoutData'];
-		_pylonData = _loadoutData # 2;	
-		// Pylons
-		{
-			_vehicle setPylonLoadout [_foreachIndex + 1,'',TRUE];
-			_vehicle setAmmoOnPylon [_foreachIndex + 1,0];
-		} forEach (getPylonMagazines _vehicle);
-		_pylonWeapons = [];
-		{ _pylonWeapons append (getArray (_x >> 'weapons')) } forEach ([_vehicle, configNull] call BIS_fnc_getTurrets);
-		{ _vehicle removeWeapon _x; } forEach ((weapons _vehicle) - _pylonWeapons);
-		{
-			if (_vehicle turretLocal (_x # 2)) then {
-				_vehicle setPylonLoadout [_x # 0,_x # 3,TRUE,_x # 2];
+		// Executed globally on all machines. The mission config guard also blocks
+		// direct case 105 requests that bypass the client action and dialog.
+		if ((getMissionConfigValue ['disableHangarLoadouts',0]) isEqualTo 0) then {
+			params ['','_vehicle','_loadoutData'];
+			_pylonData = _loadoutData # 2;	
+			// Pylons
+			{
+				_vehicle setPylonLoadout [_foreachIndex + 1,'',TRUE];
+				_vehicle setAmmoOnPylon [_foreachIndex + 1,0];
+			} forEach (getPylonMagazines _vehicle);
+			_pylonWeapons = [];
+			{ _pylonWeapons append (getArray (_x >> 'weapons')) } forEach ([_vehicle, configNull] call BIS_fnc_getTurrets);
+			{ _vehicle removeWeapon _x; } forEach ((weapons _vehicle) - _pylonWeapons);
+			{
+				if (_vehicle turretLocal (_x # 2)) then {
+					_vehicle setPylonLoadout [_x # 0,_x # 3,TRUE,_x # 2];
+				};
+			} forEach _pylonData;
+			
+			// Laser
+			if (local _vehicle) then {
+				if (
+					((_loadoutData # 4) isEqualTo 0) ||
+					{(!(missionNamespace getVariable ['QS_missionConfig_jetLaser',FALSE]))}
+				) then {
+					_vehicle removeWeaponGlobal 'Laserdesignator_pilotCamera';
+				};
 			};
-		} forEach _pylonData;
-		
-		// Laser
-		if (local _vehicle) then {
-			if (
-				((_loadoutData # 4) isEqualTo 0) ||
-				{(!(missionNamespace getVariable ['QS_missionConfig_jetLaser',FALSE]))}
-			) then {
-				_vehicle removeWeaponGlobal 'Laserdesignator_pilotCamera';
-			};
+			// Stealth
+			_vehicle setVariable ['QS_vehicle_passiveStealth',_loadoutData # 5,FALSE];
 		};
-		// Stealth
-		_vehicle setVariable ['QS_vehicle_passiveStealth',_loadoutData # 5,FALSE];
 	};
 	if (_case isEqualTo 106) then {
 		params ['','_parent','_child','_return1'];
@@ -2351,7 +2546,14 @@ if (_case < 110) exitWith {
 	};
 	if (_case isEqualTo 109) then {
 		params ['','_args'];
-		_args call QS_fnc_simpleWinch;
+		if (_clientToServer) then {
+			// Preserve the authenticated network owner when moving this work out of
+			// the unscheduled remoteExecCall context.  The callee only accepts this
+			// wrapper from local server execution, so a client cannot forge it.
+			[_args,_rxID] spawn QS_fnc_simpleWinch;
+		} else {
+			_args call QS_fnc_simpleWinch;
+		};
 	};
 };
 if (_case < 120) exitWith {
@@ -2449,7 +2651,7 @@ if (_case < 130) exitWith {
 			if (_event isEqualTo 'HINT') then {
 				['CLIENT_QUEUE_EVENT','HINT','',WEST,(_this # 2)] call (missionNamespace getVariable 'QS_fnc_roles');
 			} else {
-				['CLIENT_QUEUE_EVENT',_event,(_this param [2,'']),(_this param [3,WEST])] call (missionNamespace getVariable 'QS_fnc_roles');
+				['CLIENT_QUEUE_EVENT',_event,(_this param [2,'']),(_this param [3,WEST]),'',(_this param [4,90])] call (missionNamespace getVariable 'QS_fnc_roles');
 			};
 		};
 	};
@@ -2486,6 +2688,18 @@ if (_case < 130) exitWith {
 			if (_notifyWhitelist) then {
 				0 spawn (missionNamespace getVariable 'QS_fnc_leaderboardNotifyWhitelist');
 			};
+		};
+	};
+	/*/ Restart a pending role offer after death/respawn /*/
+	if (_case isEqualTo 126) then {
+		params ['','_event','_uid','_unit','_clientOwner'];
+		if (
+			isServer &&
+			{(_clientOwner isEqualTo _rxID)} &&
+			{((getPlayerUID _unit) isEqualTo _uid)} &&
+			{((owner _unit) isEqualTo _rxID)}
+		) then {
+			['QUEUE_REISSUE',_event,_uid] call (missionNamespace getVariable 'QS_fnc_roles');
 		};
 	};
 };

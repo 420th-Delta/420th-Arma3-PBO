@@ -61,8 +61,7 @@ if ((missionNamespace getVariable ['QS_missionConfig_destroyerEnabled',0]) isNot
 								};
 							};
 						};
-						missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-						missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+						[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 					}
 				];
 				_turret addEventHandler [
@@ -84,8 +83,7 @@ if ((missionNamespace getVariable ['QS_missionConfig_destroyerEnabled',0]) isNot
 											};
 										};
 									};
-									missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-									missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+									[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 								}
 							];
 						};
@@ -302,8 +300,7 @@ _uavInitCodeGeneric = {
 				if ((toLowerANSI _ammo) in [
 					'bomb_03_f','bomb_04_f','bo_gbu12_lgb','bo_gbu12_lgb_mi10','bo_air_lgb','bo_air_lgb_hidden','bo_mk82','bo_mk82_mi08'
 				]) then {
-					missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-					missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+					[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 				};
 			}
 		];

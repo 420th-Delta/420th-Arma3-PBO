@@ -41,45 +41,15 @@ if (!isMissionProfileNamespaceLoaded) then {
 };
 if (!isDedicated) exitWith {
 	diag_log '***** SETUP ERROR * Server must be Dedicated *';
-	[
-		[],
-		{
-			0 spawn {
-				for '_x' from 0 to 1 step 0 do {
-					['Server must be Dedicated'] call (missionNamespace getVariable 'QS_fnc_hint');
-					uisleep 1;
-				};
-			};
-		}
-	] remoteExec ['call',-2,TRUE];
+	[[],{0 spawn {for '_x' from 0 to 1 step 0 do {['Server must be Dedicated'] call (missionNamespace getVariable 'QS_fnc_hint');uisleep 1;};};}] remoteExec ['call',-2,TRUE];
 };
 if (((productVersion # 7) isNotEqualTo 'x64') && ((productVersion # 6) isNotEqualTo 'Linux')) exitWith {
 	diag_log '***** SETUP ERROR * Server must be x64 or Linux *';
-	[
-		[],
-		{
-			0 spawn {
-				for '_x' from 0 to 1 step 0 do {
-					['Server must be running 64-bit'] call (missionNamespace getVariable 'QS_fnc_hint');
-					uisleep 1;
-				};
-			};
-		}
-	] remoteExec ['call',-2,TRUE];
+	[[],{0 spawn {for '_x' from 0 to 1 step 0 do {['Server must be running 64-bit'] call (missionNamespace getVariable 'QS_fnc_hint');uisleep 1;};};}] remoteExec ['call',-2,TRUE];
 };
 if (!isFilePatchingEnabled) exitWith {
 	diag_log '***** SETUP ERROR * File patching must be enabled *';
-	[
-		[],
-		{
-			0 spawn {
-				for '_x' from 0 to 1 step 0 do {
-					['-filePatching must be enabled in Server launch options'] call (missionNamespace getVariable 'QS_fnc_hint');
-					uisleep 1;
-				};
-			};
-		}
-	] remoteExec ['call',-2,TRUE];
+	[[],{0 spawn {for '_x' from 0 to 1 step 0 do {['-filePatching must be enabled in Server launch options'] call (missionNamespace getVariable 'QS_fnc_hint');uisleep 1;};};}] remoteExec ['call',-2,TRUE];
 };
 private _difficultyData = [];
 private _difficultyInvalid = FALSE;
@@ -113,17 +83,7 @@ private _difficultyInvalid = FALSE;
 	['waypoints',0]
 ];
 if (_difficultyInvalid) exitWith {
-	[
-		[],
-		{
-			0 spawn {
-				for '_x' from 0 to 1 step 0 do {
-					['Invalid mission difficulties, view server RPT log file for more details'] call (missionNamespace getVariable 'QS_fnc_hint');
-					uisleep 1;
-				};
-			};
-		}
-	] remoteExec ['call',-2,TRUE];
+	[[],{0 spawn {for '_x' from 0 to 1 step 0 do {['Invalid mission difficulties, view server RPT log file for more details'] call (missionNamespace getVariable 'QS_fnc_hint');uisleep 1;};};}] remoteExec ['call',-2,TRUE];
 };
 private _addonActive = FALSE;
 private _patchClass = configNull;
@@ -138,30 +98,10 @@ for '_i' from 0 to ((count _binConfigPatches) - 1) step 1 do {
 	if (_addonActive) exitWith {};
 };
 if (!(_addonActive)) exitWith {
-	[
-		[],
-		{
-			0 spawn {
-				for '_x' from 0 to 1 step 0 do {
-					['Apex Framework servermod @Apex must be active'] call (missionNamespace getVariable 'QS_fnc_hint');
-					uisleep 1;
-				};
-			};
-		}
-	] remoteExec ['call',-2,TRUE];
+	[[],{0 spawn {for '_x' from 0 to 1 step 0 do {['Apex Framework servermod @Apex must be active'] call (missionNamespace getVariable 'QS_fnc_hint');uisleep 1;};};}] remoteExec ['call',-2,TRUE];
 };
 if (isNil {uiNamespace getVariable 'QS_fnc_serverCommandPassword'}) exitWith {
-	[
-		[],
-		{
-			0 spawn {
-				for '_x' from 0 to 1 step 0 do {
-					['Apex Framework config files missing: @Apex_cfg'] call (missionNamespace getVariable 'QS_fnc_hint');
-					uisleep 1;
-				};
-			};
-		}
-	] remoteExec ['call',-2,TRUE];
+	[[],{0 spawn {for '_x' from 0 to 1 step 0 do {['Apex Framework config files missing: @Apex_cfg'] call (missionNamespace getVariable 'QS_fnc_hint');uisleep 1;};};}] remoteExec ['call',-2,TRUE];
 };
 
 private _extDB3_version = "extDB3" callExtension "9:VERSION";
@@ -205,16 +145,19 @@ if (_has_extDB3) then {
 	_extDB3_ready = true;
 };
 
-QS_script_dbWhitelistRefresher = scriptNull;
 if (_extDB3_ready && QS_missionConfig_dbWhitelistEnabled) then {
 	diag_log "Database whitelisting enabled";
 	QS_fnc_whitelist = compileFinal "call TGC_fnc_dbWhitelist";
-	// QS_script_dbWhitelistRefresher = 0 spawn TGC_fnc_dbWhitelistRefresher;
+	[] call TGC_fnc_dbWhitelistInit;
 } else {
 	diag_log "Database whitelisting disabled, using whitelist.sqf";
 	QS_fnc_whitelist = compileScript ['@Apex_cfg\whitelist.sqf',TRUE];
 };
 publicVariable "QS_fnc_whitelist";
+
+// Start the server-owned profile database worker explicitly. The function is
+// idempotent, so its CfgFunctions postInit invocation remains a safe fallback.
+TGC_script_playerProfileQueue = [] spawn TGC_fnc_processPlayerProfileQueue;
 
 // Server Event Handler
 serverNamespace setVariable ['QS_fnc_serverEventHandler',compileScript ["code\functions\fn_serverEventHandler.sqf",TRUE]];
@@ -409,7 +352,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_sniper_whitelist',{[]},TRUE],
 	['QS_pilot_blacklist',[],TRUE],
 	['QS_spectator_whitelist',[],TRUE],
-	['QS_privateChannels_enabled',FALSE,TRUE],
+	['QS_privateChannels_enabled',TRUE,TRUE],
 	['QS_arsenals',[],TRUE],
 	['QS_billboards',[],FALSE],
 	['QS_activeRegion',-1,FALSE],

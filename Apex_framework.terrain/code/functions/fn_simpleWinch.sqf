@@ -21,6 +21,19 @@ Notes:
 		<vehicle> setVariable ['QS_winch_enabled',true];
 ___________________________________________/*/
 
+private _authenticatedRequestOwner = -1;
+if (
+	isServer &&
+	{!isRemoteExecuted} &&
+	{(_this isEqualType [])} &&
+	{(count _this) isEqualTo 2} &&
+	{((_this # 0) isEqualType [])} &&
+	{((_this # 1) isEqualType 0)}
+) then {
+	_authenticatedRequestOwner = _this # 1;
+	_this = _this # 0;
+};
+
 params ['_mode'];
 if (_mode isEqualTo 'MODE0') exitWith {
 	params ['','_vehicle','_toggle'];
@@ -180,8 +193,9 @@ if (_mode isEqualTo 'MODE4') exitWith {
 			QS_winch_globalHelperObject enableSimulation TRUE;
 			QS_winch_globalHelperObject setVariable ['QS_winch_helper',TRUE,TRUE];
 			_timeout = diag_tickTime + 3;
+			['hideObjectGlobal',QS_winch_globalHelperObject,TRUE] remoteExec ['QS_fnc_remoteExecCmd',2,FALSE];
 			waitUntil {
-				['hideObjectGlobal',QS_winch_globalHelperObject,TRUE] remoteExec ['QS_fnc_remoteExecCmd',2,FALSE];
+				uiSleep 0.05;
 				((isObjectHidden QS_winch_globalHelperObject) || (diag_tickTime > _timeout))
 			};
 		};
@@ -199,7 +213,13 @@ if (_mode isEqualTo 'MODE4') exitWith {
 			[109,['MODE25','MODE29',[_parent,(_attachPointInfo # 1),QS_winch_globalHelperObject,[0,0,0],20,['',[0, 1, 0]],['RopeEnd', [0, 1, 0]],'Rope']]] remoteExecCall ['QS_fnc_remoteExec',2,FALSE];
 			_timeout = diag_tickTime + 3;
 			waitUntil {
+				uiSleep 0.05;
 				(((ropes _parent) isNotEqualTo []) || (diag_tickTime > _timeout))
+			};
+			if ((ropes _parent) isEqualTo []) exitWith {
+				deleteVehicle QS_winch_globalHelperObject;
+				QS_winch_globalHelperObject = objNull;
+				50 cutText [localize 'STR_QS_Text_335','PLAIN',0.5];
 			};
 			QS_winch_rope = (ropes _parent) # 0;
 			QS_winch_monitor pushBack [QS_winch_rope,_parent,QS_winch_globalHelperObject,QS_winch_globalHelperObject,FALSE];
@@ -208,6 +228,7 @@ if (_mode isEqualTo 'MODE4') exitWith {
 			[109,['MODE25','MODE30',[_child,[QS_winch_globalHelperObject,[0,0,0],[0,0,-1]],QS_winch_rope,clientOwner,FALSE]]] remoteExecCall ['QS_fnc_remoteExec',2,FALSE];
 			_timeout = diag_tickTime + 3;
 			waitUntil {
+				uiSleep 0.05;
 				(((ropeAttachedTo QS_winch_globalHelperObject) isEqualTo _parent) || (diag_tickTime > _timeout))
 			};
 			_index = QS_winch_monitor findIf {(_x # 0) isEqualTo QS_winch_rope};
@@ -313,8 +334,9 @@ if (_mode isEqualTo 'MODE6') exitWith {
 			_newHelperType = 'B_static_AA_F';
 			QS_winch_tempObject = objNull;
 			private _timeout = diag_tickTime + 5;
+			[109,['MODE25','MODE26','QS_winch_tempObject',_newHelperType,clientOwner]] remoteExecCall ['QS_fnc_remoteExec',2,FALSE];
 			waitUntil {
-				[109,['MODE25','MODE26','QS_winch_tempObject',_newHelperType,clientOwner]] remoteExecCall ['QS_fnc_remoteExec',2,FALSE];
+				uiSleep 0.05;
 				((!isNull QS_winch_tempObject) || (diag_tickTime > _timeout))
 			};
 			if (isNull QS_winch_tempObject) exitWith {50 cutText [localize 'STR_QS_Text_335','PLAIN',0.5];};
@@ -1027,12 +1049,35 @@ if (_mode isEqualTo 'MODE24') exitWith {
 };
 if (_mode isEqualTo 'MODE25') exitWith {
 	params ['','_mode2'];
+	private _requestOwner = -1;
+	private _requestUnit = objNull;
+	if (_authenticatedRequestOwner > 2) then {
+		_requestOwner = _authenticatedRequestOwner;
+	} else {
+		if (isRemoteExecuted && {remoteExecutedOwner > 2}) then {
+			_requestOwner = remoteExecutedOwner;
+		};
+	};
+	if (_requestOwner > 2) then {
+		private _requestIndex = allPlayers findIf {(owner _x) isEqualTo _requestOwner};
+		if (_requestIndex isNotEqualTo -1) then {
+			_requestUnit = allPlayers # _requestIndex;
+		};
+	};
+	if ((_requestOwner > 2) && {isNull _requestUnit}) exitWith {};
 	if (_mode2 isEqualTo 'MODE26') then {
-		_this spawn {
+		private _helperType = _this param [3,''];
+		if !(_helperType in ['B_static_AA_F']) exitWith {};
+		private _mode26Request = +_this;
+		if (_requestOwner > 2) then {
+			_mode26Request set [4,_requestOwner];
+		};
+		_mode26Request spawn {
 			params ['','','_varname','_type','_clientOwner'];
 			if (diag_tickTime > (uiNamespace getVariable [format ['QS_winch_lastRequestTime_%1',_clientOwner],-1])) then {
 				uiNamespace setVariable [format ['QS_winch_lastRequestTime_%1',_clientOwner],diag_tickTime + 3];
 				_vehicle = createVehicle [_type,[0,0,0]];
+				if (isNull _vehicle) exitWith {};
 				_vehicle allowDamage FALSE;
 				_vehicle hideObjectGlobal TRUE;
 				_vehicle enableWeaponDisassembly FALSE;
@@ -1042,6 +1087,7 @@ if (_mode isEqualTo 'MODE25') exitWith {
 				_vehicle lock 2;
 				private _timeout = diag_tickTime + 3;
 				waitUntil {
+					uiSleep 0.05;
 					if (!isObjectHidden _vehicle) then {
 						_vehicle hideObjectGlobal TRUE;
 					};
@@ -1049,25 +1095,20 @@ if (_mode isEqualTo 'MODE25') exitWith {
 				};
 				_timeout = diag_tickTime + 3;
 				waitUntil {
+					uiSleep 0.05;
 					((_vehicle setOwner _clientOwner) || (diag_tickTime > _timeout))
 				};
 				['MODE25','MODE27',_vehicle] call QS_fnc_simpleWinch;
-				[
-					[_vehicle,_varname],
-					{
-						params ['_vehicle','_varname'];
-						missionNamespace setVariable [_varname,_vehicle,FALSE];
-						_vehicle allowDamage FALSE;
-						_vehicle enableWeaponDisassembly FALSE;
-						_vehicle enableVehicleCargo FALSE;
-						_vehicle lock 2;
-					}
-				] remoteExec ['call',_clientOwner,FALSE];
+				[[_vehicle,_varname],{params ['_vehicle','_varname'];missionNamespace setVariable [_varname,_vehicle,FALSE];_vehicle allowDamage FALSE;_vehicle enableWeaponDisassembly FALSE;_vehicle enableVehicleCargo FALSE;_vehicle lock 2;}] remoteExec ['call',_clientOwner,FALSE];
 			};
 		};
 	};
 	if (_mode2 isEqualTo 'MODE27') then {
 		params ['','','_vehicle',['_owner',2]];
+		if (
+			(_requestOwner > 2) &&
+			{(isNull _vehicle) || {(_requestUnit distance2D _vehicle) > 50}}
+		) exitWith {};
 		if (!(_vehicle getVariable ['QS_winch_server',FALSE])) then {
 			_vehicle setVariable ['QS_winch_server',TRUE,TRUE];
 			{
@@ -1151,68 +1192,104 @@ if (_mode isEqualTo 'MODE25') exitWith {
 	};
 	if (_mode2 isEqualTo 'MODE28') then {
 		params ['','','_vehicle',['_owner',2]];
-		_timeout = diag_tickTime + 3;
-		if ((owner _vehicle) isNotEqualto _owner) then {
-			waitUntil {
-				((_vehicle setOwner _owner) || (diag_tickTime > _timeout))
-			};
+		if (isNull _vehicle) exitWith {};
+		if (_requestOwner > 2) then {
+			_owner = _requestOwner;
 		};
-		[_vehicle,TRUE] remoteExec ['disableBrakes',_vehicle,FALSE];
+		[_vehicle,_owner] spawn {
+			params ['_vehicle','_owner'];
+			private _timeout = diag_tickTime + 3;
+			if ((owner _vehicle) isNotEqualTo _owner) then {
+				waitUntil {
+					uiSleep 0.05;
+					((_vehicle setOwner _owner) || (diag_tickTime > _timeout))
+				};
+			};
+			[_vehicle,TRUE] remoteExec ['disableBrakes',_vehicle,FALSE];
+		};
 	};
 	if (_mode2 isEqualTo 'MODE29') then {
 		params ['','','_ropeParams'];
-		_parent = _ropeParams # 0;
-		_child = _ropeParams # 2;
-		_rope = ropeCreate _ropeParams;
-		_parent setVariable ['QS_winch_rope',_rope,TRUE];
-		_child setVariable ['QS_winch_rope',_rope,TRUE];
-		_rope setVariable ['QS_rope_relation',[_parent,_child,'WINCH'],TRUE];
-		if (!(_parent getVariable ['QS_winch_server',FALSE])) then {
-			['MODE25','MODE27',_parent] call QS_fnc_simpleWinch;
-		};
-		if (!(_child getVariable ['QS_winch_server',FALSE])) then {
-			['MODE25','MODE27',_child] call QS_fnc_simpleWinch;
+		if !(_ropeParams isEqualType [] && {(count _ropeParams) >= 5} && {(count _ropeParams) <= 9}) exitWith {};
+		private _parent = _ropeParams # 0;
+		private _child = _ropeParams # 2;
+		if (isNull _parent || {isNull _child}) exitWith {};
+		if (
+			(_requestOwner > 2) &&
+			{(_requestUnit distance2D _parent) > 50} &&
+			{(_requestUnit distance2D _child) > 50}
+		) exitWith {};
+		private _safeRopeParams = +_ropeParams;
+		_safeRopeParams set [4,((_safeRopeParams # 4) max 1) min 50];
+		[_safeRopeParams] spawn {
+			params ['_ropeParams'];
+			private _parent = _ropeParams # 0;
+			private _child = _ropeParams # 2;
+			private _rope = ropeCreate _ropeParams;
+			if (isNull _rope) exitWith {};
+			_parent setVariable ['QS_winch_rope',_rope,TRUE];
+			_child setVariable ['QS_winch_rope',_rope,TRUE];
+			_rope setVariable ['QS_rope_relation',[_parent,_child,'WINCH'],TRUE];
+			if (!(_parent getVariable ['QS_winch_server',FALSE])) then {
+				['MODE25','MODE27',_parent] call QS_fnc_simpleWinch;
+			};
+			if (!(_child getVariable ['QS_winch_server',FALSE])) then {
+				['MODE25','MODE27',_child] call QS_fnc_simpleWinch;
+			};
 		};
 	};
 	if (_mode2 isEqualTo 'MODE30') then {
 		params ['','','_ropeParams'];
-		_ropeParams params ['_childOld','_attachParams','_rope','_clientOwner',['_deleteOld',FALSE],['_setOwner',FALSE]];
-		_childNew = _attachParams # 0;
-		_ropeRelation = _rope getVariable ['QS_rope_relation',[]];
-		if (_ropeRelation isNotEqualTo []) then {
-			_ropeRelation set [1,_childNew];
-			_rope setVariable ['QS_rope_relation',_ropeRelation,TRUE];
+		if !(_ropeParams isEqualType [] && {(count _ropeParams) >= 4} && {(count _ropeParams) <= 6}) exitWith {};
+		private _attachParams = _ropeParams # 1;
+		if !(_attachParams isEqualType [] && {(count _attachParams) >= 1}) exitWith {};
+		private _childNew = _attachParams # 0;
+		if (isNull _childNew) exitWith {};
+		if ((_requestOwner > 2) && {(_requestUnit distance2D _childNew) > 50}) exitWith {};
+		private _mode30Request = +_ropeParams;
+		if (_requestOwner > 2) then {
+			_mode30Request set [3,_requestOwner];
 		};
-		if (!isNull (getTowParent _childNew)) then {
-			[_childNew,objNull] remoteExec ['setTowParent',0,FALSE];
-		};
-		if (!isNull _childOld) then {
-			[_childOld,_rope] remoteExecCall ['ropeDetach',0,FALSE];
-		};
-		[_attachParams,_rope] remoteExec ['ropeAttachTo',0,FALSE];
-		if (!(_childNew getVariable ['QS_winch_server',FALSE])) then {
-			['MODE25','MODE27',_childNew] call QS_fnc_simpleWinch;
-		};
-		if (_setOwner) then {
-			if ((owner _childNew) isNotEqualTo _clientOwner) then {
-				[_childNew,_clientOwner] spawn {
-					params ['_childNew','_clientOwner'];
-					for '_z' from 0 to 9 step 1 do {
-						if (_childNew setOwner _clientOwner) exitWith {};
-					};
+		[_mode30Request] spawn {
+			params ['_ropeParams'];
+			_ropeParams params ['_childOld','_attachParams','_rope','_clientOwner',['_deleteOld',FALSE],['_setOwner',FALSE]];
+			private _childNew = _attachParams # 0;
+			private _ropeRelation = _rope getVariable ['QS_rope_relation',[]];
+			if (_ropeRelation isNotEqualTo []) then {
+				_ropeRelation set [1,_childNew];
+				_rope setVariable ['QS_rope_relation',_ropeRelation,TRUE];
+			};
+			if (!isNull (getTowParent _childNew)) then {
+				[_childNew,objNull] remoteExec ['setTowParent',0,FALSE];
+			};
+			if (!isNull _childOld) then {
+				[_childOld,_rope] remoteExecCall ['ropeDetach',0,FALSE];
+			};
+			[_attachParams,_rope] remoteExec ['ropeAttachTo',0,FALSE];
+			if (!(_childNew getVariable ['QS_winch_server',FALSE])) then {
+				['MODE25','MODE27',_childNew] call QS_fnc_simpleWinch;
+			};
+			if (_setOwner && {(owner _childNew) isNotEqualTo _clientOwner}) then {
+				for '_z' from 0 to 9 step 1 do {
+					if (_childNew setOwner _clientOwner) exitWith {};
+					uiSleep 0.05;
 				};
 			};
-		};
-		if (_deleteOld) then {
-			_childOld spawn {
-				sleep (diag_deltaTime * 2);
-				deleteVehicle _this;
+			if (_deleteOld && {!isNull _childOld}) then {
+				uiSleep (diag_deltaTime * 2);
+				deleteVehicle _childOld;
 			};
 		};
 	};
 	if (_mode2 isEqualTo 'MODE31') then {
 		params ['','','_ropeParams'];
+		if !(_ropeParams isEqualType [] && {(count _ropeParams) isEqualTo 3}) exitWith {};
 		_ropeParams params ['_attachedObject','_rope','_ropeParent'];
+		if (
+			(_requestOwner > 2) &&
+			{(_requestUnit distance2D _attachedObject) > 50} &&
+			{(_requestUnit distance2D _ropeParent) > 50}
+		) exitWith {};
 		[_attachedObject,_rope] remoteExec ['ropeDetach',0,FALSE];
 		['MODE16',_ropeParent,_rope] remoteExec ['QS_fnc_simpleWinch',_ropeParent,FALSE];
 	};
@@ -1220,7 +1297,7 @@ if (_mode isEqualTo 'MODE25') exitWith {
 		params ['','',['_ropes',[]]];
 		{
 			ropeDestroy _x;
-		} forEach _ropes;
+		} forEach (_ropes select [0,8]);
 	};
 	if (_mode2 isEqualTo 'MODE33') then {
 		params ['','','_ropeParams'];
@@ -1258,13 +1335,14 @@ if (_mode isEqualTo 'MODE25') exitWith {
 			private _timeout = diag_tickTime + 5;
 			private _newRope = objNull;
 			ropeDestroy _rope;
-			sleep (diag_deltaTime * 2);
+			uiSleep (diag_deltaTime * 2);
 			waitUntil {
 				_newRope = ropeCreate [_child,[0,0,0],_parent,(_attachPointInfo # 1),_ropeLength,['RopeEnd',[0,1,0]],['',[0,1,0]],'Rope',-1];
+				uiSleep 0.05;
 				((!isNull _newRope) || (diag_tickTime > _timeout))
-			};		
-			_newRope setVariable ['QS_rope_relation',[_child,_parent,'WINCH'],TRUE];
+			};
 			if (diag_tickTime > _timeout) exitWith {};
+			_newRope setVariable ['QS_rope_relation',[_child,_parent,'WINCH'],TRUE];
 			['MODE13',_parent,_child,_newRope,_rope,_monitor_index] call QS_fnc_simpleWinch;
 		};
 	};

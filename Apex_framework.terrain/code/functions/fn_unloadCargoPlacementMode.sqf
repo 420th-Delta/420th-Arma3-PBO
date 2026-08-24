@@ -162,8 +162,6 @@ if (_frontPos) then {
 	};
 	QS_targetBoundingBox_helper attachTo (uiNamespace getVariable ['QS_targetBoundingBox_attachTo',[_vehicle,_frontModelPos]]);
 };
-_nearEntities = QS_targetBoundingBox_helper nearEntities 30;
-['awake',_nearEntities,TRUE] remoteExec ['QS_fnc_remoteExecCmd',_nearEntities,FALSE];
 if (
 	(!_useHelper) &&
 	(!(_vehicle isKindOf 'CAManBase'))

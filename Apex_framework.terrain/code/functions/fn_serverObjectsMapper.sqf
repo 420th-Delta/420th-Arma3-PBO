@@ -32,6 +32,7 @@ private _configClass = '';
 private _model = '';
 private _newPosZ = 0;
 private _info = [];
+private _mappedThisBatch = 0;
 {
 	_array = _x;
 	_array params [
@@ -111,14 +112,13 @@ private _info = [];
 		};
 		_newObj setDir (_azi + _azimuth);
 		_newObj setPos _newPos;
-		[_newObj,_newPos,_azi,_azimuth] spawn {
-			params ['_newObj','_newPos','_azi','_azimuth'];
-			sleep 0.1;
-			_newObj setDir (_azi + _azimuth);
-			_newObj setPos _newPos;
-			if ((_newObj isKindOf 'House') || {((_newObj buildingPos -1) isNotEqualTo [])}) then {
-				_newObj setVectorUp [0,0,1];
-			};
+		if (canSuspend) then {
+			uiSleep 0.01;
+		};
+		_newObj setDir (_azi + _azimuth);
+		_newObj setPos _newPos;
+		if ((_newObj isKindOf 'House') || {((_newObj buildingPos -1) isNotEqualTo [])}) then {
+			_newObj setVectorUp [0,0,1];
 		};
 		if (_orientation isNotEqualTo []) then {
 			([_newObj] + _orientation) call (missionNamespace getVariable 'BIS_fnc_setPitchBank');
@@ -144,6 +144,10 @@ private _info = [];
 				0 = _newObjs pushBack _x;
 			} forEach _newObj;
 		};
+	};
+	_mappedThisBatch = _mappedThisBatch + 1;
+	if (canSuspend && {((_mappedThisBatch mod 8) isEqualTo 0)}) then {
+		uiSleep 0.01;
 	};
 } forEach _data;
 _newObjs;

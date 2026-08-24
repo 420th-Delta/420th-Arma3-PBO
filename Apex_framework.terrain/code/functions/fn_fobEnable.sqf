@@ -42,16 +42,7 @@ _flag = missionNamespace getVariable ['QS_module_fob_flag',objNull];
 _tickets = round (((missionNamespace getVariable ['QS_module_fob_respawnTickets',0]) / 2) max 0);
 _flag setVariable ['QS_module_fob_flag',_tickets,TRUE];
 ['PRESET',6,FALSE,[_side]] call QS_fnc_deployment;
-[
-	[],
-	{
-		if ((vehicle player) isKindOf 'Air') then {
-			if (player in [(driver (vehicle player)),(gunner (vehicle player))]) then {
-				player enableAIFeature ['CHECKVISIBLE',TRUE];
-			};
-		};
-	}
-] remoteExec ['call',-2,FALSE];
+[[],{if ((vehicle player) isKindOf 'Air') then {if (player in [(driver (vehicle player)),(gunner (vehicle player))]) then {player enableAIFeature ['CHECKVISIBLE',TRUE];};};}] remoteExec ['call',-2,FALSE];
 [_flag,_side,'',FALSE,objNull,1] call (missionNamespace getVariable 'QS_fnc_setFlag');
 ['sideChat',[WEST,'HQ'],(format ['%3 %1 %4 %2!',(missionNamespace getVariable 'QS_module_fob_displayName'),_activatorName,localize 'STR_QS_Chat_047',localize 'STR_QS_Chat_048'])] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 ['FOB_UPDATE',['',localize 'STR_QS_Notif_055']] remoteExec ['QS_fnc_showNotification',-2,FALSE];

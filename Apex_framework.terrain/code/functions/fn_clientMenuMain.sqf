@@ -47,6 +47,15 @@ if (_type isEqualTo 'onLoad') exitWith {
 	(_display displayCtrl 1607) ctrlSetText 'Private Channels';
 	(_display displayCtrl 1607) ctrlSetToolTip 'Private Channels require Arma 3 version 2.22';
 	(_display displayCtrl 1607) ctrlEnable (missionNamespace getVariable ['QS_privateChannels_enabled',FALSE]);
+	(_display displayCtrl 1608) ctrlSetText 'My Profile';
+	(_display displayCtrl 1608) ctrlSetToolTip 'View your all-time player statistics';
+	(_display displayCtrl 1608) ctrlEnable TRUE;
+	(_display displayCtrl 1609) ctrlSetText 'PMC';
+	(_display displayCtrl 1609) ctrlSetToolTip 'Private Military Company';
+	(_display displayCtrl 1609) ctrlEnable TRUE;
+	(_display displayCtrl 1610) ctrlSetText 'PMC Skins';
+	(_display displayCtrl 1610) ctrlSetToolTip 'Skins shared by your Private Military Company';
+	(_display displayCtrl 1610) ctrlEnable TRUE;
 };
 if (_type isEqualTo 'onUnload') exitWith {
 	closeDialog 2;
@@ -140,5 +149,28 @@ if (_type isEqualTo 'B8') exitWith {
 			(!dialog)
 		};
 		createDialog 'QS_RD_client_dialog_menu_privateChannels';
+	};
+};
+if (_type isEqualTo 'B9') exitWith {
+	closeDialog 2;
+	systemChat 'Loading Player Profile...';
+	[123,player] remoteExecCall ['QS_fnc_remoteExec',2,FALSE];
+};
+if (_type isEqualTo 'B10') exitWith {
+	closeDialog 2;
+	['onUnload'] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');
+	0 spawn {
+		uiSleep 0.1;
+		waitUntil {!dialog};
+		createDialog 'QS_RD_client_dialog_pmc';
+	};
+};
+if (_type isEqualTo 'B11') exitWith {
+	closeDialog 2;
+	['onUnload'] call (missionNamespace getVariable 'QS_fnc_clientMenuMain');
+	0 spawn {
+		uiSleep 0.1;
+		waitUntil {!dialog};
+		createDialog 'QS_RD_client_dialog_pmc_useSkins';
 	};
 };

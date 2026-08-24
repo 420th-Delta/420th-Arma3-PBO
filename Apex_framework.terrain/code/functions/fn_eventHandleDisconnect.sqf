@@ -15,34 +15,65 @@ __________________________________________________/*/
 
 params ['_object','_cid','_uid','_name'];
 if ((_uid select [0,2]) isEqualTo 'HC') exitWith {};
-['DISCONNECT',_uid] call (missionNamespace getVariable 'QS_fnc_serverPrivateChannels');
 
-private _spawnMenuPersistentClasses = [
-	'box_nato_equip_f',
-	'b_cargonet_01_ammo_f',
-	'b_supplycrate_f'
-];
+// Retire live and pending Spawn Menu manager entries immediately. This scan is
+// cheap and prevents a scheduled manager replacement racing disconnect cleanup.
+private _vehicleMonitor = serverNamespace getVariable ['QS_v_Monitor',[]];
 {
-	private _spawnedEntity = _x;
 	if (
-		((_spawnedEntity getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo _uid) &&
-		{!((toLowerANSI (typeOf _spawnedEntity)) in _spawnMenuPersistentClasses)}
+		(_x isEqualType []) &&
+		{(count _x) > 24} &&
+		{(_x # 23) isEqualTo _uid}
 	) then {
-		private _spawnedGroup = grpNull;
-		if (unitIsUAV _spawnedEntity) then {
-			_spawnedGroup = group (effectiveCommander _spawnedEntity);
-			deleteVehicleCrew _spawnedEntity;
-		} else {
-			if (_spawnedEntity isKindOf 'CAManBase') then {
-				_spawnedGroup = group _spawnedEntity;
-			};
-		};
-		deleteVehicle _spawnedEntity;
-		if (!isNull _spawnedGroup && {(units _spawnedGroup) isEqualTo []}) then {
-			deleteGroup _spawnedGroup;
-		};
+		_vehicleMonitor set [_forEachIndex,FALSE];
 	};
-} forEach (allMissionObjects 'All');
+} forEach _vehicleMonitor;
+
+// HandleDisconnect runs unscheduled.  Private-channel reconciliation and a
+// whole-world object scan used to execute inline here, preventing the server
+// from returning to simulation while a player disconnected.  Work only from
+// the Spawn Menu's authoritative registry and yield between deletions.
+[_uid] spawn {
+	params ['_uid'];
+	['DISCONNECT',_uid] call (missionNamespace getVariable 'QS_fnc_serverPrivateChannels');
+
+	private _spawnMenuPersistentClasses = [
+		'box_nato_equip_f',
+		'b_cargonet_01_ammo_f',
+		'b_supplycrate_f'
+	];
+	private _spawnedEntities = +(
+		missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]]
+	);
+	{
+		private _spawnedEntity = _x;
+		if (
+			(!isNull _spawnedEntity) &&
+			{((_spawnedEntity getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo _uid)} &&
+			{!((toLowerANSI (typeOf _spawnedEntity)) in _spawnMenuPersistentClasses)}
+		) then {
+			private _spawnedGroup = grpNull;
+			if (unitIsUAV _spawnedEntity) then {
+				_spawnedGroup = group (effectiveCommander _spawnedEntity);
+				deleteVehicleCrew _spawnedEntity;
+			} else {
+				if (_spawnedEntity isKindOf 'CAManBase') then {
+					_spawnedGroup = group _spawnedEntity;
+				};
+			};
+			deleteVehicle _spawnedEntity;
+			if (!isNull _spawnedGroup && {(units _spawnedGroup) isEqualTo []}) then {
+				deleteGroup _spawnedGroup;
+			};
+			uiSleep 0.01;
+		};
+	} forEach _spawnedEntities;
+	missionNamespace setVariable [
+		'QS_spawnMenu_spawnedEntities',
+		(missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]]) select {!isNull _x},
+		FALSE
+	];
+};
 
 ['HANDLE',['HANDLE_DISCONNECT',_this]] call (missionNamespace getVariable 'QS_fnc_roles');
 if (!isNull (group _object)) then {

@@ -98,8 +98,7 @@ if (!isNull _vehicle) then {
 					TRUE
 				];
 				if (_simulation isEqualTo 'shotmissile') then {
-					missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-					missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+					[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 				};
 			}
 		];

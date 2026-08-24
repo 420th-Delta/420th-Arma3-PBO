@@ -503,13 +503,16 @@ if (_isHC) then {
 	disableRemoteSensors FALSE;
 	calculatePlayerVisibilityByFriendly TRUE;
 	// SYNC existing group vars to HC
-	[98] remoteExec ['QS_fnc_remoteExec',2,FALSE];
+	[98,clientOwner] remoteExec ['QS_fnc_remoteExec',2,FALSE];
 };
 _groupEventHandlerTypes = ['CombatModeChanged','CommandChanged','FormationChanged','SpeedModeChanged','EnableAttackChanged','LeaderChanged','GroupIdChanged','KnowsAboutChanged','WaypointComplete','Fleeing','EnemyDetected'];
 _groupEventLocalHC = {
 	params ['_grp','_isLocal'];
 	if (_isLocal) then {
 		_grp removeEventHandler [_thisEvent,_thisEventHandler];
+		if ((_grp getVariable ['QS_AI_GRP_HC_LocalEH',-1]) isEqualTo _thisEventHandler) then {
+			_grp setVariable ['QS_AI_GRP_HC_LocalEH',nil,FALSE];
+		};
 		_grp setVariable ['QS_AI_GRP_SETUP',FALSE,FALSE];
 		_grp setVariable ['QS_AI_GRP_HC',[4,clientOwner],QS_system_AI_owners];
 		private _data = [];
@@ -566,12 +569,19 @@ _agentEventLocalHC = {
 	params ['_agent','_isLocal'];
 	if (_isLocal) then {
 		_agent removeEventHandler [_thisEvent,_thisEventHandler];
+		if ((_agent getVariable ['QS_AI_ENTITY_HC_LocalEH',-1]) isEqualTo _thisEventHandler) then {
+			_agent setVariable ['QS_AI_ENTITY_HC_LocalEH',nil,FALSE];
+		};
 		_agent setVariable ['QS_AI_ENTITY_HC',[4,clientOwner],QS_system_AI_owners];
 	};
 };
 _groupEventLocalServer = {
 	params ['_grp','_isLocal'];
 	if (_isLocal) then {
+		_grp removeEventHandler [_thisEvent,_thisEventHandler];
+		if ((_grp getVariable ['QS_AI_GRP_HC_LocalEH',-1]) isEqualTo _thisEventHandler) then {
+			_grp setVariable ['QS_AI_GRP_HC_LocalEH',nil,FALSE];
+		};
 		{
 			_x setVariable ['QS_AI_UNIT',FALSE,FALSE];
 		} forEach (units _grp);
@@ -582,6 +592,10 @@ _groupEventLocalServer = {
 _agentEventLocalServer = {
 	params ['_agent','_isLocal'];
 	if (_isLocal) then {
+		_agent removeEventHandler [_thisEvent,_thisEventHandler];
+		if ((_agent getVariable ['QS_AI_ENTITY_HC_LocalEH',-1]) isEqualTo _thisEventHandler) then {
+			_agent setVariable ['QS_AI_ENTITY_HC_LocalEH',nil,FALSE];
+		};
 		_agent setVariable ['QS_AI_ENTITY_HC',[0,-1],QS_system_AI_owners];
 	};
 };
@@ -671,6 +685,92 @@ for '_x' from 0 to 1 step 0 do {
 		_QS_module_unitBehaviors_localUnits = _QS_allUnits select {(local _x)};
 		_QS_module_agentBehaviors_localAgents = _QS_allAgents select {(local _x)};
 		_QS_updateGeneralInfoCheckDelay = _QS_uiTime + _QS_updateGeneralInfoDelay;
+		if (_isDedicated) then {
+			// Recover entities which returned to the server after their HC owner vanished.
+			private _liveHCOwners = (entities 'HeadlessClient_F') apply {owner _x};
+			{
+				private _hcState = _x getVariable ['QS_AI_GRP_HC',[0,-1]];
+				private _hcStage = _hcState param [0,0];
+				private _hcOwner = _hcState param [1,-1];
+				if (
+					(_hcStage isNotEqualTo 0) &&
+					{(_hcOwner > 2)} &&
+					{(!(_hcOwner in _liveHCOwners))}
+				) then {
+					private _localEH = _x getVariable ['QS_AI_GRP_HC_LocalEH',-1];
+					if (
+						(_localEH >= 0) &&
+						{((_x getEventHandlerInfo ['Local',_localEH]) param [0,FALSE])}
+					) then {
+						_x removeEventHandler ['Local',_localEH];
+					};
+					_x setVariable ['QS_AI_GRP_HC_LocalEH',nil,FALSE];
+					{
+						_x setVariable ['QS_AI_UNIT',FALSE,FALSE];
+					} forEach (units _x);
+					_x setVariable ['QS_AI_GRP_SETUP',FALSE,FALSE];
+					_x setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
+				};
+			} forEach _QS_module_groupBehaviors_localGroups;
+			{
+				private _hcState = _x getVariable ['QS_AI_ENTITY_HC',[0,-1]];
+				private _hcStage = _hcState param [0,0];
+				private _hcOwner = _hcState param [1,-1];
+				if (
+					(_hcStage isNotEqualTo 0) &&
+					{(_hcOwner > 2)} &&
+					{(!(_hcOwner in _liveHCOwners))}
+				) then {
+					private _localEH = _x getVariable ['QS_AI_ENTITY_HC_LocalEH',-1];
+					if (
+						(_localEH >= 0) &&
+						{((_x getEventHandlerInfo ['Local',_localEH]) param [0,FALSE])}
+					) then {
+						_x removeEventHandler ['Local',_localEH];
+					};
+					_x setVariable ['QS_AI_ENTITY_HC_LocalEH',nil,FALSE];
+					_x setVariable ['QS_AI_ENTITY_HC',[0,-1],QS_system_AI_owners];
+				};
+			} forEach _QS_module_agentBehaviors_localAgents;
+		} else {
+			// Discard HC-side transfer listeners after a transfer was cancelled or reassigned.
+			{
+				private _localEH = _x getVariable ['QS_AI_GRP_HC_LocalEH',-1];
+				if (_localEH >= 0) then {
+					private _handlerActive = (_x getEventHandlerInfo ['Local',_localEH]) param [0,FALSE];
+					private _hcState = _x getVariable ['QS_AI_GRP_HC',[0,-1]];
+					private _transferPending = (
+						(!local _x) &&
+						{((_hcState param [0,0]) in [2,3])} &&
+						{((_hcState param [1,-1]) isEqualTo _clientOwner)}
+					);
+					if (_handlerActive && (!_transferPending)) then {
+						_x removeEventHandler ['Local',_localEH];
+					};
+					if ((!_handlerActive) || {!_transferPending}) then {
+						_x setVariable ['QS_AI_GRP_HC_LocalEH',nil,FALSE];
+					};
+				};
+			} forEach _QS_allGroups;
+			{
+				private _localEH = _x getVariable ['QS_AI_ENTITY_HC_LocalEH',-1];
+				if (_localEH >= 0) then {
+					private _handlerActive = (_x getEventHandlerInfo ['Local',_localEH]) param [0,FALSE];
+					private _hcState = _x getVariable ['QS_AI_ENTITY_HC',[0,-1]];
+					private _transferPending = (
+						(!local _x) &&
+						{((_hcState param [0,0]) in [2,3])} &&
+						{((_hcState param [1,-1]) isEqualTo _clientOwner)}
+					);
+					if (_handlerActive && (!_transferPending)) then {
+						_x removeEventHandler ['Local',_localEH];
+					};
+					if ((!_handlerActive) || {!_transferPending}) then {
+						_x setVariable ['QS_AI_ENTITY_HC_LocalEH',nil,FALSE];
+					};
+				};
+			} forEach _QS_allAgents;
+		};
 		if (_isDedicated && (missionNamespace getVariable ['QS_HC_Active',_false])) then {
 			missionNamespace setVariable ['QS_system_AI_owners',call _fn_aiOwners,call _fn_aiOwners];
 		};
@@ -756,9 +856,21 @@ for '_x' from 0 to 1 step 0 do {
 									_grp removeAllEventHandlers _x;
 								};
 							} forEach _groupEventHandlerTypes;
-							_grp addEventHandler ['Local',_groupEventLocalServer];
+							private _existingLocalEH = _grp getVariable ['QS_AI_GRP_HC_LocalEH',-1];
+							if (
+								(_existingLocalEH >= 0) &&
+								{((_grp getEventHandlerInfo ['Local',_existingLocalEH]) param [0,FALSE])}
+							) then {
+								_grp removeEventHandler ['Local',_existingLocalEH];
+							};
+							private _localEH = _grp addEventHandler ['Local',_groupEventLocalServer];
+							_grp setVariable ['QS_AI_GRP_HC_LocalEH',_localEH,FALSE];
 							if (!(_grp setGroupOwner _QS_module_hc_ID)) then {
 								//===== Ownership transfer failed, reset to beginning of process
+								if (((_grp getEventHandlerInfo ['Local',_localEH]) param [0,FALSE])) then {
+									_grp removeEventHandler ['Local',_localEH];
+								};
+								_grp setVariable ['QS_AI_GRP_HC_LocalEH',nil,FALSE];
 								_grp setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
 							};
 						};
@@ -801,7 +913,9 @@ for '_x' from 0 to 1 step 0 do {
 							} forEach (units _grp);
 							_grpData pushBack _unitsData;
 							{
-								_grp setVariable [_x,_grp getVariable _x,[2,_QS_module_hc_ID]];
+								if ((toLowerANSI _x) isNotEqualTo 'qs_ai_grp_hc_localeh') then {
+									_grp setVariable [_x,_grp getVariable _x,[2,_QS_module_hc_ID]];
+								};
 							} forEach (allVariables _grp);
 							_grp setVariable ['QS_AI_GRP_HC_data',_grpData,[2,_QS_module_hc_ID]];
 							_grp setVariable ['QS_AI_GRP_HC',[1,_QS_module_hc_ID],[2,_QS_module_hc_ID]];
@@ -821,9 +935,21 @@ for '_x' from 0 to 1 step 0 do {
 							_exit = _true;
 							_QS_module_agentBehaviors_agent = selectRandom _QS_module_hc_agents_s2;
 							_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC',[3,_QS_module_hc_ID],[2,_QS_module_hc_ID]];
-							_QS_module_agentBehaviors_agent addEventHandler ['Local',_agentEventLocalServer];
+							private _existingLocalEH = _QS_module_agentBehaviors_agent getVariable ['QS_AI_ENTITY_HC_LocalEH',-1];
+							if (
+								(_existingLocalEH >= 0) &&
+								{((_QS_module_agentBehaviors_agent getEventHandlerInfo ['Local',_existingLocalEH]) param [0,FALSE])}
+							) then {
+								_QS_module_agentBehaviors_agent removeEventHandler ['Local',_existingLocalEH];
+							};
+							private _localEH = _QS_module_agentBehaviors_agent addEventHandler ['Local',_agentEventLocalServer];
+							_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC_LocalEH',_localEH,FALSE];
 							if (!(_QS_module_agentBehaviors_agent setOwner _QS_module_hc_ID)) then {
 								//===== Ownership transfer failed, reset to beginning of process
+								if (((_QS_module_agentBehaviors_agent getEventHandlerInfo ['Local',_localEH]) param [0,FALSE])) then {
+									_QS_module_agentBehaviors_agent removeEventHandler ['Local',_localEH];
+								};
+								_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC_LocalEH',nil,FALSE];
 								_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC',[0,-1],QS_system_AI_owners];
 							};
 						};
@@ -837,7 +963,9 @@ for '_x' from 0 to 1 step 0 do {
 							_exit = _true;
 							_QS_module_agentBehaviors_agent = selectRandom _QS_module_hc_agents_s0;
 							{
-								_QS_module_agentBehaviors_agent setVariable [_x,_QS_module_agentBehaviors_agent getVariable _x,[2,_QS_module_hc_ID]];
+								if ((toLowerANSI _x) isNotEqualTo 'qs_ai_entity_hc_localeh') then {
+									_QS_module_agentBehaviors_agent setVariable [_x,_QS_module_agentBehaviors_agent getVariable _x,[2,_QS_module_hc_ID]];
+								};
 							} forEach (allVariables _QS_module_agentBehaviors_agent);
 							_QS_module_agentBehaviors_agent setVariable ['BIS_fnc_animalBehaviour_disable',_true,[2,_QS_module_hc_ID]];
 							_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC',[1,_QS_module_hc_ID],[2,_QS_module_hc_ID]];
@@ -865,7 +993,15 @@ for '_x' from 0 to 1 step 0 do {
 				if (isNil {_grp getVariable 'QS_AI_GRP_HC_data'}) exitWith {
 					_grp setVariable ['QS_AI_GRP_HC',[0,_clientOwner],[2,_clientOwner]];
 				};
-				_grp addEventHandler ['Local',_groupEventLocalHC];
+				private _existingLocalEH = _grp getVariable ['QS_AI_GRP_HC_LocalEH',-1];
+				if (
+					(_existingLocalEH >= 0) &&
+					{((_grp getEventHandlerInfo ['Local',_existingLocalEH]) param [0,FALSE])}
+				) then {
+					_grp removeEventHandler ['Local',_existingLocalEH];
+				};
+				private _localEH = _grp addEventHandler ['Local',_groupEventLocalHC];
+				_grp setVariable ['QS_AI_GRP_HC_LocalEH',_localEH,FALSE];
 				_grp setVariable ['QS_AI_GRP_HC',[2,_clientOwner],[2,_clientOwner]];
 			};
 			
@@ -875,7 +1011,15 @@ for '_x' from 0 to 1 step 0 do {
 			};
 			if (_QS_module_hc_agents_s1 isNotEqualTo []) then {
 				_QS_module_agentBehaviors_agent = selectRandom _QS_module_hc_agents_s1;
-				_QS_module_agentBehaviors_agent addEventHandler ['Local',_agentEventLocalHC];
+				private _existingLocalEH = _QS_module_agentBehaviors_agent getVariable ['QS_AI_ENTITY_HC_LocalEH',-1];
+				if (
+					(_existingLocalEH >= 0) &&
+					{((_QS_module_agentBehaviors_agent getEventHandlerInfo ['Local',_existingLocalEH]) param [0,FALSE])}
+				) then {
+					_QS_module_agentBehaviors_agent removeEventHandler ['Local',_existingLocalEH];
+				};
+				private _localEH = _QS_module_agentBehaviors_agent addEventHandler ['Local',_agentEventLocalHC];
+				_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC_LocalEH',_localEH,FALSE];
 				_QS_module_agentBehaviors_agent setVariable ['QS_AI_ENTITY_HC',[2,_clientOwner],[2,_clientOwner]];
 			};
 			diag_log (format ['HC AI Report (Headless Client): %1Local units: %2 * %1Local groups: %3 * %1Local agents: %4',_endl,(count _QS_module_unitBehaviors_localUnits),(count _QS_module_groupBehaviors_localGroups),(count _QS_module_agentBehaviors_localAgents)]);

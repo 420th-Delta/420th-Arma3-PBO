@@ -225,12 +225,15 @@ if (_weapon isEqualTo 'Throw') then {
 							};
 						};
 					};
-					missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),((toLowerANSI _weapon) isEqualTo 'rockets_230mm_gat')];
-					//missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),((toLowerANSI _weapon) isEqualTo 'rockets_230mm_gat')];
+					[
+						_projectile,
+						TRUE,
+						FALSE,
+						((toLowerANSI _weapon) isEqualTo 'rockets_230mm_gat')
+					] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 				};
 				if ((toLowerANSI _simulation) isEqualTo 'shotmissile') then {
-					missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-					missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+					[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 				};
 				if (
 					((objectParent _unit) getVariable ['QS_mortar_lite',FALSE]) &&

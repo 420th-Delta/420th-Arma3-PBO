@@ -372,6 +372,9 @@ if (_mode isEqualTo 'SPAWN') exitWith {
 		closeDialog 2;
 	};
 
-	[player,_class,_terminal,_spawnPoint] remoteExecCall ['QS_fnc_spawnMenuServerSpawn',2,FALSE];
+	// Vehicle/group creation and full setup are native-heavy.  remoteExec runs
+	// the server function in scheduled context instead of blocking an
+	// unscheduled network-dispatch frame.
+	[player,_class,_terminal,_spawnPoint] remoteExec ['QS_fnc_spawnMenuServerSpawn',2,FALSE];
 	closeDialog 2;
 };

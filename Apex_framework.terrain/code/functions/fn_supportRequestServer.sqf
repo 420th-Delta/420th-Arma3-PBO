@@ -30,23 +30,11 @@ if ((_this # 0) isEqualType []) then {
 	diag_log _text2;
 	_nearbyPlayers = allPlayers inAreaArray [_targetPos,100,100,0,FALSE];
 	if (_nearbyPlayers isNotEqualTo []) then {
-		[[],{
-			50 cutText [localize 'STR_QS_Menu_223','PLAIN',0.75];
-		}] remoteExec ['call',_nearbyPlayers,FALSE];
+		[[],{50 cutText [localize 'STR_QS_Menu_223','PLAIN',0.75];}] remoteExec ['call',_nearbyPlayers,FALSE];
 	};
 	if (!_isAI) then {
 		_commander = effectiveCommander _asset;
-		[
-			[_marker,_targetPos,_unit,_asset,_supportType],
-			{
-				params ['_marker','_targetPos','_unit','_asset','_supportType'];
-				_marker setMarkerColorLocal 'ColorGreen';
-				//player commandChat (format [localize 'STR_QS_Chat_176',_supportType,mapGridPosition _targetPos]);
-				playSoundUI ['QS_audio_notification_2',0.75,0.75,FALSE];
-				_text2 = format ['***** FIRE SUPPORT ***** %4 called on grid %1 by %2 ( %3 ) *****',mapGridPosition _targetPos,name _unit,groupId (group _unit),_supportType];
-				diag_log _text2;
-			}
-		] remoteExec ['call',((crew _asset) select {(isPlayer _x)}),FALSE];
+		[[_marker,_targetPos,_unit,_asset,_supportType],{params ['_marker','_targetPos','_unit','_asset','_supportType'];_marker setMarkerColorLocal 'ColorGreen';playSoundUI ['QS_audio_notification_2',0.75,0.75,FALSE];_text2 = format ['***** FIRE SUPPORT ***** %4 called on grid %1 by %2 ( %3 ) *****',mapGridPosition _targetPos,name _unit,groupId (group _unit),_supportType];diag_log _text2;}] remoteExec ['call',((crew _asset) select {isPlayer _x}),FALSE];
 	};
 } else {
 	_asset = _this # 0;
@@ -73,8 +61,7 @@ if ((_this # 0) isEqualType []) then {
 						(((getPosATL _projectile) # 2) > 50)
 					};
 					if (!isNull _target) then {
-						missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-						missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+						[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 						_projectile setMissileTarget _target;
 					};
 					if (!isNull _projectile) then {
@@ -119,8 +106,7 @@ if ((_this # 0) isEqualType []) then {
 						
 					};
 					_unit removeEventHandler [_thisEvent,_thisEventHandler];
-					missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-					missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+					[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 					if (!isNull _projectile) then {
 						if ((toLowerANSI (_this # 5)) in ['8rnd_82mm_mo_shells','12rnd_230mm_rockets','32rnd_155mm_mo_shells','4rnd_155mm_mo_guided','2rnd_155mm_mo_lg','magazine_shipcannon_120mm_he_shells_x32','magazine_shipcannon_120mm_he_guided_shells_x2','magazine_shipcannon_120mm_he_lg_shells_x2','magazine_missiles_cruise_01_x18']) then {
 							if ((toLowerANSI (_this # 5)) in ['8rnd_82mm_mo_shells']) then {

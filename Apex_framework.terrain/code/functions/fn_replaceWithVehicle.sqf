@@ -77,7 +77,9 @@ if (!isNull _prop) then {
 					['_stateInfo',[]],
 					['_wreckInfo',[]],
 					['_wreckChance',0],
-					['_wreckCond',{TRUE}]
+					['_wreckCond',{TRUE}],
+					['_spawnMenuOwnerUID',''],
+					['_spawnMenuVehicleSide',sideUnknown]
 				];
 				missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),FALSE];
 				deleteVehicle _prop;
@@ -102,7 +104,7 @@ if (!isNull _prop) then {
 				};
 				_v setVariable ['QS_wreck_chance',(random 1) < _wreckChance,TRUE];
 				[_v] call (missionNamespace getVariable 'QS_fnc_vSetup');
-				(serverNamespace getVariable 'QS_v_Monitor') set [_i,[_v,_vdelay,_randomize,_configCode,_t,_vpos,_dir,FALSE,0,_fobVehicleID,_QS_vRespawnDist_base,_QS_vRespawnDist_field,_vRespawnTickets,_nearEntitiesCheck,_isDynamicVehicle,_isCarrierVehicle,_vehicleSpawnCondition,FALSE,FALSE,_stateInfo,_wreckInfo,_wreckChance,_wreckCond]];
+				(serverNamespace getVariable 'QS_v_Monitor') set [_i,[_v,_vdelay,_randomize,_configCode,_t,_vpos,_dir,FALSE,0,_fobVehicleID,_QS_vRespawnDist_base,_QS_vRespawnDist_field,_vRespawnTickets,_nearEntitiesCheck,_isDynamicVehicle,_isCarrierVehicle,_vehicleSpawnCondition,FALSE,FALSE,_stateInfo,_wreckInfo,_wreckChance,_wreckCond,_spawnMenuOwnerUID,_spawnMenuVehicleSide]];
 			};
 		};
 	};

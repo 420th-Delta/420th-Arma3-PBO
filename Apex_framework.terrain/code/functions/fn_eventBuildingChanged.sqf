@@ -21,12 +21,36 @@ if (_isRuin) then {
 		(missionNamespace getVariable 'QS_garbageCollector') pushBack [_changedTo,'NOW_DISCREET',(time + 120)];
 	};
 	if (QS_list_playerBuildables isNotEqualTo []) then {
-		(0 boundingBoxReal _changedTo) params ['','','_radius'];
-		_near = QS_list_playerBuildables inAreaArray [_changedTo,_radius,_radius,0,FALSE];
-		if (_near isNotEqualTo []) then {
-			{
-				deleteVehicle _x;
-			} forEach _near;
+		private _queue = missionNamespace getVariable ['QS_buildingChanged_cleanupQueue',[]];
+		_queue pushBackUnique _changedTo;
+		if ((count _queue) > 64) then {
+			_queue = _queue select [((count _queue) - 64),64];
+		};
+		missionNamespace setVariable ['QS_buildingChanged_cleanupQueue',_queue,FALSE];
+		if (!(missionNamespace getVariable ['QS_buildingChanged_cleanupRunning',FALSE])) then {
+			missionNamespace setVariable ['QS_buildingChanged_cleanupRunning',TRUE,FALSE];
+			[] spawn {
+				while {(missionNamespace getVariable ['QS_buildingChanged_cleanupQueue',[]]) isNotEqualTo []} do {
+					private _queue = missionNamespace getVariable ['QS_buildingChanged_cleanupQueue',[]];
+					private _changedTo = _queue deleteAt 0;
+					missionNamespace setVariable ['QS_buildingChanged_cleanupQueue',_queue,FALSE];
+					if (!isNull _changedTo) then {
+						(0 boundingBoxReal _changedTo) params ['','','_radius'];
+						private _buildables = +(missionNamespace getVariable ['QS_list_playerBuildables',[]]);
+						for '_index' from 0 to ((count _buildables) - 1) step 1 do {
+							private _buildable = _buildables # _index;
+							if ((!isNull _buildable) && {_buildable inArea [_changedTo,_radius,_radius,0,FALSE]}) then {
+								deleteVehicle _buildable;
+							};
+							if ((_index mod 32) isEqualTo 31) then {
+								uiSleep 0.005;
+							};
+						};
+					};
+					uiSleep 0.01;
+				};
+				missionNamespace setVariable ['QS_buildingChanged_cleanupRunning',FALSE,FALSE];
+			};
 		};
 	};
 };

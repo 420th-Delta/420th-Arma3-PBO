@@ -1665,9 +1665,6 @@ private _QS_module_objectScale_scale = 1;
 /*/===== Roles module/*/
 private _QS_module_roleAssignment = TRUE;
 private _QS_module_roleAssignment_updateDelay = -1;
-private _QS_display1Opened = FALSE;
-private _QS_display2Opened = FALSE;
-private _display1_drawID = 0;
 private _weaponIsSniper = FALSE;
 
 private _healHandlers = [];
@@ -1702,7 +1699,6 @@ _fn_hint = missionNamespace getVariable 'QS_fnc_hint';
 _fn_enemySides = missionNamespace getVariable 'QS_fnc_enemySides';
 _fn_getNearbyIncapacitated = missionNamespace getVariable 'QS_fnc_getNearbyIncapacitated';
 _fn_roles = missionNamespace getVariable 'QS_fnc_roles';
-_fn_mapDraw = (call (missionNamespace getVariable 'QS_ST_X')) # 49;
 _fn_ARRappelFromHeliActionCheck = missionNamespace getVariable 'AR_Rappel_From_Heli_Action_Check';
 _fn_ARRappelAIUnitsFromHeliActionCheck = missionNamespace getVariable 'AR_Rappel_AI_Units_From_Heli_Action_Check';
 _fn_AIRappelDetachActionCheck = missionNamespace getVariable 'AR_Rappel_Detach_Action_Check';
@@ -1823,30 +1819,6 @@ for '_z' from 0 to 1 step 0 do {
 				((findDisplay _viewMenuIDD) displayCtrl 1001) ctrlSetToolTip (localize 'STR_QS_Menu_001');
 				((findDisplay _viewMenuIDD) displayCtrl 1001) ctrlSetText format ['%3 %1 | %4 %2h',_QS_fpsLastPull,([(0 max (estimatedEndServerTime - _serverTime) min 36000),'HH:MM'] call _fn_secondsToString),localize 'STR_QS_Menu_002',localize 'STR_QS_Menu_003'];
 			};
-		};
-	};
-	if (!(_QS_display1Opened)) then {
-		if (!isNull ((findDisplay 160) displayCtrl 51)) then {
-			_QS_display1Opened = _true;
-			_display1_drawID = ((findDisplay 160) displayCtrl 51) ctrlAddEventHandler ['Draw',(format ['call %1',_fn_mapDraw])];
-		};
-	} else {
-		if (isNull ((findDisplay 160) displayCtrl 51)) then {
-			_QS_display1Opened = _false;
-			((findDisplay 160) displayCtrl 51) ctrlRemoveEventHandler ['Draw',_display1_drawID];
-			_display1_drawID = 0;
-		};
-	};
-	if (!(_QS_display2Opened)) then {
-		if (!isNull ((findDisplay -1) displayCtrl 500)) then {
-			_QS_display2Opened = _true;
-			_display1_drawID = ((findDisplay -1) displayCtrl 500) ctrlAddEventHandler ['Draw',(format ['call %1',_fn_mapDraw])];
-		};
-	} else {
-		if (isNull ((findDisplay -1) displayCtrl 500)) then {
-			_QS_display2Opened = _false;
-			((findDisplay -1) displayCtrl 500) ctrlRemoveEventHandler ['Draw',_display1_drawID];
-			_display1_drawID = 0;
 		};
 	};
 	if (_QS_module_liveFeed) then {
@@ -2548,7 +2520,8 @@ for '_z' from 0 to 1 step 0 do {
 			/*/===== Hangar/*/
 			
 			if (
-				(_hasPylons) &&
+				((getMissionConfigValue ['disableHangarLoadouts',0]) isEqualTo 0) &&
+				{(_hasPylons)} &&
 				{(alive _QS_cO)} &&
 				{(local _QS_cO)} &&
 				{(!(_QS_cO isKindOf 'CAManBase'))} &&

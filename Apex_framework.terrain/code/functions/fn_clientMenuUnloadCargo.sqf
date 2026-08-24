@@ -333,7 +333,7 @@ if (_mode3 isEqualTo 'Unload_2') exitWith {
 			_requestedObject setPosASL (uiNamespace getVariable ['QS_targetBoundingBox_ASLPos',[0,0,0]]);
 		};
 	} else {
-		[45,_vehicle,_requestedObject,(uiNamespace getVariable 'QS_targetBoundingBox_vectors'),(uiNamespace getVariable ['QS_targetBoundingBox_ASLPos',[0,0,0]]),clientOwner] remoteExec ['QS_fnc_remoteExec',0,FALSE];
+		[45,_vehicle,_requestedObject,(uiNamespace getVariable 'QS_targetBoundingBox_vectors'),(uiNamespace getVariable ['QS_targetBoundingBox_ASLPos',[0,0,0]]),clientOwner] remoteExec ['QS_fnc_remoteExec',_requestedObject,FALSE];
 	};
 	missionNamespace setVariable ['QS_targetBoundingBox_placementMode',FALSE,FALSE];
 };

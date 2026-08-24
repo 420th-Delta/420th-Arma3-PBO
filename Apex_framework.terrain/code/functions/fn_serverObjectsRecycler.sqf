@@ -171,16 +171,7 @@ if (_type isEqualTo 1) exitWith {
 			_object enableDynamicSimulation FALSE;
 			_object enableAIFeature ['ALL',FALSE];
 		} else {
-			[
-				[_object],
-				{
-					params ['_object'];
-					_object hideObjectGlobal TRUE;
-					_object enableSimulationGlobal FALSE;
-					_object enableDynamicSimulation FALSE;
-					_object enableAIFeature ['ALL',FALSE];
-				}
-			] remoteExec ['call',_object,FALSE];
+			[[_object],{params ['_object'];_object hideObjectGlobal TRUE;_object enableSimulationGlobal FALSE;_object enableDynamicSimulation FALSE;_object enableAIFeature ['ALL',FALSE];}] remoteExec ['call',_object,FALSE];
 		};
 		if ((damage _object) > 0) then {
 			_object setDamage [0,FALSE];

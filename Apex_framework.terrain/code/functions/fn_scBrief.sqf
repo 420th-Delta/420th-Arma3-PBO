@@ -28,29 +28,11 @@ if (_type isEqualTo 0) exitWith {
 	if (_scWinningSide in [0,2]) then {
 		//comment 'Mission failed!';
 		['SC_EXIT_BAD',['',localize 'STR_QS_Notif_065']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
-		[
-			[],
-			{
-				playSound 'QS_SC_outro_lose';
-				if (!isStreamFriendlyUIEnabled) then {
-					_text = parseText format ["<t align='center' size='2'>%2</t><br/><br/><img size='7' image='%1'/><br/><br/>%3",'\a3\Data_f_exp\Flags\flag_viper_co.paa',localize 'STR_QS_Hints_127',localize 'STR_QS_Hints_128'];
-					(missionNamespace getVariable 'QS_managed_hints') pushBack [2,FALSE,7.5,-1,_text,[],-1];
-				};
-			}
-		] remoteExec ['spawn',-2,FALSE];
+		[[],{playSound 'QS_SC_outro_lose';}] remoteExec ['spawn',-2,FALSE];
 	} else {
 		//comment 'Mission complete!';
 		['SC_EXIT_GOOD',['',localize 'STR_QS_Notif_066']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
-		[
-			[],
-			{
-				playSound 'QS_SC_outro_win';
-				if (!isStreamFriendlyUIEnabled) then {
-					_text = parseText format ["<t align='center' size='2'>%2</t><br/><br/><img size='7' image='%1'/><br/><br/>%3",(missionNamespace getVariable ['QS_missionConfig_textures_defaultFlag','a3\data_f\flags\flag_nato_co.paa']),localize 'STR_QS_Hints_129',localize 'STR_QS_Hints_130'];
-					(missionNamespace getVariable 'QS_managed_hints') pushBack [2,FALSE,7.5,-1,_text,[],-1];
-				};
-			}
-		] remoteExec ['spawn',-2,FALSE];
+		[[],{playSound 'QS_SC_outro_win';}] remoteExec ['spawn',-2,FALSE];
 	};
 };
 if (_type isEqualTo 1) exitWith {

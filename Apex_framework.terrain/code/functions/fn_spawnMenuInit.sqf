@@ -75,15 +75,20 @@ if (
 				private _entity = _x;
 				private _ownerUID = _entity getVariable ['QS_spawnMenu_spawnedBy',''];
 				private _owner = _playersByUID getOrDefault [_ownerUID,objNull];
+				private _isManagedVehicle = (
+					(['LandVehicle','Air','Ship'] findIf {_entity isKindOf _x}) isNotEqualTo -1
+				);
 				if (
 					(_entity isKindOf 'CAManBase') &&
+					{!(_entity getVariable ['QS_spawnMenu_aiPendingJoin',FALSE])} &&
 					{!isNull _owner} &&
 					{(group _entity) isNotEqualTo (group _owner)}
 				) then {
 					[_entity] call _deleteSpawnedEntity;
 				} else {
 					if (
-						(!isNull _owner) &&
+						(!_isManagedVehicle) &&
+						{!isNull _owner} &&
 						{(_entity distance2D _basePosition) <= _baseRadius} &&
 						{(_owner distance2D _entity) > _ownerDistance}
 					) then {

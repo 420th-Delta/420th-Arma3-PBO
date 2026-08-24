@@ -172,15 +172,7 @@ if (_mode isEqualTo 1) then {
 	if (isLightOn _cursorObject) then {
 		_cursorObject setPilotLight FALSE;	
 	};
-	[
-		[_cursorObject],
-		{
-			params ['_cursorObject'];
-			if (!isNull (assignedGroup _cursorObject)) then {
-				(assignedGroup _cursorObject) leaveVehicle _cursorObject;
-			};
-		}
-	] remoteExec ['call',0,FALSE];
+	[[_cursorObject],{params ['_cursorObject'];if (!isNull (assignedGroup _cursorObject)) then {(assignedGroup _cursorObject) leaveVehicle _cursorObject;};}] remoteExec ['call',0,FALSE];
 	_vIndex = (serverNamespace getVariable 'QS_v_Monitor') findIf { _cursorObject isEqualTo (_x # 0) };
 	if (_vIndex isEqualTo -1) then {
 		(serverNamespace getVariable 'QS_v_Monitor') pushBack [

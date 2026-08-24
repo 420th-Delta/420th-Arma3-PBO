@@ -96,10 +96,11 @@ ___________________________________________*/
 		'i_e_uavterminal'	
 	],*/
 	[
+		'b_g_fia_uavterminal_lxws',
 		'o_uavterminal',
 		'i_uavterminal',
 		'c_uavterminal',
-		'i_e_uavterminal'	
+		'i_e_uavterminal'
 	],
 	
 	// Backpacks

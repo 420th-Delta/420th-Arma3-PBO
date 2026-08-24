@@ -55,19 +55,7 @@ private _attachedArray = [];
 				if (alive _parent) then {
 					if ((_parent emptyPositions 'Cargo') > 0) then {
 						_unit setVariable ['QS_moveToTurret_cooldown',diag_tickTime + 3];
-						[
-							[_vehicle,_unit,_parent],
-							{
-								params ['_vehicle','_unit','_parent'];
-								waitUntil {
-									_unit moveOut _vehicle;
-									(!(_unit in _vehicle))
-								};
-								_vehicle removeAllEventHandlers 'IncomingMissile';
-								_unit assignAsCargo _parent;
-								_unit moveInCargo _parent;
-							}
-						] remoteExec ['spawn',_unit,FALSE];
+						[162,_vehicle,_unit,_parent] remoteExec ['QS_fnc_remoteExec',2,FALSE];
 					};
 				};
 			}
@@ -117,70 +105,11 @@ private _attachedArray = [];
 				_attachedTurrets = (attachedObjects _vehicle) select { ((_x isKindOf 'StaticWeapon') && ((_x emptyPositions 'Gunner') > 0)) };
 				if (_attachedTurrets isNotEqualTo []) then {
 					_attachedTurret = selectRandom _attachedTurrets;
-					[
-						[_vehicle,_unit,_attachedTurret],
-						{
-							params ['_vehicle','_unit','_attachedTurret'];
-							waitUntil {
-								_unit moveOut _vehicle;
-								(!(_unit in _vehicle))
-							};
-							_unit assignAsGunner _attachedTurret;
-							_unit moveInGunner _attachedTurret;
-							_attachedTurret enableWeaponDisassembly FALSE;
-							_attachedTurret allowDamage FALSE;
-							_attachedTurret removeAllEventHandlers 'IncomingMissile';
-							_attachedTurret addEventHandler [
-								'IncomingMissile',
-								{
-									params ["_target","_ammo","_vehicle","_instigator","_missile"];
-									if (!local _target) exitWith {};
-									if (isDedicated) then {
-										[_missile,objNull] remoteExec ['setMissileTarget',_vehicle];
-									};
-									_missile spawn {
-										sleep (1 + (random 1));
-										_this setDamage [1,TRUE];
-										triggerAmmo _this;
-									};
-								}
-							];
-						}
-					] remoteExec ['spawn',_unit,FALSE];
+					[163,_vehicle,_unit,_attachedTurret] remoteExec ['QS_fnc_remoteExec',2,FALSE];
 				};
 			};
 			if (_role isEqualTo 'driver') then {
-				[
-					[_vehicle],
-					{
-						params ['_vehicle'];
-						QS_INCMISS_EH = _vehicle addEventHandler [
-							'IncomingMissile',
-							{
-								params ["_target","_ammo","_vehicle","_instigator","_missile"];
-								if (!local _target) exitWith {};
-								if (isDedicated) then {
-									[_missile,objNull] remoteExec ['setMissileTarget',_vehicle];
-								};
-								_missile spawn {
-									sleep (1 + (random 1));
-									_this setDamage [1,TRUE];
-									triggerAmmo _this;
-								};
-							}
-						];
-						_vehicle addEventHandler [
-							'GetOut',
-							{
-								params ["_vehicle", "_role", "_unit", "_turret"];
-								if (_unit isEqualTo player) then {
-									_vehicle removeEventHandler [_thisEvent,_thisEventHandler];
-									_vehicle removeEventHandler ['IncomingMissile',QS_INCMISS_EH];
-								};
-							}
-						];
-					}
-				] remoteExec ['call',_unit,FALSE];
+				[[_vehicle],{params ['_vehicle'];_vehicle addEventHandler ['IncomingMissile',{_this spawn {sleep 1;(_this # 4) setDamage [1,TRUE];};}];}] remoteExec ['call',_unit,FALSE];
 			};
 		}
 	],

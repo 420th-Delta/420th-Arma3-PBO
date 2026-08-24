@@ -14,6 +14,10 @@ Description:
 ___________________________________________________________________*/
 
 params ['_co','_killer','_instigator','_usedEffects'];
+if ((localNamespace getVariable ['QS_roleQueue_offer',[]]) isNotEqualTo []) then {
+	[126,'KILLED',(getPlayerUID _co),_co,clientOwner] remoteExec ['QS_fnc_remoteExec',2,FALSE];
+	localNamespace setVariable ['QS_roleQueue_actions',[]];
+};
 if (currentChannel > 5) then {
 	setCurrentChannel 5;
 };

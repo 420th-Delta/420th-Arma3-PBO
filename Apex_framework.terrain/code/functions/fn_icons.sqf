@@ -1160,28 +1160,6 @@ _QS_fnc_iconDrawMap = {
 			missionNamespace setVariable ['QS_ST_iconUpdatePulseTimer',(diag_tickTime + _de)];
 		};
 	};
-	if ((missionNamespace getVariable ['QS_draw2D_projectiles',[]]) isNotEqualTo []) then {
-		_deg = ((ceil diag_tickTime) - diag_tickTime) * 360;
-		{
-			if (_x isEqualType objNull) then {
-				if (!isNull _x) then {
-					_m drawIcon [
-						'a3\ui_f\data\igui\cfg\cursors\explosive_ca.paa',
-						[1,0,0,0.75],
-						(getPosWorldVisual _x),
-						13,
-						13,
-						_deg,
-						'',
-						0,
-						0,
-						'RobotoCondensed',
-						'right'
-					];
-				};
-			};
-		} forEach (missionNamespace getVariable 'QS_draw2D_projectiles');
-	};
 	if ((missionNamespace getVariable ['QS_client_customDraw2D',[]]) isNotEqualTo []) then {
 		{
 			if (_x isEqualType []) then {

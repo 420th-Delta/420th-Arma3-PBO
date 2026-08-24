@@ -44,6 +44,9 @@ if !(
     private _collisionEH = _vehicle addEventHandler ["EpeContactStart", {
         params ["_vehicle", "_collider"];
         if (!local _vehicle || {(crew _vehicle) isNotEqualTo []}) exitWith {};
+        private _now = diag_tickTime;
+        if (_now < (_vehicle getVariable ["TGC_collisionCheckAfter", -1])) exitWith {};
+        _vehicle setVariable ["TGC_collisionCheckAfter", _now + 0.05];
 
         if (
             [_vehicle, "", 0, _collider, "", -1, objNull, "", false]

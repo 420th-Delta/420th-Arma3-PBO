@@ -42,14 +42,24 @@ if (_type isEqualTo 0) exitWith {
 		private _allJetTypes = ['cas_plane'] call QS_data_listVehicles;
 		_basePosition = markerPos 'QS_marker_base_marker';
 		_baseRadius = 1000;
+		private _maxKnownTargets = 192;
+		private _targetsKnowledge = [];
 		for '_x' from 0 to 1 step 0 do {
 			if ((diag_fps > 10) && (!(missionNamespace getVariable ['QS_AI_targetsKnowledge_suspend',_false]))) then {
 				if ((missionNamespace getVariable 'QS_AI_targetsKnowledge_EAST') isNotEqualTo []) then {
-					missionNamespace setVariable [
-						'QS_AI_targetsKnowledge_EAST',
-						((missionNamespace getVariable 'QS_AI_targetsKnowledge_EAST') select {((alive (_x # 0)) && (((_x # 0) distance2D _basePosition) > _baseRadius) && ((_east knowsAbout (_x # 0)) > 0) && ((_x # 3) isNotEqualTo 0))}),
-						_false
-					];
+					_targetsKnowledge = (missionNamespace getVariable 'QS_AI_targetsKnowledge_EAST') select {
+						(alive (_x # 0)) &&
+						{(((_x # 0) distance2D _basePosition) > _baseRadius)} &&
+						{((_east knowsAbout (_x # 0)) > 0)} &&
+						{((_x # 3) isNotEqualTo 0)}
+					};
+					if ((count _targetsKnowledge) > _maxKnownTargets) then {
+						_targetsKnowledge = _targetsKnowledge select [
+							((count _targetsKnowledge) - _maxKnownTargets),
+							_maxKnownTargets
+						];
+					};
+					missionNamespace setVariable ['QS_AI_targetsKnowledge_EAST',_targetsKnowledge,_false];
 				};
 				_threat_armor = _threat_armor select {((alive _x) && ((_east knowsAbout _x) > 3))};
 				_threat_air = _threat_air select {((alive _x) && (!isTouchingGround _x) && ((_east knowsAbout _x) > 3))};
@@ -100,9 +110,22 @@ if (_type isEqualTo 0) exitWith {
 							} forEach (units _west);
 							uiSleep 0.003;
 						};
-					};
+						};
 				} forEach (units _side);
-				missionNamespace setVariable ['QS_AI_targetsKnowledge_EAST',(missionNamespace getVariable 'QS_AI_targetsKnowledge_EAST'),TRUE];		//QS_system_AI_owners
+				if ((count _threat_armor) > 64) then {
+					_threat_armor = _threat_armor select [((count _threat_armor) - 64),64];
+				};
+				if ((count _threat_air) > 64) then {
+					_threat_air = _threat_air select [((count _threat_air) - 64),64];
+				};
+				_targetsKnowledge = missionNamespace getVariable ['QS_AI_targetsKnowledge_EAST',[]];
+				if ((count _targetsKnowledge) > _maxKnownTargets) then {
+					_targetsKnowledge = _targetsKnowledge select [
+						((count _targetsKnowledge) - _maxKnownTargets),
+						_maxKnownTargets
+					];
+				};
+				missionNamespace setVariable ['QS_AI_targetsKnowledge_EAST',_targetsKnowledge,QS_system_AI_owners];
 				// Analyze intel, could also plug into objective/mission consideration
 				if (_analyze) then {
 					{
@@ -485,7 +508,8 @@ if (_type isEqualTo 11) exitWith {
 				if (!isNull _grp) then {
 					_QS_script = [_grp,[_targetBuilding,(count (_targetBuilding buildingPos -1))],180] spawn (missionNamespace getVariable 'QS_fnc_searchNearbyBuilding');
 					missionNamespace setVariable ['QS_AI_scripts_moveToBldg',((missionNamespace getVariable 'QS_AI_scripts_moveToBldg') + [serverTime + 180]),QS_system_AI_owners];
-					_grp setVariable ['QS_AI_GRP_SCRIPT',_QS_script,QS_system_AI_owners];
+					// SCRIPT handles are local to their spawning machine and cannot be efficiently network-serialized.
+					_grp setVariable ['QS_AI_GRP_SCRIPT',_QS_script,FALSE];
 				};
 			};
 		};

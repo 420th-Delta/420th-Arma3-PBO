@@ -126,11 +126,47 @@ QS_hashmap_wreckTypes = createHashMapFromArray (call QS_data_wreckTypes);
 QS_hashmap_lasers = createHashMapFromArray ([0] call QS_data_lasers);
 QS_hashmap_lasersCustomOffsets = createHashMapFromArray ([1] call QS_data_lasers);
 QS_hashmap_unitLoadouts = createHashMapFromArray (call (compileScript ['code\config\QS_data_unitClassLoadouts.sqf']));
+// Creator DLC is intentionally available to clients through the local BIS Arsenal,
+// but must never be applied to server-spawned AI. Keep the complete map above for
+// client-side consumers and build a sanitized map for AI spawning.
+missionNamespace setVariable ['QS_fnc_isCreatorDLCContent', {
+	params ['_value'];
+	private _pending = [_value];
+	private _prefixes = ['gm_','vn_','csla_','lxws','spe_','rf_','ef_'];
+	private _found = FALSE;
+	while {!_found && {_pending isNotEqualTo []}} do {
+		private _item = _pending deleteAt ((count _pending) - 1);
+		if (_item isEqualType '') then {
+			private _text = toLowerANSI _item;
+			if ((_prefixes findIf {(_text find _x) isNotEqualTo -1}) isNotEqualTo -1) then {
+				_found = TRUE;
+			};
+		} else {
+			if (_item isEqualType []) then {
+				_pending append _item;
+			};
+		};
+	};
+	_found
+}, FALSE];
+QS_hashmap_unitLoadouts_AI = createHashMap;
+{
+	private _loadout = QS_hashmap_unitLoadouts get _x;
+	if (!([_loadout] call (missionNamespace getVariable 'QS_fnc_isCreatorDLCContent'))) then {
+		QS_hashmap_unitLoadouts_AI set [_x,_loadout];
+	};
+} forEach (keys QS_hashmap_unitLoadouts);
+diag_log format ['***** AI loadout filter ***** Excluded %1 Creator DLC loadouts *****',((count (keys QS_hashmap_unitLoadouts)) - (count (keys QS_hashmap_unitLoadouts_AI)))];
 QS_hashmap_maxCargoCapacity = createHashMap;
 QS_hashmap_classLists = createHashMap;
 QS_core_unittraits_map = createHashMap;
 // Get active DLC
 private _activeDLC = call (missionNamespace getVariable 'QS_fnc_getActiveDLC');
+// Compatibility addons expose Creator DLC config patches to the server. Do not
+// treat those patches as an enabled mission DLC, otherwise AI unit/vehicle tables
+// are redirected to Creator DLC classes that may not be usable for server AI.
+missionNamespace setVariable ['QS_system_activeDLC','',TRUE];
+_activeDLC = '';
 // Get DLC-context classnames
 call (missionNamespace getVariable 'QS_data_classNames');
 // Create DLC-context hashmaps

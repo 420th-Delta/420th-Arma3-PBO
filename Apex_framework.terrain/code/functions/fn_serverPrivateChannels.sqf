@@ -7,23 +7,132 @@ Description:
 __________________________________________________________________________*/
 
 if (!isServer) exitWith {};
-if !(missionNamespace getVariable ['QS_privateChannels_enabled',FALSE]) exitWith {};
 params [['_mode',''],['_data',[]]];
 
-private _channels = missionNamespace getVariable ['QS_privateChannels_server',[]];
-private _invites = missionNamespace getVariable ['QS_privateChannelInvites_server',[]];
-private _channelPool = missionNamespace getVariable ['QS_privateChannelPool_server',[]];
-_invites = _invites select {(_x # 2) >= serverTime};
+if !(_mode isEqualType '') exitWith {};
 private _requestOwner = remoteExecutedOwner;
 private _requestUnit = objNull;
 private _requestUID = '';
-private _ignoredUID = if (_mode isEqualTo 'DISCONNECT') then {_data} else {''};
-
 private _requestIndex = allPlayers findIf {(owner _x) isEqualTo _requestOwner};
 if (_requestIndex isNotEqualTo -1) then {
 	_requestUnit = allPlayers # _requestIndex;
 	_requestUID = getPlayerUID _requestUnit;
 };
+if !(missionNamespace getVariable ['QS_privateChannels_enabled',FALSE]) exitWith {
+	if (isRemoteExecuted && {_mode in ['SYNC','CREATE','DELETE','RENAME','LEAVE','EJECT','INVITE','RESPOND']}) then {
+		diag_log format [
+			'***** PRIVATE CHANNELS ***** Rejected %1 request from network owner %2: feature disabled on server.',
+			_mode,
+			_requestOwner
+		];
+		if (!isNull _requestUnit) then {
+			[
+				'NOTICE',
+				'Private Channels are disabled on the server. Confirm QS_privateChannels_enabled is TRUE on the server and restart the mission.'
+			] remoteExecCall ['QS_fnc_clientMenuPrivateChannels',_requestUnit];
+		};
+	};
+};
+private _requestRejected = FALSE;
+if (isRemoteExecuted) then {
+	private _remoteModes = ['SYNC','CREATE','DELETE','RENAME','LEAVE','EJECT','INVITE','RESPOND'];
+	private _payloadInvalid = !(_mode in _remoteModes);
+	private _pending = [[_this,0]];
+	private _nodes = 0;
+	private _stringCharacters = 0;
+	while {(!_payloadInvalid) && {_pending isNotEqualTo []}} do {
+		private _entry = _pending deleteAt ((count _pending) - 1);
+		private _value = _entry # 0;
+		private _depth = _entry # 1;
+		if (_value isEqualType []) then {
+			if ((_depth > 4) || {(count _value) > 12}) then {
+				_payloadInvalid = TRUE;
+			} else {
+				_nodes = _nodes + (count _value);
+				if (_nodes > 32) then {
+					_payloadInvalid = TRUE;
+				} else {
+					{
+						if (_x isEqualType []) then {
+							_pending pushBack [_x,_depth + 1];
+						} else {
+							if (_x isEqualType '') then {
+								_stringCharacters = _stringCharacters + (count _x);
+								if (((count _x) > 128) || {_stringCharacters > 256}) exitWith {
+									_payloadInvalid = TRUE;
+								};
+							} else {
+								if (!(_x isEqualType FALSE)) exitWith {
+									_payloadInvalid = TRUE;
+								};
+							};
+						};
+					} forEach _value;
+				};
+			};
+		};
+	};
+	private _modeShapeValid = switch (_mode) do {
+		case 'SYNC': {(_data isEqualType []) && {_data isEqualTo []}};
+		case 'CREATE': {_data isEqualType ''};
+		case 'DELETE';
+		case 'LEAVE': {_data isEqualType ''};
+		case 'RENAME';
+		case 'EJECT';
+		case 'INVITE': {
+			(_data isEqualType []) &&
+			{(count _data) isEqualTo 2} &&
+			{((_data # 0) isEqualType '')} &&
+			{((_data # 1) isEqualType '')}
+		};
+		case 'RESPOND': {
+			(_data isEqualType []) &&
+			{(count _data) isEqualTo 2} &&
+			{((_data # 0) isEqualType '')} &&
+			{((_data # 1) isEqualType FALSE)}
+		};
+		default {FALSE};
+	};
+	if (_payloadInvalid || {!_modeShapeValid}) then {
+		_requestRejected = TRUE;
+	} else {
+		private _now = diag_tickTime;
+		private _requestLimits = serverNamespace getVariable [
+			'QS_privateChannels_requestLimits',
+			createHashMap
+		];
+		if ((count _requestLimits) > 128) then {
+			_requestLimits = createHashMap;
+		};
+		private _requestState = _requestLimits getOrDefault [_requestOwner,[_now,0,-1]];
+		_requestState params ['_windowStart','_requestCount','_lastRejectLog'];
+		if ((_now - _windowStart) >= 2) then {
+			_windowStart = _now;
+			_requestCount = 0;
+		};
+		_requestCount = _requestCount + 1;
+		if (_requestCount > 8) then {
+			_requestRejected = TRUE;
+			if ((_now - _lastRejectLog) >= 10) then {
+				diag_log format [
+					'***** PRIVATE CHANNELS ***** Rate-limited owner %1 (mode %2).',
+					_requestOwner,
+					_mode
+				];
+				_lastRejectLog = _now;
+			};
+		};
+		_requestLimits set [_requestOwner,[_windowStart,_requestCount,_lastRejectLog]];
+		serverNamespace setVariable ['QS_privateChannels_requestLimits',_requestLimits];
+	};
+};
+if (_requestRejected) exitWith {};
+
+private _channels = missionNamespace getVariable ['QS_privateChannels_server',[]];
+private _invites = missionNamespace getVariable ['QS_privateChannelInvites_server',[]];
+private _channelPool = missionNamespace getVariable ['QS_privateChannelPool_server',[]];
+_invites = _invites select {(_x # 2) >= serverTime};
+private _ignoredUID = if (_mode isEqualTo 'DISCONNECT') then {_data} else {''};
 
 private _fnSanitizeName = {
 	params [['_name','Private Channel']];

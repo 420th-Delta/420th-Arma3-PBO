@@ -68,6 +68,21 @@ with uiNamespace do {
         0 spawn {isNil TGC_fnc_staffMainAOGUI};
     }];
 
+    private _weather = _display ctrlCreate ["RscButtonMenu", -1, _group];
+    _weather ctrlSetPosition ([0.03, 0.3, 0.2, 0.08] call _scaleToGroup);
+    _weather ctrlSetStructuredText composeText [
+        parseText "<t size='0.25'>&#160;</t><br/>",
+        text "Weather" setAttributes [
+            "align", "center",
+            "font", "RobotoCondensed"
+        ]
+    ];
+    _weather ctrlCommit 0;
+    _weather ctrlAddEventHandler ["ButtonClick", {
+        closeDialog 1;
+        0 spawn {isNil TGC_fnc_staffWeatherGUI};
+    }];
+
     private _close = _display ctrlCreate ["RscButtonMenu", 2];
     _close ctrlSetPosition [_groupX, _groupY + _height, 0.2, 0.04];
     _close ctrlSetText toUpper localize "$str_disp_cancel";

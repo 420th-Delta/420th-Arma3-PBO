@@ -13,12 +13,176 @@ Description:
 	Remote Execution Commands
 _______________________________________________________/*/
 
-params ['_type','_1','_2'];
-if ((!isRemoteExecuted) || {isRemoteExecutedJIP}) exitWith {diag_log format ['Remote Exec Cmd Failed with: %1 - %2 to %3 (%4 %5)',_this,remoteExecutedOwner,clientOwner,isRemoteExecuted,isRemoteExecutedJIP];};
+private _isRx = isRemoteExecuted;
+private _isRxJ = isRemoteExecutedJIP;
+private _rxID = remoteExecutedOwner;
+if ((!_isRx) || {_isRxJ}) exitWith {diag_log format ['Remote Exec Cmd Failed with: %1 - %2 to %3 (%4 %5)',_this,_rxID,clientOwner,_isRx,_isRxJ];};
+if (!(_this isEqualType [])) exitWith {};
+
+private _clientToServer = isServer && {_rxID > 2};
+private _rejectRequest = FALSE;
+private _rejectReason = '';
+if (_clientToServer) then {
+	private _pending = [[_this,0]];
+	private _nodes = 0;
+	private _stringCharacters = 0;
+	private _hashMapType = createHashMap;
+	private _codeType = {};
+	while {(!_rejectRequest) && {_pending isNotEqualTo []}} do {
+		private _entry = _pending deleteAt ((count _pending) - 1);
+		private _value = _entry # 0;
+		private _depth = _entry # 1;
+		if (_value isEqualType []) then {
+			if ((_depth > 8) || {(count _value) > 64}) then {
+				_rejectRequest = TRUE;
+				_rejectReason = 'payload shape';
+			} else {
+				_nodes = _nodes + (count _value);
+				if (_nodes > 256) then {
+					_rejectRequest = TRUE;
+					_rejectReason = 'payload nodes';
+				} else {
+					{
+						if (_x isEqualType []) then {
+							_pending pushBack [_x,_depth + 1];
+						} else {
+							if ((_x isEqualType _hashMapType) || {_x isEqualType _codeType}) exitWith {
+								_rejectRequest = TRUE;
+								_rejectReason = 'payload type';
+							};
+							if (_x isEqualType '') then {
+								_stringCharacters = _stringCharacters + (count _x);
+								if (((count _x) > 8192) || {_stringCharacters > 16384}) exitWith {
+									_rejectRequest = TRUE;
+									_rejectReason = 'string length';
+								};
+							};
+						};
+					} forEach _value;
+				};
+			};
+		};
+	};
+
+	private _typeForRate = _this param [0,''];
+	private _rateMap = missionNamespace getVariable ['QS_remoteExecCmd_rateMap',createHashMap];
+	if ((count _rateMap) > 128) then {
+		_rateMap = createHashMap;
+	};
+	private _rateKey = str _rxID;
+	private _now = diag_tickTime;
+	private _rateState = _rateMap getOrDefault [_rateKey,[_now,0,-10,0]];
+	if ((_now - (_rateState # 0)) >= 1) then {
+		_rateState set [0,_now];
+		_rateState set [1,0];
+		_rateState set [3,0];
+	};
+	_rateState set [1,(_rateState # 1) + 1];
+	private _isHeavyRequest = (_typeForRate isEqualType '') && {_typeForRate in ['setOwner','setGroupOwner','hideObjectGlobal','setMass','setCenterOfMass','setVelocity','setVelocityModelSpace','setTowParent','setVehicleCargo','ropeDestroy','ropeDetach','addForce','addTorque']};
+	if (_isHeavyRequest) then {
+		_rateState set [3,(_rateState param [3,0,[0]]) + 1];
+	};
+	if (((_rateState # 1) > 160) || {_isHeavyRequest && {(_rateState # 3) > 30}}) then {
+		_rejectRequest = TRUE;
+		_rejectReason = 'rate limit';
+	};
+	_rateMap set [_rateKey,_rateState];
+	missionNamespace setVariable ['QS_remoteExecCmd_rateMap',_rateMap,FALSE];
+};
+
+private _type = _this param [0,''];
+if (_clientToServer && {!_rejectRequest} && {_type isEqualType []}) then {
+	if ((count _this) > 16) then {
+		_rejectRequest = TRUE;
+		_rejectReason = 'batch length';
+	} else {
+		if ((_this findIf {
+			(!(_x isEqualType [])) ||
+			{(count _x) < 2} ||
+			{(count _x) > 3} ||
+			{!((_x # 0) isEqualType '')}
+		}) isNotEqualTo -1) then {
+			_rejectRequest = TRUE;
+			_rejectReason = 'batch depth';
+		};
+	};
+};
+
+if (_rejectRequest) exitWith {
+	if (_clientToServer) then {
+		private _rateMap = missionNamespace getVariable ['QS_remoteExecCmd_rateMap',createHashMap];
+		private _rateKey = str _rxID;
+		private _rateState = _rateMap getOrDefault [_rateKey,[diag_tickTime,0,-10]];
+		if ((diag_tickTime - (_rateState # 2)) >= 10) then {
+			_rateState set [2,diag_tickTime];
+			_rateMap set [_rateKey,_rateState];
+			missionNamespace setVariable ['QS_remoteExecCmd_rateMap',_rateMap,FALSE];
+			diag_log format ['***** REMOTE EXEC COMMAND REJECTED ***** owner %1 type %2 (%3)',_rxID,_type,_rejectReason];
+		};
+	};
+};
+
 if (_type isEqualType []) exitWith {
 	{
 		_x call (missionNamespace getVariable 'QS_fnc_remoteExecCmd');
 	} forEach _this;
+};
+if (((count _this) < 2) || {!(_type isEqualType '')}) exitWith {};
+params ['_type','_1','_2'];
+
+/* Validate the client-to-server commands that can transfer locality globally. */
+if (_clientToServer && {_type in ['setOwner','setGroupOwner','hideObjectGlobal']}) then {
+	private _sender = (allPlayers select {((owner _x) isEqualTo _rxID) && {!(_x isKindOf 'HeadlessClient_F')}}) param [0,objNull];
+	if (isNull _sender) then {
+		_rejectRequest = TRUE;
+		_rejectReason = 'sender';
+	} else {
+		if (_type isEqualTo 'setOwner') then {
+			if (
+				(!(_1 isEqualType objNull)) ||
+				{isNull _1} ||
+				{!(_2 isEqualType 0)} ||
+				{(_2 isNotEqualTo _rxID)} ||
+				{((_sender distance2D _1) > 500)}
+			) then {
+				_rejectRequest = TRUE;
+				_rejectReason = 'setOwner ownership';
+			};
+		};
+		if (_type isEqualTo 'setGroupOwner') then {
+			if (
+				(!(_1 isEqualType grpNull)) ||
+				{isNull _1} ||
+				{!(_2 isEqualType 0)} ||
+				{(_2 isNotEqualTo _rxID)}
+			) then {
+				_rejectRequest = TRUE;
+				_rejectReason = 'setGroupOwner ownership';
+			};
+		};
+		if (_type isEqualTo 'hideObjectGlobal') then {
+			if (
+				(!(_1 isEqualType objNull)) ||
+				{isNull _1} ||
+				{!(_2 isEqualType FALSE)} ||
+				{_2 && {((_sender distance2D _1) > 500)}}
+			) then {
+				_rejectRequest = TRUE;
+				_rejectReason = 'hideObjectGlobal ownership';
+			};
+		};
+	};
+};
+if (_rejectRequest) exitWith {
+	private _rateMap = missionNamespace getVariable ['QS_remoteExecCmd_rateMap',createHashMap];
+	private _rateKey = str _rxID;
+	private _rateState = _rateMap getOrDefault [_rateKey,[diag_tickTime,0,-10,0]];
+	if ((diag_tickTime - (_rateState # 2)) >= 10) then {
+		_rateState set [2,diag_tickTime];
+		_rateMap set [_rateKey,_rateState];
+		missionNamespace setVariable ['QS_remoteExecCmd_rateMap',_rateMap,FALSE];
+		diag_log format ['***** REMOTE EXEC COMMAND REJECTED ***** owner %1 type %2 (%3)',_rxID,_type,_rejectReason];
+	};
 };
 if (_type isEqualTo 'switchMove') exitWith {
 	_1 switchMove _2;

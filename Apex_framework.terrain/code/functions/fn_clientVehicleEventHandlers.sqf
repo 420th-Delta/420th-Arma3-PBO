@@ -41,8 +41,7 @@ if (_type isEqualTo 1) then {
 			['Fuel',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventFuel')}],
 			['Deleted',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventDeleted')}],
 			['Dammaged',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventDammaged')}],
-			['CargoLoaded',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventCargoLoaded')}],
-			['CargoUnloaded',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventCargoUnloaded')}]
+			['CargoLoaded',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventCargoLoaded')}]
 		];
 		if ((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo '') then {
 			_eventHandlersToAdd pushBack ['HandleDamage',{call (missionNamespace getVariable 'QS_fnc_clientVehicleEventHandleDamage')}];

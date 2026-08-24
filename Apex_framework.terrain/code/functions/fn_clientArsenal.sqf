@@ -41,7 +41,7 @@ if (_checkRunningScript) exitWith {
 _unit setVariable ['bis_addVirtualWeaponCargo_cargo',[[],[],[],[]],FALSE];
 
 if (QS_missionConfig_Arsenal isEqualTo 3) exitWith {};
-private _configRestrictions = getMissionConfigValue ['arsenalRestrictedItems',[]];
+private _configRestrictions = (getMissionConfigValue ['arsenalRestrictedItems',[]]) apply {toLowerANSI _x};
 
 // This script can take a long time depending on installed mods
 // so we'll record performance statistics per step
@@ -58,6 +58,14 @@ private _getStepTime = {
 private _logStep = {
 	_logStatistics pushBack [_this,call _getStepTime];
 };
+
+// Load the global restriction lists before merging them into the Arsenal lists.
+(call (missionNamespace getVariable 'QS_data_restrictedGear')) params [
+	['_restrictedWeapons',[]],
+	['_restrictedMagazines',[]],
+	['_restrictedItems',[]],
+	['_restrictedBackpacks',[]]
+];
 
 /*/ To Do: Implement this instead of the below lists
 (call (missionNamespace getVariable 'QS_data_restrictedGear')) params [
@@ -137,7 +145,6 @@ private _QS_restrictedItems = [
 	'c_uavterminal',
 	'i_e_uavterminal'
 ];
-_QS_restrictedItems append _configRestrictions;
 private _QS_restrictedWeapons = [
 	'apersminedispenser_mag'
 ];
@@ -234,6 +241,20 @@ private _QS_restrictedBackpacks = [
 	'o_ugv_02_demining_backpack_f'
 ];
 
+// Mission-configured restrictions may contain weapons, magazines, items, or backpacks.
+// Keep them in every category so arsenalRestrictedItems[] is enforced regardless of
+// the config class type and by the runtime gear restriction checks below.
+_QS_restrictedItems append _configRestrictions;
+_QS_restrictedWeapons append _configRestrictions;
+_QS_restrictedMagazines append _configRestrictions;
+_QS_restrictedBackpacks append _configRestrictions;
+
+// Merge the global restricted-gear lists into the Arsenal restrictions.
+_QS_restrictedItems append _restrictedItems;
+_QS_restrictedWeapons append _restrictedWeapons;
+_QS_restrictedMagazines append _restrictedMagazines;
+_QS_restrictedBackpacks append _restrictedBackpacks;
+
 private _unitSide = _unit getVariable ['QS_unit_side',WEST];
 if (_unitSide in [EAST,RESISTANCE]) then {
 	_QS_restrictedItems = _QS_restrictedItems -	[
@@ -258,7 +279,7 @@ QS_arsenal_missionBlacklist = [
 
 // Optimize membership testing for above restrictions
 _combinedRestrictionsMap = createHashMap;
-{_combinedRestrictionsMap set [_x,true]} forEach _combinedRestrictions;
+{_combinedRestrictionsMap set [toLowerANSI _x,true]} forEach _combinedRestrictions;
 'Create restriction hashmap' call _logStep;
 
 _isBlacklisted = QS_missionConfig_Arsenal isEqualTo 2;
@@ -266,7 +287,12 @@ if (_isBlacklisted || {QS_missionConfig_Arsenal isEqualTo 0}) then {
 	// If using blacklist, we first have to add everything, so we can remove the blacklisted items.
 
 	if (!isNil 'QS_client_arsenalCache') exitWith {
-		_unit setVariable ['bis_addVirtualWeaponCargo_cargo',+QS_client_arsenalCache,FALSE];
+		private _cachedCargo = +QS_client_arsenalCache;
+		{
+			_cachedCargo set [_forEachIndex,(_x select {!(toLowerANSI _x in _combinedRestrictionsMap)})];
+		} forEach _cachedCargo;
+		QS_client_arsenalCache = _cachedCargo;
+		_unit setVariable ['bis_addVirtualWeaponCargo_cargo',+_cachedCargo,FALSE];
 		'Reuse cached arsenal data' call _logStep;
 	};
 

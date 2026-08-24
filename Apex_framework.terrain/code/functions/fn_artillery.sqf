@@ -110,14 +110,7 @@ if (_type isEqualTo 1) exitWith {
 			};
 			// M5 MLRS
 			if (_arty isKindOf 'B_MBT_01_mlrs_F') then {
-				[
-					[_arty,_ammo_MLRS],
-					{      
-						if ((_this # 0) turretLocal [0]) then {
-							(_this # 0) setMagazineTurretAmmo ['12Rnd_230mm_rockets',(_this # 1),[0]];
-						};
-					}
-				] remoteExec ['call',0,FALSE];
+				[[ _arty,_ammo_MLRS ],{if ((_this # 0) turretLocal [0]) then {(_this # 0) setMagazineTurretAmmo ['12Rnd_230mm_rockets',(_this # 1),[0]];};}] remoteExec ['call',0,FALSE];
 			};
 		} else {
 			// Artillery destroyed somehow, respawn it

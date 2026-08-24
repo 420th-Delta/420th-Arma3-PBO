@@ -171,7 +171,7 @@ if (_mode isEqualTo 'activate') exitWith {
 					['enableCollisionWith',_requestedObject,_other] remoteExec ['QS_fnc_remoteExecCmd',0,FALSE];
 				};
 			} else {
-				[45,_vehicle,_requestedObject,(uiNamespace getVariable 'QS_targetBoundingBox_vectors'),(uiNamespace getVariable ['QS_targetBoundingBox_ASLPos',[0,0,0]])] remoteExecCall ['QS_fnc_remoteExec',0,FALSE];
+				[45,_vehicle,_requestedObject,(uiNamespace getVariable 'QS_targetBoundingBox_vectors'),(uiNamespace getVariable ['QS_targetBoundingBox_ASLPos',[0,0,0]]),clientOwner] remoteExec ['QS_fnc_remoteExec',_requestedObject,FALSE];
 			};
 			if (_vehicle isNotEqualTo QS_player) then {
 				[_vehicle,TRUE,TRUE] call QS_fnc_updateCenterOfMass;

@@ -15,7 +15,15 @@ _______________________________________________/*/
 
 params [['_newUnit',player],['_oldUnit',objNull]];
 QS_player = missionNamespace getVariable ['bis_fnc_moduleRemoteControl_unit',_newUnit];
+if ((localNamespace getVariable ['QS_roleQueue_offer',[]]) isNotEqualTo []) then {
+	// Action IDs belong to the old player object and must never be applied to the respawned object.
+	localNamespace setVariable ['QS_roleQueue_actions',[]];
+	[126,'RESPAWN',(getPlayerUID _newUnit),_newUnit,clientOwner] remoteExec ['QS_fnc_remoteExec',2,FALSE];
+};
 ['SYNC',[]] remoteExecCall ['QS_fnc_serverPrivateChannels',2];
+// PMC invite action IDs belonged to the old player object; the sync below recreates valid offers.
+localNamespace setVariable ['QS_PMC_inviteActions',[]];
+['SYNC',[]] remoteExecCall ['QS_fnc_serverPMC',2];
 simulWeatherSync;
 if (captive player) then {
 	player setCaptive FALSE;

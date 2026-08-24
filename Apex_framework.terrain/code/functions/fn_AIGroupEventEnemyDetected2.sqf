@@ -20,14 +20,24 @@ Description:
 ___________________________________________/*/
 
 params [['_grp',grpNull],['_target',objNull]];
+if ((isNull _grp) || {isNull _target}) exitWith {};
 if (serverTime < (_grp getVariable ['QS_AI_GRP_intelED_cooldown',-1])) exitWith {};
 _grp setVariable ['QS_AI_GRP_intelED_cooldown',serverTime + 5,FALSE];
 ([_target,'SAFE'] call QS_fnc_inZone) params ['_inSafezone','_safezoneLevel','_safezoneActive'];
 if (_inSafezone && _safezoneActive && (_safezoneLevel > 1)) exitWith {};
-_targetIndex = QS_AI_targetsIntel findIf { _target isEqualTo (_x # 0) };
-if (_targetIndex isEqualTo -1) then {
-	missionNamespace setVariable ['QS_AI_targetsIntel',((missionNamespace getVariable 'QS_AI_targetsIntel') + [[_target,serverTime,ASLToAGL (((leader _grp) targetKnowledge _target) # 6),_grp knowsAbout _target,_grp,isTouchingGround _target,rating _target]]),QS_system_AI_owners];
+private _leader = leader _grp;
+if (isNull _leader) exitWith {};
+private _intelDelta = [
+	_target,
+	serverTime,
+	ASLToAGL ((_leader targetKnowledge _target) # 6),
+	_grp knowsAbout _target,
+	_grp,
+	isTouchingGround _target,
+	rating _target
+];
+if (isServer) then {
+	_intelDelta call (missionNamespace getVariable 'QS_fnc_serverAIIntelDelta');
 } else {
-	QS_AI_targetsIntel set [_targetIndex,[_target,serverTime,ASLToAGL (((leader _grp) targetKnowledge _target) # 6),_grp knowsAbout _target,_grp,isTouchingGround _target,rating _target]];
-	missionNamespace setVariable ['QS_AI_targetsIntel',(missionNamespace getVariable 'QS_AI_targetsIntel'),QS_system_AI_owners];
+	_intelDelta remoteExecCall ['QS_fnc_serverAIIntelDelta',2,FALSE];
 };

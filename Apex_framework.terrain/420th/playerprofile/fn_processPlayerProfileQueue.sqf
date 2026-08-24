@@ -14,6 +14,10 @@ if (_init in ["preInit", "postInit"]) exitWith {
     [""] spawn TGC_fnc_processPlayerProfileQueue;
 };
 
+if (missionNamespace getVariable ["TGC_playerProfile_queueWorkerRunning", false]) exitWith {};
+missionNamespace setVariable ["TGC_playerProfile_queueWorkerRunning", true, false];
+diag_log "TGC_fnc_processPlayerProfileQueue: database worker started";
+
 if (isNil {missionNamespace getVariable "TGC_playerProfile_queryQueue"}) then {
     missionNamespace setVariable ["TGC_playerProfile_queryQueue", []];
 };
@@ -26,6 +30,7 @@ while {true} do {
     };
 
     (_queue deleteAt 0) params ["_requestOwner", "_uid", "_playerName"];
+    diag_log format ["TGC_fnc_processPlayerProfileQueue: processing %1 (%2) for owner %3", _playerName, _uid, _requestOwner];
 
     try {
         if (isNil "fdelta_stats_fnc_dbQuery") then {

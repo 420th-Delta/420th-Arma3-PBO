@@ -114,6 +114,31 @@ if (
 	[_unit,'You cannot recruit more than 10 AI'] call _hint;
 };
 
+private _isVehicle = (
+	(['LandVehicle','Air','Ship'] findIf {_vehicleClass isKindOf _x}) isNotEqualTo -1
+);
+private _vehicleLimit = 5;
+private _unitUID = getPlayerUID _unit;
+private _spawnedVehicleCount = if (_isVehicle) then {
+	{
+		private _spawnedEntity = _x;
+		alive _spawnedEntity &&
+		{(_spawnedEntity getVariable ['QS_spawnMenu_spawnedBy','']) isEqualTo _unitUID} &&
+		{(['LandVehicle','Air','Ship'] findIf {_spawnedEntity isKindOf _x}) isNotEqualTo -1}
+	} count (missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]])
+} else {
+	0
+};
+if (_spawnedVehicleCount >= _vehicleLimit) exitWith {
+	[
+		_unit,
+		format [
+			'Spawn Menu: you already have %1 active vehicles. Respawn or destroy one before spawning another.',
+			_vehicleLimit
+		]
+	] call _notify;
+};
+
 private _nextSpawn = _unit getVariable ['QS_spawnMenu_nextSpawn',0];
 if (serverTime < _nextSpawn) exitWith {
 	[_unit,format ['Spawn Menu: wait %1 seconds before spawning another item.',ceil (_nextSpawn - serverTime)]] call _notify;
@@ -179,14 +204,28 @@ if (_blockingObjects isNotEqualTo []) exitWith {
 _unit setVariable ['QS_spawnMenu_nextSpawn',serverTime + 10,FALSE];
 
 private _entity = objNull;
+private _spawnGroup = grpNull;
+private _destinationGroup = grpNull;
+private _destinationOwner = 2;
 if (_isAI) then {
-	private _group = group _unit;
-	_entity = _group createUnit [_vehicleClass,_position,[],0,'CAN_COLLIDE'];
+	_destinationGroup = group _unit;
+	_destinationOwner = owner _unit;
+	if (_destinationOwner <= 0) then {
+		_destinationOwner = groupOwner _destinationGroup;
+	};
+	_spawnGroup = createGroup [side _destinationGroup,TRUE];
+	if (!isNull _spawnGroup) then {
+		_spawnGroup deleteGroupWhenEmpty TRUE;
+		_entity = _spawnGroup createUnit [_vehicleClass,_position,[],0,'CAN_COLLIDE'];
+	};
 } else {
 	_entity = createVehicle [_vehicleClass,_position,[],0,'CAN_COLLIDE'];
 };
 
 if (isNull _entity) exitWith {
+	if (!isNull _spawnGroup) then {
+		deleteGroup _spawnGroup;
+	};
 	[_unit,'Spawn Menu: the selected entity could not be created.'] call _notify;
 };
 
@@ -198,37 +237,30 @@ if (_isBoat) then {
 };
 _entity setVariable ['QS_spawnMenu_spawnedBy',getPlayerUID _unit,TRUE];
 (missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]]) pushBackUnique _entity;
+if (_isVehicle) then {
+	[_entity,_unitUID,side (group _unit)] call QS_fnc_spawnMenuManagedVehicleInit;
+};
 
 if (_isAI) then {
 	_entity setVariable ['QS_RD_dismissable',TRUE,TRUE];
+	_entity setVariable ['QS_spawnMenu_aiPendingJoin',TRUE,TRUE];
+	if (_destinationOwner > 2) then {
+		// Man units inherit locality from their group. Transfer the temporary
+		// group instead of calling setOwner on the unit.
+		_spawnGroup setGroupOwner _destinationOwner;
+	};
+	if (_destinationOwner isEqualTo 2) then {
+		[_entity,_unit,_destinationGroup] call QS_fnc_spawnMenuJoinAI;
+	} else {
+		[_entity,_unit,_destinationGroup] remoteExecCall ['QS_fnc_spawnMenuJoinAI',_destinationOwner,FALSE];
+	};
 } else {
 	_entity setVariable ['QS_RD_vehicleRespawnable',TRUE,TRUE];
 	_entity setVariable ['TGC_vehicle_side',side (group _unit),TRUE];
 };
 
-if (unitIsUAV _entity) then {
-	_entity setVariable ['QS_uav_protected',TRUE,TRUE];
-	if ((crew _entity) isEqualTo []) then {
-		private _uavGroup = createVehicleCrew _entity;
-		if (!isNull _uavGroup) then {
-			_uavGroup setVariable ['QS_HComm_grp',FALSE,TRUE];
-			{
-				_x setVariable ['QS_spawnMenu_spawnedBy',getPlayerUID _unit,TRUE];
-			} forEach (units _uavGroup);
-		};
-	};
-	[_entity,getPlayerUID _unit] remoteExec ['TGC_fnc_lockDroneByUID',0,FALSE];
-};
-
 if (!_isAI && {!_isSupplyCrate} && {!isNil 'QS_fnc_vSetup'}) then {
 	[_entity] call QS_fnc_vSetup;
-};
-if (
-	(!_isAI) &&
-	{((['LandVehicle','Air','Ship'] findIf {_entity isKindOf _x}) isNotEqualTo -1)}
-) then {
-	[_entity] call TGC_fnc_addSpawnMenuVehicleHandlers;
-	[_entity] remoteExecCall ['TGC_fnc_addSpawnMenuVehicleHandlers',-2,_entity];
 };
 if ((typeOf _entity) isEqualTo 'B_Heli_Light_01_F') then {
 	_entity addWeaponTurret ['CMFlareLauncher',[-1]];
@@ -311,6 +343,40 @@ if (_vehicleClass in ['O_T_VTOL_02_infantry_dynamicLoadout_F','O_T_VTOL_02_vehic
 		'a3\air_f_exp\vtol_02\data\vtol_02_ext02_co.paa',
 		'a3\air_f_exp\vtol_02\data\vtol_02_ext03_l_co.paa',
 		'a3\air_f_exp\vtol_02\data\vtol_02_ext03_r_co.paa'
+	];
+};
+
+if (_isVehicle) then {
+	if (isNil {serverNamespace getVariable 'QS_v_Monitor'}) then {
+		serverNamespace setVariable ['QS_v_Monitor',[]];
+	};
+	private _managedSpawnPosition = ASLToAGL (getPosASL _entity);
+	(serverNamespace getVariable 'QS_v_Monitor') pushBack [
+		_entity,
+		30,
+		FALSE,
+		{},
+		_vehicleClass,
+		_managedSpawnPosition,
+		[vectorDir _entity,vectorUp _entity],
+		FALSE,
+		0,
+		-1,
+		50,
+		2000,
+		-1,
+		4,
+		FALSE,
+		0,
+		{TRUE},
+		FALSE,
+		FALSE,
+		[],
+		[],
+		0,
+		{TRUE},
+		_unitUID,
+		side (group _unit)
 	];
 };
 

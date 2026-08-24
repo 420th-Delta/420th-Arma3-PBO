@@ -44,8 +44,7 @@ if ((toLowerANSI _defenderType) in ['b_sam_system_01_f','b_sam_system_02_f','b_s
 		'Fired',
 		{
 			params ['','','','','','','_projectile',''];
-			missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-			missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
+			[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
 		}
 	];
 };
@@ -76,7 +75,7 @@ _relPos = markerPos 'QS_marker_aoMarker';
 _gunner doWatch (_relPos vectorAdd [0,0,2000]);
 _airdefenseGroup setBehaviour 'AWARE';
 _airdefenseGroup setCombatMode 'RED';
-[[_defender],{player disableUAVConnectability [(_this # 0),TRUE];}] remoteExec ['call',-2,_defender];
+[[ _defender ],{player disableUAVConnectability [(_this # 0),TRUE];}] remoteExec ['call',-2,_defender];
 if (_nearAir isNotEqualTo []) then {
 	{
 		_airdefenseGroup reveal [_x,4];

@@ -1,18 +1,5 @@
-SLT_fnc_RE_Server = { 
- params["_arguments","_code"]; 
- _varName = ("SLT"+str (round random 10000)); 
- 
- TempCode = compile ("if(!isServer) exitWith{};_this call "+str _code+"; "+(_varName+" = nil;")); 
- TempArgs = _arguments; 
- 
- call compile (_varName +" = [TempArgs,TempCode]; 
- publicVariable '"+_varName+"'; 
- 
- [[], { 
- ("+_varName+" select 0) spawn ("+_varName+" select 1); 
- }] remoteExec ['spawn',2];"); 
-}; 
- 
+SLT_fnc_RE_Server = { params ["_arguments","_code"]; _varName = ("SLT" + str (round random 10000)); TempCode = compile ("if(!isServer) exitWith{};_this call " + str _code + "; " + (_varName + " = nil;")); TempArgs = _arguments; call compile (_varName + " = [TempArgs,TempCode]; publicVariable '" + _varName + "'; [[], {(" + _varName + " select 0) spawn (" + _varName + " select 1);}] remoteExec ['spawn',2];"); };
+
 with uiNamespace do {SLTScriptDisplayName = "Team Name Tags";}; 
  
 SLT_fnc_enableScript = { 
@@ -187,16 +174,15 @@ SLT_fnc_enableScript = {
  }; 
  
 SLT_fnc_disableScript = { 
- {  
-  removeMissionEventHandler ['Draw3D', TeamNameTagEvent]; 
-  if (!isNil 'TeamNameTagAIUpdater') then {terminate TeamNameTagAIUpdater;};
-  TeamNameTagEvent = nil; 
-  TeamNameTagAIUpdater = nil;
-  TNTNearbyFriendlyAI = nil;
-  } remoteExec ['bis_fnc_call', 0]; 
- 
- {} remoteExec ['BIS_fnc_call',0,'TeamNameTag']; 
-}; 
+ {
+ if (!isNil 'TeamNameTagEvent') then {removeMissionEventHandler ['Draw3D',TeamNameTagEvent];};
+ if (!isNil 'TeamNameTagAIUpdater') then {terminate TeamNameTagAIUpdater;};
+ TeamNameTagEvent = nil;
+ TeamNameTagAIUpdater = nil;
+ TNTNearbyFriendlyAI = nil;
+ } remoteExec ['bis_fnc_call',0];
+ {} remoteExec ['BIS_fnc_call',0,'TeamNameTag'];
+};
  
 SLT_fnc_init = { 
  params[["_useToggleOptions",true]]; 

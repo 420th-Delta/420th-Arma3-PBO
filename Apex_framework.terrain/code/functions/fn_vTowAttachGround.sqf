@@ -225,12 +225,19 @@ if (isNil {_towedVehicle getVariable 'QS_loadCargoIn'}) then {
 	if (_line03 isNotEqualTo []) then {_posIsClear = FALSE;};
 	if (!(_posIsClear)) then {
 		private _center = getPosWorld _towedVehicle;
-		for '_x' from 0 to 1 step 0 do {
-			private _position = _center findEmptyPosition [0,40,(typeOf _towedVehicle)];
-			if (_position isEqualTo []) then {
-				_position = [_center,0,50,(sizeOf (typeOf _towedVehicle)),0,0.5,0] call (missionNamespace getVariable 'QS_fnc_findSafePos');
+		private _centerAGL = ASLToAGL _center;
+		private _position = [];
+		private _searchDeadline = diag_tickTime + 0.025;
+		for '_attempt' from 0 to 11 do {
+			if (diag_tickTime > _searchDeadline) exitWith {};
+			private _radius = 8 + (8 * floor (_attempt / 3));
+			private _candidate = _centerAGL getPos [_radius,((getDir _vehicle) + 135 + (_attempt * 120)) mod 360];
+			if ((lineIntersectsSurfaces [(AGLToASL (_vehicle modelToWorld [0,0,0])),(AGLToASL _candidate),_vehicle,_towedVehicle,TRUE,1,'GEOM']) isEqualTo []) exitWith {
+				_position = _candidate;
 			};
-			if ((lineIntersectsSurfaces [(AGLToASL (_vehicle modelToWorld [0,0,0])),(AGLToASL _position),_vehicle,_towedVehicle,TRUE,1,'GEOM']) isEqualTo []) exitWith {};
+		};
+		if (_position isEqualTo []) then {
+			_position = _centerAGL;
 		};
 		_position set [2,(_center # 2)];
 		private _posToSet = _position vectorAdd [0,0,0.35];

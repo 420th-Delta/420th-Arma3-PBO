@@ -28,11 +28,32 @@ Notes:
 ________________________________________________*/
 
 params ['_type','_params'];
+private _fn_kickSignatureUserOnce = {
+	params ['_userID'];
+	private _state = serverNamespace getVariable ['QS_signatureKickState',createHashMap];
+	private _key = str _userID;
+	private _now = diag_tickTime;
+	if ((count _state) > 256) then {
+		{
+			if ((_state get _x) <= _now) then {
+				_state deleteAt _x;
+			};
+		} forEach (keys _state);
+	};
+	private _nextAllowed = _state getOrDefault [_key,-1];
+	if (_nextAllowed > _now) exitWith {FALSE};
+	_state set [_key,(_now + 30)];
+	serverNamespace setVariable ['QS_signatureKickState',_state];
+	(call (uiNamespace getVariable 'QS_fnc_serverCommandPassword')) serverCommand (format ['#kick %1',_userID]);
+	TRUE
+};
 if (_type isEqualTo 'regularCheck') exitWith {
 	_params params ['_userID','_testIndex'];
 	''
 };
-diag_log str _this;	// Debug
+if (!(_type in ['onUnsignedData','onHackedData','onDifferentData'])) then {
+	diag_log str _this;	// Debug
+};
 if (_type isEqualTo 'sendChatMessage') exitWith {
 	_params params ['_userID','_message'];
 	''
@@ -47,19 +68,22 @@ if (_type isEqualTo 'onUserConnected') exitWith {
 };
 if (_type isEqualTo 'onUserDisconnected') exitWith {
 	_params params ['_userID'];
+	private _state = serverNamespace getVariable ['QS_signatureKickState',createHashMap];
+	_state deleteAt (str _userID);
+	serverNamespace setVariable ['QS_signatureKickState',_state];
 	''
 };
 if (_type isEqualTo 'onUnsignedData') exitWith {
 	_params params ['_userID','_fileName'];
-	(call (uiNamespace getVariable 'QS_fnc_serverCommandPassword')) serverCommand (format ['#kick %1',_userID]);
+	[_userID] call _fn_kickSignatureUserOnce;
 };
 if (_type isEqualTo 'onHackedData') exitWith {
 	_params params ['_userID','_fileName'];
-	(call (uiNamespace getVariable 'QS_fnc_serverCommandPassword')) serverCommand (format ['#kick %1',_userID]);
+	[_userID] call _fn_kickSignatureUserOnce;
 };
 if (_type isEqualTo 'onDifferentData') exitWith {
 	_params params ['_userID','_fileName'];
-	(call (uiNamespace getVariable 'QS_fnc_serverCommandPassword')) serverCommand (format ['#kick %1',_userID]);
+	[_userID] call _fn_kickSignatureUserOnce;
 };
 if (_type isEqualTo 'onUserKicked') exitWith {
 	_params params ['_userID','_kickTypeID','_kickReason'];

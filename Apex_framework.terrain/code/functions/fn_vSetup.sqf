@@ -14,6 +14,20 @@ Description:
 _____________________________________________________/*/
 
 params ['_u',['_z',FALSE],['_wreckable',FALSE]];
+private _fn_addManagedEventHandler = {
+	params ['_entity','_eventType','_handler','_idVariable'];
+	private _existingEH = _entity getVariable [_idVariable,-1];
+	if (
+		(_existingEH >= 0) &&
+		{((_entity getEventHandlerInfo [_eventType,_existingEH]) param [0,FALSE])}
+	) exitWith {
+		_existingEH
+	};
+	_entity setVariable [_idVariable,nil,FALSE];
+	private _eventHandler = _entity addEventHandler [_eventType,_handler];
+	_entity setVariable [_idVariable,_eventHandler,FALSE];
+	_eventHandler
+};
 _t = typeOf _u;
 _t2 = toLowerANSI _t;
 _isSimpleObject = isSimpleObject _u;
@@ -365,7 +379,8 @@ if (_u isKindOf 'LandVehicle') then {
 		{(!(_u isKindOf 'ugv_01_rcws_base_f'))}
 	) then {
 		// Unarmed Stomper UGV
-		_u addEventHandler [
+		[
+			_u,
 			'Deleted',
 			{
 				params ['_vehicle'];
@@ -378,9 +393,11 @@ if (_u isKindOf 'LandVehicle') then {
 						};
 					} forEach (attachedObjects _vehicle);
 				};
-			}
-		];
-		_u addEventHandler [
+			},
+			'QS_vSetup_ugvDeletedEH'
+		] call _fn_addManagedEventHandler;
+		[
+			_u,
 			'Killed',
 			{
 				params ['_vehicle'];
@@ -393,8 +410,9 @@ if (_u isKindOf 'LandVehicle') then {
 						};
 					} forEach (attachedObjects _vehicle);
 				};
-			}
-		];
+			},
+			'QS_vSetup_ugvKilledEH'
+		] call _fn_addManagedEventHandler;
 		_u setVariable ['QS_tow_veh',2,TRUE];
 		_stretcher1 = createSimpleObject ['a3\props_f_orange\humanitarian\camps\stretcher_01_f.p3d',[0,0,0]];
 		[1,_stretcher1,[_u,[0,-0.75,-0.7]]] call QS_fnc_eventAttach;
@@ -509,15 +527,17 @@ if (_u isKindOf 'Air') then {
 			};
 			_u addBackpackCargoGlobal [QS_core_classNames_parachute,_transportSoldier];
 			if (_t2 isKindOf 'VTOL_01_vehicle_base_F') then {
-				_u addEventHandler [
+				[
+					_u,
 					'Killed',
 					{
 						params ['_killed','_killer'];
 						if ((getVehicleCargo _killed) isNotEqualTo []) then {
 							(_this # 0) setVehicleCargo objNull;
 						};
-					}
-				];
+					},
+					'QS_vSetup_vtolCargoKilledEH'
+				] call _fn_addManagedEventHandler;
 			};
 		};
 	};
@@ -530,8 +550,32 @@ if (_u isKindOf 'Air') then {
 			_u allowDamage FALSE;
 			_u setVariable ['QS_vehicle_activateLocked',TRUE,TRUE];
 			_u lock 2;
-			_u addEventHandler ['GetIn',{(_this # 0) allowDamage TRUE; (_this # 0) removeEventHandler [_thisEvent,_thisEventHandler];}];
-			_u addEventHandler ['Local',{(_this # 0) allowDamage TRUE; (_this # 0) removeEventHandler [_thisEvent,_thisEventHandler];}];
+			[
+				_u,
+				'GetIn',
+				{
+					private _vehicle = _this # 0;
+					_vehicle allowDamage TRUE;
+					_vehicle removeEventHandler [_thisEvent,_thisEventHandler];
+					if ((_vehicle getVariable ['QS_vSetup_activationGetInEH',-1]) isEqualTo _thisEventHandler) then {
+						_vehicle setVariable ['QS_vSetup_activationGetInEH',nil,FALSE];
+					};
+				},
+				'QS_vSetup_activationGetInEH'
+			] call _fn_addManagedEventHandler;
+			[
+				_u,
+				'Local',
+				{
+					private _vehicle = _this # 0;
+					_vehicle allowDamage TRUE;
+					_vehicle removeEventHandler [_thisEvent,_thisEventHandler];
+					if ((_vehicle getVariable ['QS_vSetup_activationLocalEH',-1]) isEqualTo _thisEventHandler) then {
+						_vehicle setVariable ['QS_vSetup_activationLocalEH',nil,FALSE];
+					};
+				},
+				'QS_vSetup_activationLocalEH'
+			] call _fn_addManagedEventHandler;
 			_u spawn {sleep 3; _this enableSimulationGlobal FALSE;};
 		};
 		_u setVariable ['QS_heli_spawnPosition',(position _u),FALSE];
@@ -592,7 +636,8 @@ if ((getFuelCargo _u) > 0) then {
 	if (!(_u getVariable ['QS_logistics_deployable',FALSE])) then {
 		_u setVariable ['QS_logistics_deployable',TRUE,TRUE];
 	};
-	_u addEventHandler [
+	[
+		_u,
 		'Killed',
 		{
 			params ['_entity'];
@@ -607,8 +652,9 @@ if ((getFuelCargo _u) > 0) then {
 					(ASLToAGL (getPosASL _entity))
 				];
 			};
-		}
-	];
+		},
+		'QS_vSetup_fuelKilledEH'
+	] call _fn_addManagedEventHandler;
 };
 if ((getRepairCargo _u) > 0) then {
 	_u setRepairCargo 0;
@@ -678,11 +724,13 @@ if (_t2 in [
 if ((['LandVehicle','Air','Ship'] findIf { _u isKindOf _x }) isNotEqualTo -1) then {
 	[_u] call (missionNamespace getVariable 'QS_fnc_vehicleAPSParams');
 };
-_u addEventHandler [
+
+[
+	_u,
 	'Deleted',
 	{
 		params ['_vehicle'];
-		_attachedObjs = [_vehicle] call QS_fnc_getAllAttached;
+		private _attachedObjs = [_vehicle] call QS_fnc_getAllAttached;
 		{
 			deleteVehicle _x;
 		} forEach _attachedObjs;
@@ -691,35 +739,66 @@ _u addEventHandler [
 				_vehicle setVehicleCargo objNull;
 			};
 		};
-	}
-];
+	},
+	'QS_vSetup_deletedEH'
+] call _fn_addManagedEventHandler;
 // Other
 if (!(_z)) then {
 	if (isDedicated) then {
 		_u setVariable ['QS_RD_vehicleRespawnable',TRUE,TRUE];
 	};
 	if (!(unitIsUav _u)) then {
-		_u addEventHandler ['Killed',(missionNamespace getVariable 'QS_fnc_vKilled')];
+		[
+			_u,
+			'Killed',
+			(missionNamespace getVariable 'QS_fnc_vKilled'),
+			'QS_vSetup_killedEH'
+		] call _fn_addManagedEventHandler;
 	};
 };
 if (isDedicated) then {
-	if (_t2 in (['load_cargo_1'] call QS_data_listVehicles)) then {
-		_u addEventHandler ['CargoLoaded',{call QS_fnc_eventCargoLoaded}];
-		_u addEventHandler ['CargoUnloaded',{call QS_fnc_eventCargoUnloaded}];
+	if (
+		(_t2 in (['load_cargo_1'] call QS_data_listVehicles)) &&
+		{(!(_u getVariable ['QS_server_cargoEventHandlersManaged',FALSE]))}
+	) then {
+		private _cargoLoadedEH = _u addEventHandler ['CargoLoaded',{call QS_fnc_eventCargoLoaded}];
+		private _cargoUnloadedEH = _u addEventHandler ['CargoUnloaded',{call QS_fnc_eventCargoUnloaded}];
+		_u setVariable [
+			'QS_server_cargoEventHandlers',
+			[
+				['CargoLoaded',_cargoLoadedEH],
+				['CargoUnloaded',_cargoUnloadedEH]
+			],
+			FALSE
+		];
+		_u setVariable ['QS_server_cargoEventHandlersManaged',TRUE,FALSE];
 	};
 	if (_wreckable) then {
 		_vehicle setVariable ['QS_logistics_wreckable',TRUE,FALSE];
 	};
 	_u setVariable ['QS_transporter',nil,FALSE];
-	_u addEventHandler [
+	[
+		_u,
 		'Local',
 		{
 			params ['_vehicle','_isLocal'];
+			private _damageEH = _vehicle getVariable ['QS_vSetup_handleDamageEH',-1];
+			private _damageEHActive = (
+				(_damageEH >= 0) &&
+				{((_vehicle getEventHandlerInfo ['HandleDamage',_damageEH]) param [0,FALSE])}
+			);
 			if (_isLocal) then {
 				if ((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') then {
+					if (_damageEHActive) then {
+						_vehicle removeEventHandler ['HandleDamage',_damageEH];
+					};
+					_vehicle setVariable ['QS_vSetup_handleDamageEH',nil,FALSE];
 					[_vehicle] call TGC_fnc_addSpawnMenuVehicleHandlers;
 				} else {
-					_vehicle addEventHandler ['HandleDamage',{call QS_fnc_clientVehicleEventHandleDamage}];
+					if (!_damageEHActive) then {
+						_damageEH = _vehicle addEventHandler ['HandleDamage',{call QS_fnc_clientVehicleEventHandleDamage}];
+						_vehicle setVariable ['QS_vSetup_handleDamageEH',_damageEH,FALSE];
+					};
 				};
 				if (
 					(lockedDriver _vehicle) &&
@@ -735,11 +814,14 @@ if (isDedicated) then {
 					_vehicle setVariable ['QS_lockedInventory',FALSE,TRUE];
 				};
 			} else {
-				if ((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') exitWith {};
-				_vehicle removeAllEventHandlers 'HandleDamage';
+				if (_damageEHActive) then {
+					_vehicle removeEventHandler ['HandleDamage',_damageEH];
+				};
+				_vehicle setVariable ['QS_vSetup_handleDamageEH',nil,FALSE];
 			};
-		}
-	];
+		},
+		'QS_vSetup_localEH'
+	] call _fn_addManagedEventHandler;
 };
 if ((locked _u) isNotEqualTo 2) then {
 	_u lock 0;

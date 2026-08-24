@@ -33,6 +33,22 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 	['BASE'] spawn (missionNamespace getVariable 'QS_fnc_localObjects');
 };
 if (!([getPlayerUID player] call (missionNamespace getVariable 'QS_fnc_atNameCheck'))) exitWith {};
+
+// Staff and role initialization below depends on the connecting player's
+// database whitelist. Ensure the receiver/request handshake is running and
+// give the server response a bounded window to arrive before caching access.
+if (missionNamespace getVariable ['QS_missionConfig_dbWhitelistEnabled',false]) then {
+	[] call TGC_fnc_dbWhitelistInit;
+	private _whitelistDeadline = diag_tickTime + 16;
+	waitUntil {
+		uiSleep 0.1;
+		(missionNamespace getVariable ['TGC_dbWhitelistReceived',false]) ||
+		{diag_tickTime >= _whitelistDeadline}
+	};
+	if !(missionNamespace getVariable ['TGC_dbWhitelistReceived',false]) then {
+		diag_log format ['TGC whitelist: timed out waiting for client data for %1',getPlayerUID player];
+	};
+};
 private _isAdmin = (getPlayerUID player) in (['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 private _isDonator = (getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 if (_isAdmin) then {
@@ -632,7 +648,7 @@ if (missionNamespace getVariable ['QS_missionConfig_weaponLasers',TRUE]) then {
 	['INIT'] call QS_fnc_simpleLasers;
 };
 0 spawn (missionNamespace getVariable 'QS_fnc_clientDiary');
-0 spawn (missionNamespace getVariable 'QS_fnc_icons');
+0 spawn (missionNamespace getVariable 'QS_fnc_clientProjectileMapIcons');
 call (missionNamespace getVariable 'AR_Advanced_Rappelling_Install');
 enableDynamicSimulationSystem FALSE;
 disableRemoteSensors TRUE;
@@ -995,6 +1011,7 @@ if (missionNamespace getVariable ['QS_missionConfig_introMusic',TRUE]) then {
 	};
 };
 ['SYNC',[]] remoteExecCall ['QS_fnc_serverPrivateChannels',2];
+['SYNC',[]] remoteExecCall ['QS_fnc_serverPMC',2];
 0 spawn (missionNamespace getVariable 'QS_fnc_clientCore');
 if (userInputDisabled) then {
 	disableUserInput FALSE;

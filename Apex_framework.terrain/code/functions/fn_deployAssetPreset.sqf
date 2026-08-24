@@ -136,12 +136,11 @@ if (_preset isEqualTo 6) then {
 			_x setSkill 1;
 		} forEach (units _grp);
 		_vehicle addEventHandler [
-			'Fired',
-			{
-				params ['','','','','','','_projectile',''];
-				missionNamespace setVariable ['QS_draw2D_projectiles',((missionNamespace getVariable 'QS_draw2D_projectiles') + [_projectile]),TRUE];
-				missionNamespace setVariable ['QS_draw3D_projectiles',((missionNamespace getVariable 'QS_draw3D_projectiles') + [_projectile]),TRUE];
-			}
+		'Fired',
+		{
+			params ['','','','','','','_projectile',''];
+			[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
+		}
 		];
 		_vehicle addEventHandler [
 			'Deleted',

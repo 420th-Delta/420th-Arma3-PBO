@@ -52,10 +52,11 @@ if (isNull _grp) then {
 private _unitType = '';
 for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 	_unitType = (_groupComposition # _i) # 0;
+	private _resolvedUnitType = QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType];
 	if (_useRecycler) then {
-		_unit = [2,2,QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType]] call (missionNamespace getVariable 'QS_fnc_serverObjectsRecycler');
+		_unit = [2,2,_resolvedUnitType] call (missionNamespace getVariable 'QS_fnc_serverObjectsRecycler');
 		if (isNull _unit) then {
-			_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[-1015,-1015,0],[],15,'NONE'];
+			_unit = _grp createUnit [_resolvedUnitType,[-1015,-1015,0],[],15,'NONE'];
 			QS_core_unittraits_map set [typeOf _unit,getAllUnitTraits _unit,TRUE];
 		} else {
 			// wake up unit
@@ -76,9 +77,16 @@ for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 					_unit setUnitTrait _x;
 				} forEach _unitTraits;
 			};
-			_loadout = QS_hashmap_unitLoadouts getOrDefaultCall [
+			_loadout = QS_hashmap_unitLoadouts_AI getOrDefaultCall [
 				((_groupComposition # _i) # 0),
-				{getUnitLoadout ((_groupComposition # _i) # 0)},
+				{
+					private _fallbackLoadout = getUnitLoadout _unit;
+					if ([_fallbackLoadout] call (missionNamespace getVariable 'QS_fnc_isCreatorDLCContent')) then {
+						[]
+					} else {
+						_fallbackLoadout
+					}
+				},
 				TRUE
 			];
 			_unit setUnitLoadout [_loadout,TRUE];
@@ -87,7 +95,7 @@ for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 			};
 		};
 	} else {
-		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[-1015,-1015,0],[],15,'NONE'];
+		_unit = _grp createUnit [_resolvedUnitType,[-1015,-1015,0],[],15,'NONE'];
 		QS_core_unittraits_map set [typeOf _unit,getAllUnitTraits _unit,TRUE];
 	};
 	_unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
