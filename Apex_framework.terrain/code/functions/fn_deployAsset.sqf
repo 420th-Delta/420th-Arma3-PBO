@@ -14,6 +14,19 @@ Description:
 __________________________________________/*/
 
 params ['_entity','_state',['_profileName','Unknown Soldier'],'_clientOwner',['_faction',sideUnknown],['_currentCooldown',0]];
+
+// QS_v_Monitor uses FALSE as a temporary tombstone until the vehicle manager
+// compacts the array.  Deployment and disconnect handlers can run while those
+// tombstones are present, so only inspect populated monitor records.
+private _findVehicleMonitorIndex = {
+	params ['_entity'];
+	(serverNamespace getVariable ['QS_v_Monitor',[]]) findIf {
+		(_x isEqualType []) &&
+		{(count _x) > 0} &&
+		{_entity isEqualTo (_x # 0)}
+	}
+};
+
 QS_system_vehicleRallyPoints = QS_system_vehicleRallyPoints select {(alive (_x # 0))};
 missionNamespace setVariable ['QS_system_builtThings',QS_system_builtThings select {!isNull _x},TRUE];			// To do: optimize this
 if (_state isEqualTo -1) exitWith {
@@ -28,7 +41,7 @@ if (_state isEqualTo -1) exitWith {
 			_entity setVariable ['QS_deploy_marker','',FALSE];
 		};
 		_index = QS_logistics_deployedAssets findIf {_entity isEqualTo (_x # 0)};
-		_vIndex = (serverNamespace getVariable 'QS_v_Monitor') findIf { _entity isEqualTo (_x # 0) };
+		_vIndex = [_entity] call _findVehicleMonitorIndex;
 		if (_index isNotEqualTo -1) then {
 			_assets = (QS_logistics_deployedAssets # _index) # 1;
 			if (_assets isNotEqualTo []) then {
@@ -88,7 +101,7 @@ if (_state isEqualTo 0) exitWith {
 			_entity setVariable ['QS_logistics_deployed',FALSE,TRUE];
 			(format [localize 'STR_QS_Text_413',_displayName,_profileName]) remoteExec ['systemChat',-2];
 			_index = QS_logistics_deployedAssets findIf {_entity isEqualTo (_x # 0)};
-			_vIndex = (serverNamespace getVariable 'QS_v_Monitor') findIf { _entity isEqualTo (_x # 0) };
+			_vIndex = [_entity] call _findVehicleMonitorIndex;
 			_preset = _entity getVariable ['QS_deploy_preset',-1];
 			_entity = [_entity,FALSE,_preset] call QS_fnc_deployAssetPreset;
 			if (_index isNotEqualTo -1) then {
@@ -141,7 +154,7 @@ if (_state isEqualTo 1) exitWith {
 			waitUntil {
 				((_entity setOwner 2) || (diag_tickTime > _timeout))
 			};
-			_vIndex = (serverNamespace getVariable 'QS_v_Monitor') findIf { _entity isEqualTo (_x # 0) };
+			_vIndex = [_entity] call _findVehicleMonitorIndex;
 			private _deployParams = _entity getVariable ['QS_logistics_deployParams',[30,30,30,30,100,30,500]];
 			_deployParams params [
 				'_deploySafeRadius',
