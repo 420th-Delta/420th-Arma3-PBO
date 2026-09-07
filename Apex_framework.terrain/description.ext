@@ -736,6 +736,7 @@ class CfgFunctions {
 			class vehicleAPSParams {file = "code\functions\fn_vehicleAPSParams.sqf";};
 			class vehicleGetPassiveStealth {file = "code\functions\fn_vehicleGetPassiveStealth.sqf";};
 			class vehicleLoadouts {file = "code\functions\fn_vehicleLoadouts.sqf";};
+			class removeAircraftBombs {file = "code\functions\fn_removeAircraftBombs.sqf";};
 			class vEventControlsShifted {file = "code\functions\fn_vEventControlsShifted.sqf";};
 			class vEventRopeAttach {file = "code\functions\fn_vEventRopeAttach.sqf";};
 			class vEventRopeBreak {file = "code\functions\fn_vEventRopeBreak.sqf";};

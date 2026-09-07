@@ -96,6 +96,7 @@ if (!(['cluster',(typeOf _jetActual),FALSE] call (missionNamespace getVariable '
 } else {
 	[_jetActual,1,[]] call (missionNamespace getVariable 'QS_fnc_vehicleLoadouts');
 };
+[_jetActual] call (missionNamespace getVariable 'QS_fnc_removeAircraftBombs');
 _jetPilot addEventHandler [
 	'Killed',
 	{
