@@ -35,6 +35,14 @@ QS_enemyUAVDiagnostics_entityCreatedEH = addMissionEventHandler [
 			];
 			if (!((_liveSide in [EAST,RESISTANCE]) || {_configSide in [EAST,RESISTANCE]})) exitWith {};
 
+			if (
+				(_uav isKindOf 'Plane') &&
+				{!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}}
+			) then {
+				private _source = ['normalAO.enemyUAV','defend.enemyUAV'] select (missionNamespace getVariable ['QS_defendActive',FALSE]);
+				[_uav,_source] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
+			};
+
 			diag_log text format [
 				'QS_ENEMY_UAV_SPAWN class="%1" netId="%2" owner=%3 position=%4 velocity=%5 orientation=[heading=%6,vectorDir=%7,vectorUp=%8] side=%9 configSide=%10 local=%11',
 				typeOf _uav,

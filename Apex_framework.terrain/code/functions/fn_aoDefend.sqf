@@ -1143,7 +1143,15 @@ for '_x' from 0 to 1 step 0 do {
 		if (_timeNow > _QS_flyByDelay) then {
 			_QS_flyBy = FALSE;
 			{
+				private _planesBeforeFlyby = entities 'Plane';
 				_x call (missionNamespace getVariable 'BIS_fnc_ambientFlyby');
+				if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
+					{
+						if (!(_x in _planesBeforeFlyby)) then {
+							[_x,'defend.ambientFlyby'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
+						};
+					} forEach (entities 'Plane');
+				};
 			} forEach [
 				[_startPos1,_endPos1,_QS_flyByAltitude,_QS_flyBySpeed,_QS_flyByType,_side],
 				[_startPos2,_endPos2,_QS_flyByAltitude,_QS_flyBySpeed,_QS_flyByType,_side]
@@ -1199,6 +1207,9 @@ for '_x' from 0 to 1 step 0 do {
 				0 = _allArray pushBack _jet;
 				0 = _allArray pushBack (driver _jet);
 				_grp setCombatMode 'RED';
+				if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
+					[_jet,'defend.airSuperiority'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
+				};
 				_jetSpawnDelay = time + 60 + (random 60);
 			};
 		};

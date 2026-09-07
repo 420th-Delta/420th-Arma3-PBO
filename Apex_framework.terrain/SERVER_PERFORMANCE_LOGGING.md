@@ -10,6 +10,10 @@ All diagnostic state is server-local. The probes do not broadcast, create JIP en
 - `[QS PERF] SLOW`: individual operations taking at least 250 ms, with start/end `diag_tickTime`, elapsed milliseconds, elapsed frames, original `canSuspend`, counts, Defend state, and operation-specific metadata. Default limit: 20 detail lines per summary window, with up to 10 additional severe (5+ second) samples. Summaries still include rate-limited details.
 - `[QS PERF] FRAME_GAP`: at least 1,000 ms between server EachFrame callbacks. Includes current Defend state, up to 8 active spans, and the last 16 completed spans. Gap lines are limited to one per 5 seconds.
 - `[QS PERF] INCOMPLETE`: starts dropped at the 256-active-span limit, or spans expired after 600 seconds. These can indicate script errors/termination or unusually long waits, not necessarily a blocking operation.
+- `[QS XFORM] CORRUPT`: a server-observed entity has a malformed, non-finite, or degenerate position, velocity, or orientation. Includes class, `netId`, current owner/locality, position, velocity, orientation, attachment/vehicle context, and mission timing.
+- `[QS XFORM] SUSPECT`: a finite transform is outside the configured world envelope, approaches the f16 range, or has substantially non-orthogonal direction/up vectors. These records are leads, not proof of corruption.
+- `[QS XFORM] RECOVERED`: an entity previously reported by the detector now has a valid transform.
+- `[QS XFORM] SUMMARY`: approximately once per minute, reports census duration, object and finding counts, retained diagnostic state, and any created-entity queue overflow.
 
 `frames=0` means both timing samples were taken in the same frame; `frames>0` means wall time includes other frames and possibly scheduler delays. Even a native-call probe can straddle a scheduling boundary. Total/batch spans include their original sleeps and nested work. Do **not** add nested timings together or interpret `totalMs` as exclusive CPU time. A completed sample belongs to its completion window even if it began in a previous window.
 
@@ -35,6 +39,7 @@ The frame-gap callback can only report a stall after processing resumes. Active 
 | `aoGetTerrainData.*` | Total output eligible houses; completion metadata: nearby simple objects and building-position count. Separate house-search/filter and whole-world simple-object census timings. The latter uses the existing scan result. |
 | `findRandomPos.*` | Object counts 0/0 (these are position searches). Total completion metadata: loop iterations, timeout reached. `selectBestPlaces` completion metadata: returned candidate count. Other placement/terrain queries are covered by the total span, not separately. |
 | `curatorSync.*` | Census output objects found; addEditable input/output target entries per batch; total output filtered additional-object list. Counts can overlap between batches. |
+| `transformDiag.*` | Server-only transform detector. Census output is objects returned by `allMissionObjects`; batch input/output is the number inspected. Created and periodic checks are processed in bounded scheduled batches. |
 
 In summaries, `inputSamples`/`outputSamples` count samples with known counts. A value of -1 is unknown/not applicable and is excluded from sums; 0 is a known zero. Object counts are observations of each operation, not necessarily unique objects or net population changes. Metadata is present on SLOW records, not per-call fast records.
 
@@ -52,9 +57,12 @@ Use TRUE to resume. This disables new recording and output (except the startup I
 missionNamespace setVariable ['QS_perf_slowMs',500];
 missionNamespace setVariable ['QS_perf_frameGapMs',2000];
 missionNamespace setVariable ['QS_perf_summarySeconds',60];
+missionNamespace setVariable ['QS_transformDiag_enabled',FALSE];
 ```
 
 There is no new remote-execution allowlist entry. Keep existing UAV/projectile settings unchanged during this capture so comparisons remain useful.
+
+Transform diagnostics are server-only and write exclusively to the server RPT. They do not repair or delete entities. Findings are deduplicated and normally repeat no more than once per 60 seconds unless the reason or owner changes. The deduplication cache and `EntityCreated` queue are bounded; `EntityKilled` checks are immediate but cap related-object inspection at 16. The periodic census defaults to every 10 seconds and checks objects in batches of 100 with scheduler yields between batches.
 
 ## Validation and first capture
 

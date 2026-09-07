@@ -896,7 +896,12 @@ for '_x' from 0 to 1 step 0 do {
 							};
 							private _localEH = _grp addEventHandler ['Local',_groupEventLocalServer];
 							_grp setVariable ['QS_AI_GRP_HC_LocalEH',_localEH,FALSE];
-							if (!(_grp setGroupOwner _QS_module_hc_ID)) then {
+							private _groupOwnerBefore = groupOwner _grp;
+							private _groupOwnerTransferResult = _grp setGroupOwner _QS_module_hc_ID;
+							if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagGroupOwnerRequest'}) then {
+								[_grp,_groupOwnerBefore,_QS_module_hc_ID,_groupOwnerTransferResult] call (missionNamespace getVariable 'QS_fnc_transformDiagGroupOwnerRequest');
+							};
+							if (!_groupOwnerTransferResult) then {
 								//===== Ownership transfer failed, reset to beginning of process
 								if (((_grp getEventHandlerInfo ['Local',_localEH]) param [0,FALSE])) then {
 									_grp removeEventHandler ['Local',_localEH];

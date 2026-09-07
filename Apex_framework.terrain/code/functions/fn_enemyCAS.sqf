@@ -181,6 +181,9 @@ _grp setCombatBehaviour 'COMBAT';
 _grp setBehaviourStrong 'COMBAT';
 _grp setSpeedMode 'FULL';
 [9,EAST,_grp,(leader _grp),_jetActual] call (missionNamespace getVariable 'QS_fnc_AIGetKnownEnemies');
+if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
+	[_jetActual,'normalAO.enemyCAS'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
+};
 if (!((toLowerANSI _jetSelect) in ['o_plane_fighter_02_stealth_f'])) then {
 	if (!(missionNamespace getVariable ['QS_defendActive',FALSE])) then {
 		['EnemyJet',[localize 'STR_QS_Notif_054']] remoteExec ['QS_fnc_showNotification',-2,FALSE];

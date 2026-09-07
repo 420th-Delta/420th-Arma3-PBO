@@ -6,7 +6,8 @@ const root = path.resolve(__dirname, '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const names = ['perfBegin', 'perfEnd', 'perfInit', 'deleteOutOfBoundsLoop', 'spawnGroup',
   'unitSetup', 'serverObjectsMapper', 'core', 'eventEntityKilled', 'aoDefend', 'aoEnemy',
-  'customInventory', 'aoGetTerrainData', 'findRandomPos', 'curatorSync'];
+  'customInventory', 'aoGetTerrainData', 'findRandomPos', 'curatorSync',
+  'corruptTransformDiagnostics'];
 
 function structurallyBalanced(source, name) {
   const stack = [];
@@ -45,6 +46,7 @@ for (const name of ['perfBegin', 'perfEnd', 'perfInit']) {
   assert(description.includes(`class ${name} {file = "code\\functions\\fn_${name}.sqf";`), `${name}: missing registration`);
 }
 assert(/class perfInit \{[^}]*preInit = 1;/.test(description));
+assert(description.includes('class corruptTransformDiagnostics {file = "code\\functions\\fn_corruptTransformDiagnostics.sqf"; postInit = 1;}'), 'Transform diagnostics missing postInit registration');
 const helpers = ['perfBegin', 'perfEnd', 'perfInit'].map(n => read(`code/functions/fn_${n}.sqf`)).join('\n');
 assert(!/\b(remoteExec(?:Call)?|publicVariable|allMissionObjects|allSimpleObjects)\b/i.test(helpers), 'Profiler must not broadcast or add world censuses');
 assert(!/class QS_fnc_perf/.test(read('code/config/security.hpp')), 'Profiler must not be remotely allowlisted');
@@ -53,6 +55,19 @@ assert(helpers.includes('(count _perfRecent) > 16'), 'Recent history must be bou
 assert(helpers.includes('_perfMs >= 5000'), 'Severe spans need reserved detail capacity');
 assert(helpers.includes('_perfEndFrame - _perfStartFrame'), 'Frame deltas must be recorded');
 assert(helpers.includes('_perfSnapshot = serverNamespace getVariable'), 'Summary must use a swapped snapshot');
+const transformDiagnostics = read('code/functions/fn_corruptTransformDiagnostics.sqf');
+assert(transformDiagnostics.includes('if (!isServer) exitWith {}'), 'Transform diagnostics must be server-only');
+assert(!/\b(remoteExec(?:Call)?|publicVariable)\b/i.test(transformDiagnostics), 'Transform diagnostics must not broadcast');
+assert(transformDiagnostics.includes("allMissionObjects ''"), 'Transform diagnostics must periodically reconcile all mission objects');
+assert(transformDiagnostics.includes('finite _x'), 'Transform diagnostics must use the engine finite check');
+assert(transformDiagnostics.includes("'EntityCreated'"), 'Transform diagnostics must inspect newly created entities');
+assert(transformDiagnostics.includes("'EntityKilled'"), 'Transform diagnostics must inspect killed entities');
+for (const field of ['class=', 'netId=', 'owner=', 'positionWorld=', 'velocity=', 'vectorDir=', 'vectorUp=']) {
+  assert(transformDiagnostics.includes(field), `Transform diagnostic output missing ${field}`);
+}
+assert(transformDiagnostics.includes('QS_transformDiag_queueLimit'), 'Created-entity queue must be bounded');
+assert(transformDiagnostics.includes('QS_transformDiag_cacheLimit'), 'Transform deduplication cache must be bounded');
+assert(transformDiagnostics.includes("_related resize 16"), 'Killed-related immediate checks must be bounded');
 assert.equal((read('TGC/Functions/Database/fn_dbQuery.sqf').match(/call QS_fnc_perfEnd/g) || []).length, 3, 'All 3 extension boundaries must be timed');
 assert.equal((read('code/functions/fn_unitSetup.sqf').match(/call QS_fnc_perfEnd/g) || []).length, 3, 'All unitSetup returns must close the span');
 assert.equal((read('code/functions/fn_aoGetTerrainData.sqf').match(/\[_perfTerrain,/g) || []).length, 5, 'All terrain type exits must close the span');

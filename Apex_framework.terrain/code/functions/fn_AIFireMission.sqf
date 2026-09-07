@@ -218,6 +218,9 @@ if (_type isEqualTo 2) exitWith {
 	_supportGroup reveal [_laserTarget,3.9];
 	_supportProvider doWatch _laserTarget;
 	_supportProvider commandTarget _laserTarget;
+	if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission'}) then {
+		['START',_vehicle,_targetObject,_targetPosition,_laserTarget] call (missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission');
+	};
 	private _unit = objNull;
 	{
 		_unit = _x;
@@ -291,6 +294,9 @@ if (_type isEqualTo 2) exitWith {
 						{((_vehicle aimedAtTarget [_laserTarget]) < 0.5)} ||
 						{(time > _fireDuration)}
 					) exitWith {};
+					if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission'}) then {
+						['COMMAND',_vehicle,_targetObject,_targetPosition,_laserTarget] call (missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission');
+					};
 					_vehicle fireAtTarget [_laserTarget,(currentWeapon _vehicle)];
 					sleep (0.5 - ((_vehicle aimedAtTarget [_laserTarget]) / 2.25));
 				};
@@ -307,6 +313,9 @@ if (_type isEqualTo 2) exitWith {
 			_fireDelay = time + 5;
 		};
 		uiSleep 1;
+	};
+	if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission'}) then {
+		['END',_vehicle,_targetObject,_targetPosition,_laserTarget] call (missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission');
 	};
 	_vehicle setVariable ['QS_AI_PLANE_fireMission',FALSE,FALSE];
 	if (!isNull _laserTarget) then {
