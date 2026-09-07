@@ -450,8 +450,12 @@ for '_x' from 0 to 1 step 0 do {
 						if (_foundSpawnPos) exitWith {};
 					};
 					_uavType = selectRandom _uavTypes;
+					private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 					_uav = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _uavType,_uavType],_spawnPos,[],0,'FLY'];
+					[_perfSpawn,([0,1] select (!isNull _uav)),[typeOf _uav,netId _uav]] call QS_fnc_perfEnd;
+					private _perfCrew = ['aoDefend.createVehicleCrew',1,[typeOf _uav,netId _uav]] call QS_fnc_perfBegin;
 					_grp = createVehicleCrew _uav;
+					[_perfCrew,count (crew _uav)] call QS_fnc_perfEnd;
 					if (_allPlayersCount >= 15) then {
 						[_uav,1,[]] call _fn_vehicleLoadouts;
 					} else {
@@ -657,7 +661,9 @@ for '_x' from 0 to 1 step 0 do {
 					if (_foundSpawnPos) exitWith {};
 				};
 				_armorType = selectRandomWeighted ([_motorPool] call _fn_getAIMotorPool);
+				private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 				_av = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],_spawnPos,[],0,'NONE'];
+				[_perfSpawn,([0,1] select (!isNull _av)),[typeOf _av,netId _av]] call QS_fnc_perfEnd;
 				_av setVariable ['QS_dynSim_ignore',TRUE,FALSE];
 				_av enableDynamicSimulation FALSE;
 				0 = _armorArray pushBack _av;
@@ -675,7 +681,9 @@ for '_x' from 0 to 1 step 0 do {
 				_av lock 2;
 				_direction = _spawnPos getDir _centerPos;
 				_av setDir _direction;
+				private _perfCrew = ['aoDefend.createVehicleCrew',1,[typeOf _av,netId _av]] call QS_fnc_perfBegin;
 				_grp = createVehicleCrew _av;
+				[_perfCrew,count (crew _av)] call QS_fnc_perfEnd;
 				if (!((side _grp) in [EAST,RESISTANCE])) then {
 					_grp = createGroup [EAST,TRUE];
 					(crew _av) joinSilent _grp;
@@ -762,7 +770,9 @@ for '_x' from 0 to 1 step 0 do {
 							if (_foundSpawnPos) exitWith {};
 						};
 						_groundTransportType = selectRandom _groundTransportTypes;
+						private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 						_v = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _groundTransportType,_groundTransportType],_spawnPos,[],0,'NONE'];
+						[_perfSpawn,([0,1] select (!isNull _v)),[typeOf _v,netId _v]] call QS_fnc_perfEnd;
 						_v setVariable ['QS_dynSim_ignore',TRUE,FALSE];
 						_v enableDynamicSimulation FALSE;
 						0 = _groundTransportArray pushBack _v;
@@ -782,7 +792,9 @@ for '_x' from 0 to 1 step 0 do {
 						clearBackpackCargoGlobal _v;
 						_direction = _spawnPos getDir _centerPos;
 						_v setDir _direction;
+						private _perfCrew = ['aoDefend.createVehicleCrew',1,[typeOf _v,netId _v]] call QS_fnc_perfBegin;
 						_grp = createVehicleCrew _v;
+						[_perfCrew,count (crew _v)] call QS_fnc_perfEnd;
 						[(units _grp),3] call _fn_setAISkill;
 						_v allowDamage TRUE;
 						_v addEventHandler [
@@ -833,7 +845,9 @@ for '_x' from 0 to 1 step 0 do {
 						};
 						for '_x' from 0 to (round(((_v emptyPositions 'Cargo') - 1) / _divisor)) step 1 do {
 							_unitType = selectRandom _unitTypes;
+							private _perfSpawn = ['aoDefend.createUnit',1] call QS_fnc_perfBegin;
 							_unit = _grp2 createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[0,0,0],[],0,'NONE'];
+							[_perfSpawn,([0,1] select (!isNull _unit)),[typeOf _unit,netId _unit]] call QS_fnc_perfEnd;
 							sleep 0.1;
 							_unit = _unit call _fn_unitSetup;
 							_unit moveInAny _v;
@@ -912,7 +926,9 @@ for '_x' from 0 to 1 step 0 do {
 					};
 					_spawnPos set [2,(800 + (random 400))];
 					_vParaType = selectRandom _vParaTypes;
+					private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 					_vParaV = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vParaType,_vParaType],[0,0,(100 + (random 1000))],[],0,'NONE'];
+					[_perfSpawn,([0,1] select (!isNull _vParaV)),[typeOf _vParaV,netId _vParaV]] call QS_fnc_perfEnd;
 					_allArray pushBack _vParaV;
 					_vParaV setVariable ['QS_uav_protected',TRUE,FALSE];
 					_vParaV setPos _spawnPos;
@@ -924,7 +940,9 @@ for '_x' from 0 to 1 step 0 do {
 					clearWeaponCargoGlobal _vParaV;
 					clearItemCargoGlobal _vParaV;
 					clearBackpackCargoGlobal _vParaV;
+					private _perfCrew = ['aoDefend.createVehicleCrew',1,[typeOf _vParaV,netId _vParaV]] call QS_fnc_perfBegin;
 					createVehicleCrew _vParaV;
+					[_perfCrew,count (crew _vParaV)] call QS_fnc_perfEnd;
 					if ((crew _vParaV) isNotEqualTo []) then {
 						_grp = group (effectiveCommander _vParaV);
 						{
@@ -938,7 +956,9 @@ for '_x' from 0 to 1 step 0 do {
 						_grp3 = createGroup [_side,TRUE];
 						for '_x' from 0 to ((_vParaV emptyPositions 'CARGO') - 1) step 1 do {
 							_unitType = selectRandom _unitTypes;
+							private _perfSpawn = ['aoDefend.createUnit',1] call QS_fnc_perfBegin;
 							_unit = _grp3 createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[0,0,0],[],0,'NONE'];
+							[_perfSpawn,([0,1] select (!isNull _unit)),[typeOf _unit,netId _unit]] call QS_fnc_perfEnd;
 							_unit = _unit call _fn_unitSetup;
 							_unit assignAsCargo _vParaV;
 							_unit moveInCargo _vParaV;
@@ -1149,7 +1169,9 @@ for '_x' from 0 to 1 step 0 do {
 					if ((_allPlayers inAreaArray [_spawnPos,1000,1000,0,FALSE]) isEqualTo []) exitWith {};
 				};
 				_jetType = selectRandomWeighted (['defend_jettypes_1'] call QS_data_listVehicles);
+				private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 				_jet = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _jetType,_jetType],_spawnPos,[],0,'FLY'];
+				[_perfSpawn,([0,1] select (!isNull _jet)),[typeOf _jet,netId _jet]] call QS_fnc_perfEnd;
 				_jetArray pushBack _jet;
 				_jet engineOn TRUE;
 				_jet allowCrewInImmobile [TRUE,TRUE];
@@ -1160,7 +1182,9 @@ for '_x' from 0 to 1 step 0 do {
 				clearWeaponCargoGlobal _jet;
 				clearItemCargoGlobal _jet;
 				clearBackpackCargoGlobal _jet;
+				private _perfCrew = ['aoDefend.createVehicleCrew',1,[typeOf _jet,netId _jet]] call QS_fnc_perfBegin;
 				_grp = createVehicleCrew _jet;
+				[_perfCrew,count (crew _jet)] call QS_fnc_perfEnd;
 				[_grp,_centerPos,FALSE] call _fn_taskAttack;
 				_grp enableAttack TRUE;
 				_grp lockWP TRUE;
@@ -1187,12 +1211,16 @@ for '_x' from 0 to 1 step 0 do {
 					if ((_allPlayers inAreaArray [_spawnPos,1000,1000,0,FALSE]) isEqualTo []) exitWith {};
 				};
 				_helicopterType = selectRandom _helicopterTypes;
+				private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 				_helicopter = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _helicopterType,_helicopterType],_spawnPos,[],0,'FLY'];
+				[_perfSpawn,([0,1] select (!isNull _helicopter)),[typeOf _helicopter,netId _helicopter]] call QS_fnc_perfEnd;
 				[_helicopter,2,[]] call _fn_vehicleLoadouts;
 				[_helicopter,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 				_allArray pushBack _helicopter;
 				_helicopterArray pushBack _helicopter;
+				private _perfCrew = ['aoDefend.createVehicleCrew',1,[typeOf _helicopter,netId _helicopter]] call QS_fnc_perfBegin;
 				_grp = createVehicleCrew _helicopter;
+				[_perfCrew,count (crew _helicopter)] call QS_fnc_perfEnd;
 				_direction = _spawnPos getDir _centerPos;
 				_helicopter setDir _direction;
 				_helicopter lock 2;
@@ -1244,7 +1272,9 @@ for '_x' from 0 to 1 step 0 do {
 														_heliParaGrp move _centerPos;
 													};
 													_paratrooperType = selectRandom _paratrooperTypes;
+													private _perfSpawn = ['aoDefend.createUnit',1] call QS_fnc_perfBegin;
 													_parajumper = _heliParaGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _paratrooperType,_paratrooperType],[0,0,0],[],0,'NONE'];
+													[_perfSpawn,([0,1] select (!isNull _parajumper)),[typeOf _parajumper,netId _parajumper]] call QS_fnc_perfEnd;
 													0 = _allArray pushBack _parajumper;
 													_parajumper = _parajumper call _fn_unitSetup;
 													if ((random 1) > 0.5) then {
@@ -1291,7 +1321,9 @@ for '_x' from 0 to 1 step 0 do {
 				_spawnPos = _centerPos getPos [(250 + (random 150)),(random 360)];
 				_spawnPos set [2,(60 + (random 150))];
 				_paratrooperType = selectRandom _paratrooperTypes;
+				private _perfSpawn = ['aoDefend.createUnit',1] call QS_fnc_perfBegin;
 				_paratrooper = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _paratrooperType,_paratrooperType],[0,0,0],[],0,'NONE'];
+				[_perfSpawn,([0,1] select (!isNull _paratrooper)),[typeOf _paratrooper,netId _paratrooper]] call QS_fnc_perfEnd;
 				_paratrooper = _paratrooper call _fn_unitSetup;
 				0 = _allArray pushBack _paratrooper;
 				0 = _paratrooperArray pushBack _paratrooper;
@@ -1319,7 +1351,9 @@ for '_x' from 0 to 1 step 0 do {
 					_spawnPos = _centerPos getPos [(250 + (random 150)),(random 360)];
 					_spawnPos set [2,(60 + (random 150))];
 					_paratrooperType = selectRandom _paratrooperTypes;
+					private _perfSpawn = ['aoDefend.createUnit',1] call QS_fnc_perfBegin;
 					_paratrooper = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _paratrooperType,_paratrooperType],[0,0,0],[],0,'NONE'];
+					[_perfSpawn,([0,1] select (!isNull _paratrooper)),[typeOf _paratrooper,netId _paratrooper]] call QS_fnc_perfEnd;
 					_paratrooper = _paratrooper call _fn_unitSetup;
 					//_paratrooper enableAIFeature ['AUTOCOMBAT',FALSE];
 					_paratrooper enableAIFeature ['COVER',FALSE];
@@ -1340,14 +1374,20 @@ for '_x' from 0 to 1 step 0 do {
 	};
 	
 	if (_timeNow > _vehicleReammoDelay) then {
+		private _perfRearm = ['aoDefend.rearmBatch',count _allArray] call QS_fnc_perfBegin;
+		private _perfRearmed = 0;
 		if (_allArray isNotEqualTo []) then {
 			{
 				if (!isNull _x) then {
+					private _perfAmmo = ['aoDefend.setVehicleAmmo',1,[typeOf _x,netId _x]] call QS_fnc_perfBegin;
 					_x setVehicleAmmo 1;
+					[_perfAmmo,1] call QS_fnc_perfEnd;
+					_perfRearmed = _perfRearmed + 1;
 				};
 				sleep 0.007;
 			} count _allArray;
 		};
+		[_perfRearm,_perfRearmed] call QS_fnc_perfEnd;
 		_vehicleReammoDelay = time + 70;
 	};
 	

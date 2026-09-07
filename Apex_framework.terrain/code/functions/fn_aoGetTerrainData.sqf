@@ -14,6 +14,7 @@ Description:
 ____________________________________________________/*/
 
 params ['_type','_position','_radius','_aoData'];
+private _perfTerrain = ['aoGetTerrainData.total',-1,[_type,_radius]] call QS_fnc_perfBegin;
 private _return = [];
 if (_type isEqualTo 0) exitWith {
 	_aoPolygon = _aoData # 2;
@@ -35,8 +36,13 @@ if (_type isEqualTo 0) exitWith {
 		_roadSegmentsInPolygon = _roadSegments select {((getPosWorld _x) inPolygon _aoPolygon)};
 		_roadIntersections = _roadSegments select {((count (roadsConnectedTo _x)) in [1,3])};
 	};
+	private _perfHouses = ['aoGetTerrainData.nearestHousesAndFilter',-1,[_radius]] call QS_fnc_perfBegin;
 	_nearHouses = (nearestObjects [_position,['House'],_radius,TRUE]) select {(!isObjectHidden _x) && (([_x,(_x buildingPos -1)] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
-	_nearSimpleObjects = (allSimpleObjects []) inAreaArray [_position,_radius,_radius,0,FALSE];
+	[_perfHouses,count _nearHouses] call QS_fnc_perfEnd;
+	private _perfSimple = ['aoGetTerrainData.allSimpleObjects'] call QS_fnc_perfBegin;
+	private _perfSimpleObjects = allSimpleObjects [];
+	[_perfSimple,count _perfSimpleObjects] call QS_fnc_perfEnd;
+	_nearSimpleObjects = _perfSimpleObjects inAreaArray [_position,_radius,_radius,0,FALSE];
 	if (_nearSimpleObjects isNotEqualTo []) then {
 		_nearSimpleHouses = _nearSimpleObjects select {(([_x,[]] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
 		_nearHouses = _nearHouses + _nearSimpleHouses;
@@ -82,6 +88,7 @@ if (_type isEqualTo 0) exitWith {
 		_buildingPositionsInPolygonNearGround
 	];
 	missionNamespace setVariable ['QS_grid_terrainData',_return,FALSE];
+	[_perfTerrain,count _nearHouses,[count _nearSimpleObjects,count _nearBuildingPositions]] call QS_fnc_perfEnd;
 	_return;
 };
 if (_type isEqualTo 1) exitWith {
@@ -105,8 +112,13 @@ if (_type isEqualTo 1) exitWith {
 		_roadSegmentsInArea = _roadSegments inAreaArray [_position,_radius,_radius,0,FALSE];
 		_roadIntersections = _roadSegments select {((count (roadsConnectedTo _x)) in [1,3])};
 	};
+	private _perfHouses = ['aoGetTerrainData.nearestHousesAndFilter',-1,[_radius]] call QS_fnc_perfBegin;
 	_nearHouses = (nearestObjects [_position,['House'],_radius,TRUE]) select {(!isObjectHidden _x) && (([_x,(_x buildingPos -1)] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
-	_nearSimpleObjects = (allSimpleObjects []) inAreaArray [_position,_radius,_radius,0,FALSE];
+	[_perfHouses,count _nearHouses] call QS_fnc_perfEnd;
+	private _perfSimple = ['aoGetTerrainData.allSimpleObjects'] call QS_fnc_perfBegin;
+	private _perfSimpleObjects = allSimpleObjects [];
+	[_perfSimple,count _perfSimpleObjects] call QS_fnc_perfEnd;
+	_nearSimpleObjects = _perfSimpleObjects inAreaArray [_position,_radius,_radius,0,FALSE];
 	if (_nearSimpleObjects isNotEqualTo []) then {
 		_nearSimpleHouses = _nearSimpleObjects select {(([_x,[]] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
 		_nearHouses = _nearHouses + _nearSimpleHouses;
@@ -188,6 +200,7 @@ if (_type isEqualTo 1) exitWith {
 		_radialPositions2
 	];
 	missionNamespace setVariable ['QS_classic_terrainData',_return,FALSE];
+	[_perfTerrain,count _nearHouses,[count _nearSimpleObjects,count _nearBuildingPositions]] call QS_fnc_perfEnd;
 	_return;
 };
 if (_type isEqualTo 2) exitWith {
@@ -210,8 +223,13 @@ if (_type isEqualTo 2) exitWith {
 		_roadSegmentsInArea = _roadSegments inAreaArray [_position,_radius,_radius,0,FALSE];
 		_roadIntersections = _roadSegments select {((count (roadsConnectedTo _x)) in [1,3])};
 	};
+	private _perfHouses = ['aoGetTerrainData.nearestHousesAndFilter',-1,[_radius]] call QS_fnc_perfBegin;
 	_nearHouses = (nearestObjects [_position,['House'],_radius,TRUE]) select {(!isObjectHidden _x) && (([_x,(_x buildingPos -1)] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
-	_nearSimpleObjects = (allSimpleObjects []) inAreaArray [_position,_radius,_radius,0,FALSE];
+	[_perfHouses,count _nearHouses] call QS_fnc_perfEnd;
+	private _perfSimple = ['aoGetTerrainData.allSimpleObjects'] call QS_fnc_perfBegin;
+	private _perfSimpleObjects = allSimpleObjects [];
+	[_perfSimple,count _perfSimpleObjects] call QS_fnc_perfEnd;
+	_nearSimpleObjects = _perfSimpleObjects inAreaArray [_position,_radius,_radius,0,FALSE];
 	if (_nearSimpleObjects isNotEqualTo []) then {
 		_nearSimpleHouses = _nearSimpleObjects select {(([_x,[]] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
 		_nearHouses = _nearHouses + _nearSimpleHouses;
@@ -268,6 +286,7 @@ if (_type isEqualTo 2) exitWith {
 		[]
 	];
 	missionNamespace setVariable ['QS_sideMission_terrainData',_return,FALSE];
+	[_perfTerrain,count _nearHouses,[count _nearSimpleObjects,count _nearBuildingPositions]] call QS_fnc_perfEnd;
 	_return;
 };
 if (_type isEqualTo 3) exitWith {
@@ -290,8 +309,13 @@ if (_type isEqualTo 3) exitWith {
 		_roadSegmentsInArea = _roadSegments inAreaArray [_position,_radius,_radius,0,FALSE];
 		_roadIntersections = _roadSegments select {((count (roadsConnectedTo _x)) in [1,3])};
 	};
+	private _perfHouses = ['aoGetTerrainData.nearestHousesAndFilter',-1,[_radius]] call QS_fnc_perfBegin;
 	_nearHouses = (nearestObjects [_position,['House'],_radius,TRUE]) select {(!isObjectHidden _x) && (([_x,(_x buildingPos -1)] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
-	_nearSimpleObjects = (allSimpleObjects []) inAreaArray [_position,_radius,_radius,0,FALSE];
+	[_perfHouses,count _nearHouses] call QS_fnc_perfEnd;
+	private _perfSimple = ['aoGetTerrainData.allSimpleObjects'] call QS_fnc_perfBegin;
+	private _perfSimpleObjects = allSimpleObjects [];
+	[_perfSimple,count _perfSimpleObjects] call QS_fnc_perfEnd;
+	_nearSimpleObjects = _perfSimpleObjects inAreaArray [_position,_radius,_radius,0,FALSE];
 	if (_nearSimpleObjects isNotEqualTo []) then {
 		_nearSimpleHouses = _nearSimpleObjects select {(([_x,[]] call (missionNamespace getVariable 'QS_fnc_customBuildingPositions')) isNotEqualTo [])};
 		_nearHouses = _nearHouses + _nearSimpleHouses;
@@ -348,6 +372,8 @@ if (_type isEqualTo 3) exitWith {
 		[]
 	];
 	missionNamespace setVariable ['QS_genericAO_terrainData',_return,FALSE];
+	[_perfTerrain,count _nearHouses,[count _nearSimpleObjects,count _nearBuildingPositions]] call QS_fnc_perfEnd;
 	_return;
 };
+[_perfTerrain,0] call QS_fnc_perfEnd;
 _return;

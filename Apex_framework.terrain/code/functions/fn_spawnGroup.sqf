@@ -40,6 +40,7 @@ if (_groupComposition isEqualTo []) exitWith {
 	diag_log (format ['***** DEBUG ***** Group composition is null - %1 *****',_type]);
 	grpNull;
 };
+private _perfGroup = ['spawnGroup.total',count _groupComposition,[_type,_useRecycler]] call QS_fnc_perfBegin;
 if (isNull _grp) then {
 	_grp = createGroup [_side,_deleteWhenEmpty];
 	_grp setFormation 'WEDGE';
@@ -56,7 +57,9 @@ for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 	if (_useRecycler) then {
 		_unit = [2,2,_resolvedUnitType] call (missionNamespace getVariable 'QS_fnc_serverObjectsRecycler');
 		if (isNull _unit) then {
+			private _perfCreate = ['spawnGroup.createUnit',1,[_resolvedUnitType]] call QS_fnc_perfBegin;
 			_unit = _grp createUnit [_resolvedUnitType,[-1015,-1015,0],[],15,'NONE'];
+			[_perfCreate,([0,1] select (!isNull _unit))] call QS_fnc_perfEnd;
 			QS_core_unittraits_map set [typeOf _unit,getAllUnitTraits _unit,TRUE];
 		} else {
 			// wake up unit
@@ -95,7 +98,9 @@ for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 			};
 		};
 	} else {
+		private _perfCreate = ['spawnGroup.createUnit',1,[_resolvedUnitType]] call QS_fnc_perfBegin;
 		_unit = _grp createUnit [_resolvedUnitType,[-1015,-1015,0],[],15,'NONE'];
+		[_perfCreate,([0,1] select (!isNull _unit))] call QS_fnc_perfEnd;
 		QS_core_unittraits_map set [typeOf _unit,getAllUnitTraits _unit,TRUE];
 	};
 	_unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
@@ -111,4 +116,5 @@ for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 	_unit setDir _dir;
 	_unit setVehiclePosition [(AGLToASL _pos),[],5,'NONE'];
 };
+[_perfGroup,count (units _grp)] call QS_fnc_perfEnd;
 _grp;

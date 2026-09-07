@@ -15,6 +15,10 @@ _______________________________________/*/
 
 params ['_module'];
 if (!isNull _module) then {
+	private _perfSync = ['curatorSync.total',1] call QS_fnc_perfBegin;
+	private _perfCensus = ['curatorSync.allMissionObjects'] call QS_fnc_perfBegin;
+	private _perfObjects = allMissionObjects 'All';
+	[_perfCensus,count _perfObjects] call QS_fnc_perfEnd;
 	private _arrayToAdd = [];
 	private _entity = objNull;
 	{
@@ -36,9 +40,11 @@ if (!isNull _module) then {
 				_arrayToAdd pushBackUnique _entity;
 			};
 		};
-	} forEach (allMissionObjects 'All');
+	} forEach _perfObjects;
 	{
+		private _perfEditable = ['curatorSync.addEditable',count (_x # 0)] call QS_fnc_perfBegin;
 		_module addCuratorEditableObjects _x;
+		[_perfEditable,count (_x # 0)] call QS_fnc_perfEnd;
 		sleep 0.2;
 	} forEach [	
 		[(allPlayers select {(!(_x getVariable ['QS_curator_disableEditability',FALSE]))}),FALSE],
@@ -46,4 +52,5 @@ if (!isNull _module) then {
 		[(allDead select {(!(_x getVariable ['QS_dead_prop',FALSE]))}),TRUE],
 		[_arrayToAdd,TRUE]
 	];
+	[_perfSync,count _arrayToAdd] call QS_fnc_perfEnd;
 };

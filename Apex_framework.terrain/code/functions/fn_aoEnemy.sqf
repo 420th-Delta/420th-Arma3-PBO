@@ -262,7 +262,9 @@ if ((random 1) > _staticChance) then {
 		["O_HMG_02_high_F",[2.16064,1.62402,10.4124],0,42.212],
 		["O_HMG_02_high_F",[1.96973,-2.24854,10.4124],0,139.225]
 	];
+	private _perfSpawn = ['aoEnemy.createVehicle',1] call QS_fnc_perfBegin;
 	_tower = createVehicle ['CargoPlaftorm_01_green_F',[0,0,0]];
+	[_perfSpawn,([0,1] select (!isNull _tower)),[typeOf _tower,netId _tower]] call QS_fnc_perfEnd;
 	if (_usedSettlementPosition) then {
 		_tower setPosATL _randomPos;
 		//_tower setDir _dir;
@@ -298,7 +300,9 @@ if ((random 1) > _staticChance) then {
 	_tower setVariable ['QS_entity_assocEntities',[],FALSE];
 	_towerGrp = createGroup [EAST,TRUE];
 	{
+		private _perfSpawn = ['aoEnemy.createVehicle',1] call QS_fnc_perfBegin;
 		_object = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI (_x # 0),(_x # 0)],[0,0,0]];
+		[_perfSpawn,([0,1] select (!isNull _object)),[typeOf _object,netId _object]] call QS_fnc_perfEnd;
 		_object allowDamage FALSE;
 		_attachPos = _x # 1;
 		_attachPos set [2,(_attachPos # 2) - _offset];
@@ -315,7 +319,9 @@ if ((random 1) > _staticChance) then {
 					[_object] call (missionNamespace getVariable 'QS_fnc_downgradeVehicleWeapons');
 				};
 			};
+			private _perfCrew = ['aoEnemy.createVehicleCrew',1,[typeOf _object,netId _object]] call QS_fnc_perfBegin;
 			_grp = createVehicleCrew _object;
+			[_perfCrew,count (crew _object)] call QS_fnc_perfEnd;
 			(units _grp) joinSilent _towerGrp;
 			(gunner _object) setVariable ['QS_AI_UNIT_isMG',TRUE,QS_system_AI_owners];
 			(gunner _object) setVariable ['QS_AI_UNIT_enabled',TRUE,QS_system_AI_owners];
@@ -500,7 +506,9 @@ for '_x' from 0 to (_vehCount - 1) step 1 do {
 		_randomPos = [_centerPos,0,_aoSize,2.5,0,0.4,0] call (missionNamespace getVariable 'QS_fnc_findSafePos');
 	};
 	_AOvehType = selectRandomWeighted ([_motorPool] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
+	private _perfSpawn = ['aoEnemy.createVehicle',1] call QS_fnc_perfBegin;
 	_AOveh = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _AOvehType,_AOvehType],(_randomPos vectorAdd [0,0,0.25]),[],0,'NONE'];
+	[_perfSpawn,([0,1] select (!isNull _AOveh)),[typeOf _AOveh,netId _AOveh]] call QS_fnc_perfEnd;
 	_AOveh allowDamage FALSE;
 	_AOveh limitSpeed (random [30,40,50]);
 	(missionNamespace getVariable 'QS_AI_vehicles') pushBack _AOveh;
@@ -526,7 +534,9 @@ for '_x' from 0 to (_vehCount - 1) step 1 do {
 		};
 	};
 	_AOveh addEventHandler ['Killed',(missionNamespace getVariable 'QS_fnc_vKilled2')];
+	private _perfCrew = ['aoEnemy.createVehicleCrewAndJoin',1,[typeOf _AOveh,netId _AOveh]] call QS_fnc_perfBegin;
 	(units (createVehicleCrew _AOveh)) joinSilent _AOvehGroup;
+	[_perfCrew,count (crew _AOveh)] call QS_fnc_perfEnd;
 	_AOvehGroup addVehicle _AOveh;
 	[_AOvehGroup,_randomPos,_aoSize,_roadPositionsValid,TRUE] call (missionNamespace getVariable 'QS_fnc_taskPatrolVehicle');
 	_AOveh lock 3;
@@ -652,7 +662,9 @@ if ((count (_terrainData # 4)) > 6) then {
 	_AOgarrisonGroup = createGroup [RESISTANCE,TRUE];
 	for '_x' from 0 to ([29,14] select (missionNamespace getVariable ['QS_ao_urbanSpawn',FALSE])) step 1 do {
 		_randomUnit = selectRandom _indArray;
+		private _perfSpawn = ['aoEnemy.createUnit',1] call QS_fnc_perfBegin;
 		_unit = _AOgarrisonGroup createUnit [QS_core_units_map getOrDefault [toLowerANSI _randomUnit,_randomUnit],_centerPos,[],100,'NONE'];
+		[_perfSpawn,([0,1] select (!isNull _unit)),[typeOf _unit,netId _unit]] call QS_fnc_perfEnd;
 		_unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 		_enemiesArray pushBack _unit;
 		_toGarrison pushBack _unit;
@@ -662,7 +674,9 @@ if ((count (_terrainData # 4)) > 6) then {
 };
 _QS_HQpos set [2,0];
 private _resistanceGrp = createGroup [RESISTANCE,TRUE];
+private _perfSpawn = ['aoEnemy.createUnit',1] call QS_fnc_perfBegin;
 _unit = _resistanceGrp createUnit [QS_core_units_map getOrDefault ['i_c_soldier_para_1_f','i_c_soldier_para_1_f'],_QS_HQpos,[],10,'NONE'];
+[_perfSpawn,([0,1] select (!isNull _unit)),[typeOf _unit,netId _unit]] call QS_fnc_perfEnd;
 _unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 _enemiesArray pushBack _unit;
 _toGarrison pushBack _unit;
@@ -678,7 +692,9 @@ private _AOgarrisonGroup2 = createGroup [RESISTANCE,TRUE];
 _toGarrison = [];
 for '_x' from 0 to 8 step 1 do {
 	_randomUnit = selectRandom _indArray;
+	private _perfSpawn = ['aoEnemy.createUnit',1] call QS_fnc_perfBegin;
 	_unit = _AOgarrisonGroup2 createUnit [QS_core_units_map getOrDefault [toLowerANSI _randomUnit,_randomUnit],_QS_HQpos,[],0,'NONE'];
+	[_perfSpawn,([0,1] select (!isNull _unit)),[typeOf _unit,netId _unit]] call QS_fnc_perfEnd;
 	_unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 	_enemiesArray pushBack _unit;
 	_toGarrison pushBack _unit;
@@ -742,7 +758,9 @@ private _commandGrp = createGroup [EAST,TRUE];
 _commandGrp setGroupIdGlobal ['Command'];
 _commandGrp setVariable ['QS_dynSim_ignore',TRUE,QS_system_AI_owners];
 _commandGrp enableDynamicSimulation FALSE;
+private _perfSpawn = ['aoEnemy.createUnit',1] call QS_fnc_perfBegin;
 private _commander = _commandGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _officerType,_officerType],_QS_HQpos,[],0,'NONE'];
+[_perfSpawn,([0,1] select (!isNull _commander)),[typeOf _commander,netId _commander]] call QS_fnc_perfEnd;
 {
 	missionNamespace setVariable _x;
 } forEach [

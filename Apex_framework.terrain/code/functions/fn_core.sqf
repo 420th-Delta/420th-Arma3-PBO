@@ -2010,6 +2010,8 @@ for '_x' from 0 to 1 step 0 do {
 								};
 							};
 							uiSleep 30;
+							private _perfAO = ['core.endAOCleanup',count _cleanupObjects,[_waitForDefend]] call QS_fnc_perfBegin;
+							private _perfAttachmentRequests = 0;
 							{
 								if ((_x isEqualType objNull) && {!isNull _x}) then {
 									_cleanupObjects pushBackUnique _x;
@@ -2038,18 +2040,23 @@ for '_x' from 0 to 1 step 0 do {
 									};
 									{
 										[0,_x] call (missionNamespace getVariable 'QS_fnc_eventAttach');
+										private _perfDelete = ['core.endAOCleanup.attachment',1,[typeOf _x,netId _x]] call QS_fnc_perfBegin;
 										deleteVehicle _x;
+										[_perfDelete,-1] call QS_fnc_perfEnd;
+										_perfAttachmentRequests = _perfAttachmentRequests + 1;
 									} forEach (attachedObjects _x);
 									missionNamespace setVariable [
 										'QS_analytics_entities_deleted',
 										((missionNamespace getVariable ['QS_analytics_entities_deleted',0]) + 1),
 										FALSE
 									];
+									private _perfDeleteEntity = ['core.endAOCleanup.entity',1,[typeOf _x,netId _x]] call QS_fnc_perfBegin;
 									if ((_x isKindOf 'CAManBase') && {!isNull (objectParent _x)} && {(objectParent _x) isKindOf 'AllVehicles'}) then {
 										(objectParent _x) deleteVehicleCrew _x;
 									} else {
 										deleteVehicle _x;
 									};
+									[_perfDeleteEntity,-1] call QS_fnc_perfEnd;
 									_deletedCount = _deletedCount + 1;
 								};
 							} forEach _cleanupObjects;
@@ -2064,6 +2071,7 @@ for '_x' from 0 to 1 step 0 do {
 									_unhiddenCount = _unhiddenCount + 1;
 								};
 							} forEach _unhideObjects;
+							[_perfAO,_deletedCount,[count _cleanupObjects,_perfAttachmentRequests,_unhiddenCount]] call QS_fnc_perfEnd;
 							diag_log format [
 								'***** NORMAL AO CLEANUP ***** Forced cleanup completed: %1 entities, %2 terrain objects *****',
 								_deletedCount,
@@ -3764,7 +3772,11 @@ for '_x' from 0 to 1 step 0 do {
 		_vRespawn_checkDelay = time + _vRespawn_delay;
 	};
 	if (_timeNow > _QS_cleanup_checkDelay) then {
+		private _perfCleanup = ['core.periodicCleanup',count (missionNamespace getVariable ['QS_garbageCollector',[]])] call QS_fnc_perfBegin;
+		private _perfDeleteRequests = 0;
+		private _perfDeadCensus = ['core.allDead'] call QS_fnc_perfBegin;
 		private _cleanupAllDead = allDead;
+		[_perfDeadCensus,count _cleanupAllDead] call QS_fnc_perfEnd;
 		private _cleanupAllDeadMen = _cleanupAllDead select {(_x isKindOf 'CAManBase')};
 		private _cleanupAllMines = allMines;
 		private _cleanupDeadMenCount = count _cleanupAllDeadMen;
@@ -3806,7 +3818,10 @@ for '_x' from 0 to 1 step 0 do {
 						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
 						_false
 					];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _x;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 			};
 			if ((_forEachIndex mod 16) isEqualTo 15) then {
@@ -3839,7 +3854,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_managed_flares isNotEqualTo []) then {
 				{
 					if (diag_tickTime > (_x # 1)) then { 
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle (_x # 0);
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				} forEach _managed_flares;
 			};
@@ -3902,12 +3920,21 @@ for '_x' from 0 to 1 step 0 do {
 														missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 														if (!isNull (objectParent _QS_obj)) then {
 															if ((objectParent _QS_obj) isKindOf 'AllVehicles') then {
+																private _perfDeleteCrew = ['core.cleanup.deleteVehicleCrew',1] call QS_fnc_perfBegin;
 																(objectParent _QS_obj) deleteVehicleCrew _QS_obj;
+																[_perfDeleteCrew,-1] call QS_fnc_perfEnd;
+																_perfDeleteRequests = _perfDeleteRequests + 1;
 															} else {
+																private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 																deleteVehicle _QS_obj;
+																[_perfDelete,-1] call QS_fnc_perfEnd;
+																_perfDeleteRequests = _perfDeleteRequests + 1;
 															};
 														} else {
+															private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 															deleteVehicle _QS_obj;
+															[_perfDelete,-1] call QS_fnc_perfEnd;
+															_perfDeleteRequests = _perfDeleteRequests + 1;
 														};
 													};
 												};
@@ -3921,7 +3948,10 @@ for '_x' from 0 to 1 step 0 do {
 													{(_allDeadVehiclesCount > _deadVehiclesLimitMax)}
 												) then {
 													missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+													private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 													deleteVehicle _QS_obj;
+													[_perfDelete,-1] call QS_fnc_perfEnd;
+													_perfDeleteRequests = _perfDeleteRequests + 1;
 												};
 											};											
 										};		
@@ -3978,15 +4008,27 @@ for '_x' from 0 to 1 step 0 do {
 							if (_x isKindOf 'CAManBase') then {
 								if (!isNull (objectParent _x)) then {
 									if ((objectParent _x) isKindOf 'AllVehicles') then {
+										private _perfDeleteCrew = ['core.cleanup.deleteVehicleCrew',1] call QS_fnc_perfBegin;
 										(objectParent _x) deleteVehicleCrew _x;
+										[_perfDeleteCrew,-1] call QS_fnc_perfEnd;
+										_perfDeleteRequests = _perfDeleteRequests + 1;
 									} else {
+										private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 										deleteVehicle _x;
+										[_perfDelete,-1] call QS_fnc_perfEnd;
+										_perfDeleteRequests = _perfDeleteRequests + 1;
 									};
 								} else {
+									private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 									deleteVehicle _x;
+									[_perfDelete,-1] call QS_fnc_perfEnd;
+									_perfDeleteRequests = _perfDeleteRequests + 1;
 								};
 							} else {
+								private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 								deleteVehicle _x;
+								[_perfDelete,-1] call QS_fnc_perfEnd;
+								_perfDeleteRequests = _perfDeleteRequests + 1;
 							};
 							uiSleep 0.007;
 						} else {
@@ -4026,7 +4068,9 @@ for '_x' from 0 to 1 step 0 do {
 			'Ruins',
 			'SmokeShell'
 		] + _jetJunk + _backpackDroneTypes;
+		private _perfEntityCensus = ['core.cleanupEntities'] call QS_fnc_perfBegin;
 		_allMissionObjectsAll = entities [_cleanupEntityTypes,[],_false,_false];
+		[_perfEntityCensus,count _allMissionObjectsAll] call QS_fnc_perfEnd;
 		_missionCraters = [];
 		_missionWeaponHolders = [];
 		_missionGroundWeaponHolders = [];
@@ -4044,7 +4088,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_missionObject isKindOf 'CraterLong') then {
 				if ((_allPlayers inAreaArray [_missionObject,500,500,0,_false]) isEqualTo []) then {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				} else {
 					if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
 						0 = _missionCraters pushBack _missionObject;
@@ -4055,7 +4102,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_missionObject isKindOf 'WeaponHolder') then {
 				if ((_missionObject distance2D _baseMarker) < 300) then {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				} else {
 					0 = _missionWeaponHolders pushBack _missionObject;
 				};
@@ -4066,7 +4116,10 @@ for '_x' from 0 to 1 step 0 do {
 					0 = _missionGroundWeaponHolders pushBack _missionObject;
 				} else {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 				uiSleep 0.005;
 			};
@@ -4075,7 +4128,10 @@ for '_x' from 0 to 1 step 0 do {
 					0 = _missionWeaponHolderSimulated pushBack _missionObject;
 				} else {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 				uiSleep 0.005;
 			};
@@ -4093,7 +4149,10 @@ for '_x' from 0 to 1 step 0 do {
 					if ((_allUnits inAreaArray [_missionObject,250,250,0,_false]) isEqualTo []) then {
 						if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
 							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+							private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 							deleteVehicle _missionObject;
+							[_perfDelete,-1] call QS_fnc_perfEnd;
+							_perfDeleteRequests = _perfDeleteRequests + 1;
 						};
 					} else {
 						if (isNil {_missionObject getVariable 'QS_cleanup_protected'}) then {
@@ -4106,7 +4165,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_missionObject isKindOf 'Ruins') then {
 				if (_missionObject isKindOf 'Land_TTowerBig_2_ruins_F') then {
 					if ((_allPlayers inAreaArray [_missionObject,1000,1000,0,_false]) isEqualTo []) then {
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle _missionObject;
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				} else {
 					if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
@@ -4146,7 +4208,10 @@ for '_x' from 0 to 1 step 0 do {
 			{
 				if (!isNull _x) then {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _x;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 			} count _deleteNow;
 			_deleteNow = [];
@@ -4162,7 +4227,10 @@ for '_x' from 0 to 1 step 0 do {
 				for '_x' from 0 to (_n - 1) step 1 do {
 					if (!isNull (_array # _i)) then {
 						missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle (_array # _i);
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 					_i = _i + 1;
 					uiSleep 0.01;
@@ -4196,12 +4264,21 @@ for '_x' from 0 to 1 step 0 do {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					if (!isNull (objectParent _x)) then {
 						if ((objectParent _x) isKindOf 'AllVehicles') then {
+							private _perfDeleteCrew = ['core.cleanup.deleteVehicleCrew',1] call QS_fnc_perfBegin;
 							(objectParent _x) deleteVehicleCrew _x;
+							[_perfDeleteCrew,-1] call QS_fnc_perfEnd;
+							_perfDeleteRequests = _perfDeleteRequests + 1;
 						} else {
+							private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 							deleteVehicle _x;
+							[_perfDelete,-1] call QS_fnc_perfEnd;
+							_perfDeleteRequests = _perfDeleteRequests + 1;
 						};
 					} else {
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle _x;
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				};
 				if ((_forEachIndex mod 16) isEqualTo 15) then {
@@ -4212,7 +4289,10 @@ for '_x' from 0 to 1 step 0 do {
 		if (_cleanupAllMines isNotEqualTo []) then {
 			{
 				if ((_allUnits inAreaArray [_x,500,500,0,_false]) isEqualTo []) then {
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _x;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 				};
 				if ((_forEachIndex mod 16) isEqualTo 15) then {
@@ -4221,7 +4301,10 @@ for '_x' from 0 to 1 step 0 do {
 			} forEach _cleanupAllMines;
 		};
 		if ((count (missionNamespace getVariable ['QS_prisoners',[]])) > _maxPrisoners) then {
+			private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 			deleteVehicle ((missionNamespace getVariable 'QS_prisoners') # 0);
+			[_perfDelete,-1] call QS_fnc_perfEnd;
+			_perfDeleteRequests = _perfDeleteRequests + 1;
 			missionNamespace setVariable ['QS_prisoners',((missionNamespace getVariable 'QS_prisoners') select {(alive _x)}),_true];
 		};
 
@@ -4241,11 +4324,17 @@ for '_x' from 0 to 1 step 0 do {
 							{
 								missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 								[0,_x] call _fn_eventAttach;
-								deleteVehicle _x
+								private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
+								deleteVehicle _x;
+								[_perfDelete,-1] call QS_fnc_perfEnd;
+								_perfDeleteRequests = _perfDeleteRequests + 1;
 							} forEach (attachedObjects _uav);
 						};
 						missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle _uav;
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				} count _allUnitsUav;
 			};
@@ -4267,6 +4356,7 @@ for '_x' from 0 to 1 step 0 do {
 			};
 			_QS_checkUAVsTime = _timeNow + _QS_checkUAVsTime_delay;
 		};
+		[_perfCleanup,_perfDeleteRequests,[count _cleanupAllDead,count _cleanupAllMines,count _allMissionObjectsAll,count (missionNamespace getVariable ['QS_garbageCollector',[]])]] call QS_fnc_perfEnd;
 		_QS_cleanup_checkDelay = _timeNow + _QS_cleanup_delay;
 	};
 

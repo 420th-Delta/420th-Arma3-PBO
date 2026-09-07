@@ -19,6 +19,7 @@ params [
 	['_data',[]],
 	['_useRecycler',FALSE]
 ];
+private _perfMapper = ['serverObjectsMapper.total',count _data] call QS_fnc_perfBegin;
 private _newObjs = [];
 _pos params ['_posX','_posY'];
 _dynSim = dynamicSimulationSystemEnabled;
@@ -86,13 +87,17 @@ private _mappedThisBatch = 0;
 		if (_useRecycler) then {
 			_newObj = [2,1,_info # 0] call (missionNamespace getVariable 'QS_fnc_serverObjectsRecycler');
 			if (isNull _newObj) then {
+				private _perfCreate = ['serverObjectsMapper.createSimpleObject',1,[_type]] call QS_fnc_perfBegin;
 				_newObj = createSimpleObject [_info # 0,_newPos];
+				[_perfCreate,([0,1] select (!isNull _newObj))] call QS_fnc_perfEnd;
 			} else {
 				missionNamespace setVariable ['QS_analytics_entities_recycled',((missionNamespace getVariable ['QS_analytics_entities_recycled',0]) + 1),FALSE];
 				_newObj setPosWorld _newPos;
 			};
 		} else {
+			private _perfCreate = ['serverObjectsMapper.createSimpleObject',1,[_type]] call QS_fnc_perfBegin;
 			_newObj = createSimpleObject [_info # 0,_newPos];
+			[_perfCreate,([0,1] select (!isNull _newObj))] call QS_fnc_perfEnd;
 		};
 		_newObj setDir (_azi + _azimuth);
 		if ((_info # 2) in ['fortifications','ruins','car','armored','air','ship','support']) then {
@@ -103,12 +108,16 @@ private _mappedThisBatch = 0;
 		if (_useRecycler) then {
 			_newObj = [2,0,_type] call (missionNamespace getVariable 'QS_fnc_serverObjectsRecycler');
 			if (isNull _newObj) then {
+				private _perfCreate = ['serverObjectsMapper.createVehicle',1,[_type]] call QS_fnc_perfBegin;
 				_newObj = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type],[(random -1000),(random -1000),(1000 + (random 1000))],[],0,'CAN_COLLIDE'];
+				[_perfCreate,([0,1] select (!isNull _newObj))] call QS_fnc_perfEnd;
 			} else {
 				missionNamespace setVariable ['QS_analytics_entities_recycled',((missionNamespace getVariable ['QS_analytics_entities_recycled',0]) + 1),FALSE];
 			};
 		} else {
+			private _perfCreate = ['serverObjectsMapper.createVehicle',1,[_type]] call QS_fnc_perfBegin;
 			_newObj = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type],[(random -1000),(random -1000),(1000 + (random 1000))],[],0,'CAN_COLLIDE'];
+			[_perfCreate,([0,1] select (!isNull _newObj))] call QS_fnc_perfEnd;
 		};
 		_newObj setDir (_azi + _azimuth);
 		_newObj setPos _newPos;
@@ -150,4 +159,5 @@ private _mappedThisBatch = 0;
 		uiSleep 0.01;
 	};
 } forEach _data;
+[_perfMapper,count _newObjs] call QS_fnc_perfEnd;
 _newObjs;
