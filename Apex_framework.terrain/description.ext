@@ -106,6 +106,9 @@ class CfgFunctions {
 	#include "420th\userinputmenus\CfgFunctions.cpp"
 	class QS {
 		class apex_framework {
+			class perfInit {file = "code\functions\fn_perfInit.sqf"; preInit = 1;};
+			class perfBegin {file = "code\functions\fn_perfBegin.sqf";};
+			class perfEnd {file = "code\functions\fn_perfEnd.sqf";};
 			class addWeapon {file = "code\functions\fn_addWeapon.sqf";};
 			class ahScanString {file = "code\functions\fn_ahScanString.sqf";};
 			class attachToRelative {file = "code\functions\fn_attachToRelative.sqf";};
