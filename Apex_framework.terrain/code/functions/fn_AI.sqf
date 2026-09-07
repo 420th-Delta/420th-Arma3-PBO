@@ -1838,7 +1838,7 @@ for '_x' from 0 to 1 step 0 do {
 									};
 								};
 							};
-						} count _QS_module_classic_enemy_0;
+						} forEach _QS_module_classic_enemy_0;
 						_QS_module_classic_enemy_0 = [];
 					};
 					if (_QS_module_classic_infReinforce_array isNotEqualTo []) then {

@@ -1784,7 +1784,7 @@ for '_x' from 0 to 1 step 0 do {
 									_normalAO_cleanupObjects pushBackUnique _x;
 									_x setDamage 1;
 								};
-							} count (missionNamespace getVariable 'QS_enemyGroundReinforceArray');
+							} forEach (missionNamespace getVariable 'QS_enemyGroundReinforceArray');
 						};
 						if ((missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray') isNotEqualTo []) then {
 							{
@@ -1792,14 +1792,14 @@ for '_x' from 0 to 1 step 0 do {
 									_normalAO_cleanupObjects pushBackUnique _x;
 									_x setDamage 1;
 								};
-							} count (missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray');
+							} forEach (missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray');
 						};
 						if ((missionNamespace getVariable 'QS_enemyJungleCamp_array') isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
 									_normalAO_cleanupObjects pushBackUnique _x;
 								};
-							} count (missionNamespace getVariable 'QS_enemyJungleCamp_array');
+							} forEach (missionNamespace getVariable 'QS_enemyJungleCamp_array');
 						};
 						if ((missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew') isNotEqualTo []) then {
 							{
@@ -1807,7 +1807,7 @@ for '_x' from 0 to 1 step 0 do {
 									_normalAO_cleanupObjects pushBackUnique _x;
 									_x setDamage 1;
 								};
-							} count (missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew');
+							} forEach (missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew');
 						};
 						if ((missionNamespace getVariable ['QS_aoAnimals',[]]) isNotEqualTo []) then {
 							{
