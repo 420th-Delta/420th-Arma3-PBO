@@ -776,7 +776,7 @@ class CfgFunctions {
 			class zoneManager {file = "code\functions\fn_zoneManager.sqf";};
 			class zonePreset {file = "code\functions\fn_zonePreset.sqf";};
 			class enemyUAVDiagnostics {file = "code\functions\fn_enemyUAVDiagnostics.sqf"; postInit = 1;};
-			class deleteOutOfBoundsLoop {file = "code\functions\fn_deleteOutOfBoundsLoop.sqf"; postInit = 1;};
+			// class deleteOutOfBoundsLoop {file = "code\functions\fn_deleteOutOfBoundsLoop.sqf"; postInit = 1;};
 		};
 	};
     class TGC {
