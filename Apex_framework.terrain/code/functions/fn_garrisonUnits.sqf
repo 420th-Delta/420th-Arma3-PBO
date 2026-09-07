@@ -96,7 +96,7 @@ private _unit = objNull;
 			_unit enableAIFeature ['COVER',FALSE];
 			_unit enableAIFeature ['PATH',FALSE];
 			if (!local _unit) then {
-				_garrisoned_nonLocal pushBack _x;
+				_garrisoned_nonLocal pushBack _unit;
 			};
 		};
 		if (_isServerHC) then {
