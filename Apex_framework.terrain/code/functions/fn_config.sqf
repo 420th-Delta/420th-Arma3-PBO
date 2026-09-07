@@ -578,7 +578,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_AI_supportProviders_CASPLANE',[],FALSE],
 	['QS_AI_supportProviders_CASUAV',[],FALSE],
 	// Temporary mission-wide switch for hostile UAV patrol/Defend AO spawning.
-	['QS_enemyUAVSpawningEnabled',FALSE,TRUE],
+	['QS_enemyUAVSpawningEnabled',TRUE,TRUE],
 	['QS_AI_supportProviders_ARTY',[],FALSE],
 	['QS_AI_supportProviders_INTEL',[],FALSE],
 	['QS_AI_hostileBuildings',[],FALSE],
