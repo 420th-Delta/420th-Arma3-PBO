@@ -601,6 +601,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_dynTask_medevac_array',[],FALSE],
 	['QS_primaryObjective_civilians',[],FALSE],
 //  ['QS_recycler_units',((missionNamespace getVariable ['QS_missionConfig_aoType','ZEUS']) in ['CLASSIC','SC']),FALSE],
+	['QS_recycler_enabled',FALSE,FALSE],
 	['QS_recycler_units',TRUE,FALSE],
 	['QS_recycler_unitCount',15,FALSE],
 	['QS_recycler_nullGrp',grpNull,FALSE],

@@ -17,6 +17,13 @@ ________________________________________________/*/
 
 params ['_type','_type2'];
 private _return = objNull;
+if (!(missionNamespace getVariable ['QS_recycler_enabled',FALSE])) exitWith {
+	if (_type isEqualTo 1) then {
+		FALSE
+	} else {
+		objNull
+	};
+};
 if (_type isEqualTo 0) exitWith {
 	// Initialize
 	private _simpleObjects = [];
