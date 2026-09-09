@@ -88,6 +88,9 @@ if (_mode isEqualTo 'LOAD') exitWith {
 				case 'Land_Cargo10_yellow_F': {'Terrain Leveler'};
 				case 'Land_Cargo10_blue_F': {'MIM-145 Defender'};
 				case 'Land_Cargo10_cyan_F': {'AN/MPQ-105 Radar'};
+				case 'Land_Cargo20_light_blue_F': {'Mk21 Centurion'};
+				case 'Land_Cargo20_cyan_F': {'Praetorian 1C'};
+				case 'Land_Cargo20_blue_F': {'Mk49 Spartan'};
 				default {getText (_x >> 'displayName')};
 			};
 			if (
@@ -184,6 +187,9 @@ if (_mode isEqualTo 'LOAD') exitWith {
 						case 'Land_Cargo10_yellow_F': {'Terrain Leveler'};
 						case 'Land_Cargo10_blue_F': {'MIM-145 Defender'};
 						case 'Land_Cargo10_cyan_F': {'AN/MPQ-105 Radar'};
+						case 'Land_Cargo20_light_blue_F': {'Mk21 Centurion'};
+						case 'Land_Cargo20_cyan_F': {'Praetorian 1C'};
+						case 'Land_Cargo20_blue_F': {'Mk49 Spartan'};
 						default {getText (_config >> 'displayName')};
 					};
 					if (_displayName isEqualTo '') then {
