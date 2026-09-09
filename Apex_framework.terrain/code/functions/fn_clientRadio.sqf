@@ -17,10 +17,10 @@ Example:
 	[0,((missionNamespace getVariable 'QS_radioChannels') # 2)] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 __________________________________________________________*/
 
-params ['_type','_channel'];
+params ['_type','_channel',['_unit',player]];
 if (_type isEqualTo 0) then {
 	if (_channel in (missionNamespace getVariable 'QS_client_radioChannels')) then {
-		_channel radioChannelRemove [player];
+		_channel radioChannelRemove [_unit];
 		if (currentChannel > 5) then {
 			setCurrentChannel 5;
 		};
@@ -34,7 +34,7 @@ if (_type isEqualTo 0) then {
 } else {
 	if (_type isEqualTo 1) then {
 		if (!(_channel in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
-			_channel radioChannelAdd [player];
+			_channel radioChannelAdd [_unit];
 			diag_log format ['***** RADIO ***** Added to channel %1',_channel];
 			missionNamespace setVariable [
 				'QS_client_radioChannels',
@@ -47,7 +47,7 @@ if (_type isEqualTo 0) then {
 			/*/Respawn Event/*/
 			if ((missionNamespace getVariable 'QS_client_radioChannels') isNotEqualTo []) then {
 				{
-					_x radioChannelAdd [player];
+					_x radioChannelAdd [_unit];
 				} forEach (missionNamespace getVariable 'QS_client_radioChannels');
 			};
 		} else {
@@ -58,7 +58,7 @@ if (_type isEqualTo 0) then {
 				};
 				if ((missionNamespace getVariable 'QS_client_radioChannels') isNotEqualTo []) then {
 					{
-						_x radioChannelRemove [player];
+						_x radioChannelRemove [_unit];
 					} forEach (missionNamespace getVariable 'QS_client_radioChannels');
 				};
 			} else {
