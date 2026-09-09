@@ -242,7 +242,32 @@ if (_deploymentData isEqualTo []) then {
 };
 ['SELECT',_deploymentData] call QS_fnc_deployment;
 ['SET_SAVED_LOADOUT',(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_fnc_roles');
-[2,-1] spawn (missionNamespace getVariable 'QS_fnc_clientRadio');
+// Channel membership belongs to the unit object. Restore the captured respawn
+// unit synchronously so delayed killed-event work cannot act on a new `player`.
+[2,-1,_newUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+_newUnit spawn {
+	private _respawnUnit = _this;
+	uiSleep 1;
+	if (player isNotEqualTo _respawnUnit) exitWith {};
+
+	// radioChannelAdd is idempotent. A short retry covers engine-side entity
+	// replacement timing while keeping the desired-channel list authoritative.
+	[2,-1,_respawnUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+	[] call TGC_fnc_refreshStaffChannelAccess;
+
+	private _aircraftEligible = (([
+		'QS_trait_pilot',
+		'uavhacker',
+		'QS_trait_HQ',
+		'QS_trait_fighterPilot',
+		'QS_trait_CAS',
+		'QS_trait_JTAC'
+	] findIf {_respawnUnit getUnitTrait _x}) isNotEqualTo -1);
+	if (_aircraftEligible) then {
+		[([0,1] select (missionProfileNamespace getVariable ['QS_client_radioChannel_aircraft',TRUE])),2] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+	};
+	[4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+};
 [29,(missionNamespace getVariable 'QS_module_fob_side')] call (missionNamespace getVariable 'QS_fnc_remoteExec');
 if (
 	(missionNamespace getVariable ['QS_missionConfig_deployment',TRUE]) &&
