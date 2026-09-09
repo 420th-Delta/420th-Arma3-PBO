@@ -163,7 +163,10 @@ private _hasDragCarryOverride = _isSupplyCrate || {
 		'land_cargo10_sand_f',
 		'land_cargo10_yellow_f',
 		'land_cargo10_blue_f',
-		'land_cargo10_cyan_f'
+		'land_cargo10_cyan_f',
+		'land_cargo20_light_blue_f',
+		'land_cargo20_cyan_f',
+		'land_cargo20_blue_f'
 	]
 };
 private _isBoat = _vehicleClass isKindOf 'Ship';
