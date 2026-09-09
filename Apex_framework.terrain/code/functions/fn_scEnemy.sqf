@@ -197,7 +197,7 @@ _air lock 3;
 _air setVehicleReceiveRemoteTargets TRUE;
 _air setVehicleReportRemoteTargets TRUE;
 _air enableDynamicSimulation FALSE;
-['setFeatureType',_air,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_air];
+[_air,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 {
 	_x setVariable ['QS_dynSim_ignore',TRUE,TRUE];
 	_x enableDynamicSimulation FALSE;

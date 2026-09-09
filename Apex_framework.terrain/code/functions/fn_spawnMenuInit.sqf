@@ -39,6 +39,8 @@ if (
 		private _baseRadius = 1000;
 		private _ownerDistance = 2000;
 		private _cleanupDelay = 10;
+		private _loadableCargoTypes = ['loadable_cargo_objects_1'] call QS_data_listVehicles;
+		private _logisticsContainerTypes = ['Cargo_base_F','Slingload_01_Base_F','Pod_Heli_Transport_04_base_F'];
 		private _deleteSpawnedEntity = {
 			params ['_entity'];
 			private _entityGroup = grpNull;
@@ -78,6 +80,22 @@ if (
 				private _isManagedVehicle = (
 					(['LandVehicle','Air','Ship'] findIf {_entity isKindOf _x}) isNotEqualTo -1
 				);
+				private _isLogisticsObject = (
+					(!_isManagedVehicle) &&
+					{
+						(_entity isKindOf 'ReammoBox_F') ||
+						{(toLowerANSI (typeOf _entity)) in _loadableCargoTypes} ||
+						{(_logisticsContainerTypes findIf {_entity isKindOf _x}) isNotEqualTo -1}
+					}
+				);
+				if (
+					_isLogisticsObject &&
+					{!(_entity getVariable ['QS_spawnMenu_logisticsCleanupQueued',FALSE])} &&
+					{!isNil {missionNamespace getVariable 'QS_garbageCollector'}}
+				) then {
+					(missionNamespace getVariable 'QS_garbageCollector') pushBack [_entity,'SPAWN_MENU_LOGISTICS',0];
+					_entity setVariable ['QS_spawnMenu_logisticsCleanupQueued',TRUE,FALSE];
+				};
 				if (
 					(_entity isKindOf 'CAManBase') &&
 					{!(_entity getVariable ['QS_spawnMenu_aiPendingJoin',FALSE])} &&
@@ -88,6 +106,7 @@ if (
 				} else {
 					if (
 						(!_isManagedVehicle) &&
+						{!_isLogisticsObject} &&
 						{!isNull _owner} &&
 						{(_entity distance2D _basePosition) <= _baseRadius} &&
 						{(_owner distance2D _entity) > _ownerDistance}

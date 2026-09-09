@@ -10,12 +10,14 @@
 			'Killed',
 			{
 				params ['_entity','_killer','_instigator','_useEffects'];
+				if (!(missionNamespace getVariable ['QS_virtualSectors_sub_2_active',FALSE])) exitWith {};
 				missionNamespace setVariable ['QS_virtualSectors_sub_2_active',FALSE,FALSE];
-				if ((missionNamespace getVariable 'QS_virtualSectors_sub_2_markers') isNotEqualTo []) then {
-					{
-						_x setMarkerAlpha 0;
-					} forEach (missionNamespace getVariable 'QS_virtualSectors_sub_2_markers');
-				};
+				{
+					if (_x in allMapMarkers) then {
+						deleteMarker _x;
+					};
+				} forEach (missionNamespace getVariable ['QS_virtualSectors_sub_2_markers',[]]);
+				missionNamespace setVariable ['QS_virtualSectors_sub_2_markers',[],FALSE];
 				['SC_SUB_COMPLETED',['',localize 'STR_QS_Notif_001']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 				['QS_virtualSectors_sub_2_task'] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
 				if (!isNull _instigator) then {
@@ -36,13 +38,14 @@
 		_tower addEventHandler [
 			'Deleted',
 			{
-				if (!(missionNamespace getVariable 'QS_virtualSectors_sub_2_active')) exitWith {};
+				if (!(missionNamespace getVariable ['QS_virtualSectors_sub_2_active',FALSE])) exitWith {};
 				missionNamespace setVariable ['QS_virtualSectors_sub_2_active',FALSE,FALSE];
-				if ((missionNamespace getVariable 'QS_virtualSectors_sub_2_markers') isNotEqualTo []) then {
-					{
-						_x setMarkerAlpha 0;
-					} forEach (missionNamespace getVariable 'QS_virtualSectors_sub_2_markers');
-				};
+				{
+					if (_x in allMapMarkers) then {
+						deleteMarker _x;
+					};
+				} forEach (missionNamespace getVariable ['QS_virtualSectors_sub_2_markers',[]]);
+				missionNamespace setVariable ['QS_virtualSectors_sub_2_markers',[],FALSE];
 				['SC_SUB_COMPLETED',['',localize 'STR_QS_Notif_001']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 				['QS_virtualSectors_sub_2_task'] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
 				if (missionNamespace getVariable ['QS_virtualSectors_active',FALSE]) then {

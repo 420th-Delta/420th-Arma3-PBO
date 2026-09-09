@@ -185,7 +185,7 @@ _heli addEventHandler [
 		};
 	}
 ];
-['setFeatureType',_heli,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_heli];
+[_heli,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 _heliGroup enableAttack FALSE;
 {
 	_x allowDamage FALSE;
@@ -265,7 +265,7 @@ if (_useSupport) then {
 		clearItemCargoGlobal _supportHeli;
 		clearBackpackCargoGlobal _supportHeli;
 		[_supportHeli,TRUE] remoteExec ['lockInventory',0,FALSE];
-		['setFeatureType',_supportHeli,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_supportHeli];
+		[_supportHeli,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 		//[_supportHeli,1,[]] call (missionNamespace getVariable 'QS_fnc_vehicleLoadouts');
 		_wp = _supportGroup addWaypoint [_HLZ,0];
 		_wp setWaypointType 'LOITER';

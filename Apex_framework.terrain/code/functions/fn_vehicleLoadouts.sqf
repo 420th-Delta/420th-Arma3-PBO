@@ -49,8 +49,8 @@ if (_type isEqualTo 1) exitWith {
 		{
 			_vehicle setPylonLoadout _x;
 		} forEach [
-			[1,'PylonMissile_1Rnd_Bomb_03_F',TRUE,[0]],
-			[2,'PylonMissile_1Rnd_Bomb_03_F',TRUE,[0]]
+			[1,'PylonMissile_1Rnd_Bomb_04_F',TRUE,[0]],
+			[2,'PylonMissile_1Rnd_Bomb_04_F',TRUE,[0]]
 		];
 	};
 	if (_vehicleType isEqualTo 'b_plane_cas_01_dynamicloadout_f') then {
@@ -134,8 +134,8 @@ if (_type isEqualTo 1) exitWith {
 		{
 			_vehicle setPylonLoadout _x;
 		} forEach [
-			[1,'PylonMissile_1Rnd_Bomb_03_F',TRUE],
-			[2,'PylonMissile_1Rnd_Bomb_03_F',TRUE]
+			[1,'PylonMissile_1Rnd_Bomb_04_F',TRUE],
+			[2,'PylonMissile_1Rnd_Bomb_04_F',TRUE]
 		];
 	};
 	if (_vehicleType isEqualTo 'o_plane_cas_02_dynamicloadout_f') then {
@@ -147,8 +147,8 @@ if (_type isEqualTo 1) exitWith {
 			[2,'PylonRack_20Rnd_Rocket_03_HE_F',TRUE],
 			[3,'PylonRack_20Rnd_Rocket_03_AP_F',TRUE],
 			[4,'',TRUE],
-			[5,'PylonMissile_1Rnd_Bomb_03_F',TRUE],
-			[6,'PylonMissile_1Rnd_Bomb_03_F',TRUE],
+			[5,'PylonMissile_1Rnd_Bomb_04_F',TRUE],
+			[6,'PylonMissile_1Rnd_Bomb_04_F',TRUE],
 			[7,'',TRUE],
 			[8,'PylonRack_20Rnd_Rocket_03_AP_F',TRUE],
 			[9,'PylonRack_20Rnd_Rocket_03_HE_F',TRUE],
@@ -168,15 +168,15 @@ if (_type isEqualTo 1) exitWith {
 			[2,'PylonMissile_Missile_AA_R73_x1',TRUE],
 			[3,'PylonMissile_Missile_AA_R73_x1',TRUE],	/*/PylonMissile_Missile_AA_R77_x1/*/
 			[4,'PylonMissile_Missile_AA_R73_x1',TRUE],	/*/PylonMissile_Missile_AA_R77_x1/*/
-			[5,'PylonMissile_Bomb_KAB250_x1',TRUE],
-			[6,'PylonMissile_Bomb_KAB250_x1',TRUE],
+			[5,'PylonMissile_1Rnd_Bomb_04_F',TRUE],
+			[6,'PylonMissile_1Rnd_Bomb_04_F',TRUE],
 			[7,'PylonMissile_Missile_AA_R73_x1',TRUE],
 			[8,'PylonMissile_Missile_AA_R73_x1',TRUE],
 			[9,'PylonMissile_Missile_AA_R73_x1',TRUE],	/*/PylonMissile_Missile_AA_R77_x1/*/
 			[10,'PylonMissile_Missile_AA_R73_x1',TRUE],	/*/PylonMissile_Missile_AA_R77_x1/*/
 			[11,'PylonMissile_Missile_AA_R77_INT_x1',TRUE],
 			[12,'PylonMissile_Missile_AA_R77_INT_x1',TRUE],
-			[13,'PylonMissile_Bomb_KAB250_x1',TRUE]
+			[13,'PylonMissile_1Rnd_Bomb_04_F',TRUE]
 		];
 		// Add extra gun ammo
 		_vehicle addMagazineTurret ['magazine_Fighter02_Gun30mm_AA_x180',[-1]];
@@ -200,7 +200,7 @@ if (_type isEqualTo 1) exitWith {
 			[10,'PylonMissile_Missile_AA_R77_x1',TRUE],	/*/PylonMissile_Missile_AA_R77_x1/*/
 			[11,'PylonMissile_Missile_AA_R77_INT_x1',TRUE],
 			[12,'PylonMissile_Missile_AA_R77_INT_x1',TRUE],
-			[13,'PylonMissile_Bomb_KAB250_x1',TRUE]
+			[13,'PylonMissile_1Rnd_Bomb_04_F',TRUE]
 		];
 		// Add extra gun ammo
 		_vehicle addMagazineTurret ['magazine_Fighter02_Gun30mm_AA_x180',[-1]];
@@ -239,8 +239,8 @@ if (_type isEqualTo 1) exitWith {
 		{
 			_vehicle setPylonLoadout _x;
 		} forEach [
-			[1,'PylonMissile_1Rnd_Bomb_03_F',TRUE],
-			[2,'PylonMissile_1Rnd_Bomb_03_F',TRUE]
+			[1,'PylonMissile_1Rnd_Bomb_04_F',TRUE],
+			[2,'PylonMissile_1Rnd_Bomb_04_F',TRUE]
 		];
 	};
 	if (_vehicleType in ['i_heli_light_03_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f']) then {
@@ -301,7 +301,11 @@ if (_type isEqualTo 1) exitWith {
 if (_type isEqualTo 2) exitWith {
 	_vehicle call _preparePylons;
 	{
-		_vehicle setPylonLoadout [(_forEachIndex + 1),(selectRandom _x),TRUE];
+		private _pylonMagazine = selectRandom _x;
+		if (_pylonMagazine in ['PylonMissile_1Rnd_Bomb_03_F','PylonMissile_Bomb_KAB250_x1']) then {
+			_pylonMagazine = 'PylonMissile_1Rnd_Bomb_04_F';
+		};
+		_vehicle setPylonLoadout [(_forEachIndex + 1),_pylonMagazine,TRUE];
 	} forEach ([0,_vehicle,0] call (missionNamespace getVariable 'QS_fnc_getCompatiblePylonMags'));
 };
 if (_type isEqualTo 3) exitWith {

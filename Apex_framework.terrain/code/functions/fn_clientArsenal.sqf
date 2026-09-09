@@ -15,6 +15,10 @@ ____________________________________________________/*/
 
 params [['_unit',player],['_checkRunningScript',true]];
 
+// This is client UI setup and must not run on dedicated servers or headless
+// clients, where there is no Arsenal interface to initialize.
+if (!hasInterface) exitWith {};
+
 // Below is a very primitive way of preventing concurrency
 // and is prone to race conditions:
 // 1. Multiple calls to QS_fnc_clientArsenal will be ignored,
@@ -283,6 +287,7 @@ _combinedRestrictionsMap = createHashMap;
 'Create restriction hashmap' call _logStep;
 
 _isBlacklisted = QS_missionConfig_Arsenal isEqualTo 2;
+private _arsenalPreloadFailed = FALSE;
 if (_isBlacklisted || {QS_missionConfig_Arsenal isEqualTo 0}) then {
 	// If using blacklist, we first have to add everything, so we can remove the blacklisted items.
 
@@ -297,7 +302,25 @@ if (_isBlacklisted || {QS_missionConfig_Arsenal isEqualTo 0}) then {
 	};
 
 	["Preload"] call BIS_fnc_arsenal;
-	private _data = +BIS_fnc_arsenal_data;
+	// Do not assume the function's internal cache exists immediately.  Waiting
+	// also covers engine/mod implementations which finish the preload
+	// asynchronously.
+	if (isNil {missionNamespace getVariable 'BIS_fnc_arsenal_data'}) then {
+		private _preloadDeadline = diag_tickTime + 10;
+		waitUntil {
+			uiSleep 0.05;
+			(!isNil {missionNamespace getVariable 'BIS_fnc_arsenal_data'})
+			|| {diag_tickTime >= _preloadDeadline}
+		};
+	};
+	private _data = +(missionNamespace getVariable ['BIS_fnc_arsenal_data',[]]);
+	if ((count _data) < 27) exitWith {
+		_arsenalPreloadFailed = TRUE;
+		diag_log format [
+			'QS_fnc_clientArsenal: BIS_fnc_arsenal preload returned invalid data (%1 entries); arsenal setup aborted',
+			count _data
+		];
+	};
 	_data params [
 		'_primaries',
 		'_secondaries',
@@ -363,6 +386,8 @@ if (_isBlacklisted || {QS_missionConfig_Arsenal isEqualTo 0}) then {
 	QS_client_arsenalCache = [_items,_weapons,_magazines,_backpacks];
 	_unit setVariable ['bis_addVirtualWeaponCargo_cargo',+QS_client_arsenalCache,FALSE];
 };
+
+if (_arsenalPreloadFailed) exitWith {};
 
 // Get blacklist/whitelist from arsenal.sqf
 private _unitRole = _unit getVariable ['QS_unit_role','rifleman'];

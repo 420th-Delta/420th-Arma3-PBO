@@ -36,6 +36,31 @@ if (!isServer) exitWith {
 
         diag_log format ["TGC_fnc_dbWhitelistInit: received client whitelist for %1 with roles %2", _uid, _roles];
         missionNamespace setVariable ["QS_RSS_refreshUI", true, false];
+
+        // Initial player setup has a bounded whitelist wait. If the database
+        // response arrives after it, reconcile channel permissions as soon as
+        // the channel system is ready instead of requiring a respawn.
+        if !(missionNamespace getVariable ["TGC_dbWhitelistChannelRefreshPending", false]) then {
+            missionNamespace setVariable ["TGC_dbWhitelistChannelRefreshPending", true, false];
+            0 spawn {
+                waitUntil {
+                    uiSleep 0.1;
+                    missionNamespace getVariable ["QS_client_channelAccessInitialized", false]
+                };
+                [] call TGC_fnc_refreshStaffChannelAccess;
+                missionNamespace setVariable ["TGC_dbWhitelistChannelRefreshPending", false, false];
+            };
+        };
+    };
+
+    // The periodic server refresh replaces QS_whitelist_data directly rather
+    // than using the per-player response above. Reconcile entitlement-based
+    // channels on those broadcasts as well, including mid-session grants and
+    // revocations.
+    "QS_whitelist_data" addPublicVariableEventHandler {
+        if (missionNamespace getVariable ["QS_client_channelAccessInitialized", false]) then {
+            [] call TGC_fnc_refreshStaffChannelAccess;
+        };
     };
 
     0 spawn {
@@ -60,8 +85,21 @@ diag_log "TGC_fnc_dbWhitelistInit: server connect handlers initialized";
 TGC_fnc_dbWhitelistInit_refreshPlayer = {
     params [["_ownerId", -1], ["_uid", ""], ["_name", ""]];
     if (missionNamespace getVariable ["QS_missionConfig_dbWhitelistEnabled", false] isNotEqualTo true) exitWith {};
-    if (missionNamespace getVariable ["TGC_db_ready", false] isNotEqualTo true) exitWith {};
     if (_uid isEqualTo "") exitWith {};
+
+    // Connections can arrive while the asynchronous database startup is still
+    // in progress. Keep this scheduled refresh alive long enough for startup
+    // to finish; otherwise both PlayerConnected and the client's early retries
+    // can be discarded without ever sending a whitelist snapshot.
+    private _dbReadyDeadline = diag_tickTime + 60;
+    waitUntil {
+        uiSleep 0.25;
+        (missionNamespace getVariable ["TGC_db_ready", false]) ||
+        {diag_tickTime >= _dbReadyDeadline}
+    };
+    if !(missionNamespace getVariable ["TGC_db_ready", false]) exitWith {
+        diag_log format ["TGC_fnc_dbWhitelistInit: database readiness timed out for %1 (%2)", _name, _uid];
+    };
     if (isNil "QS_whitelist_data") then {QS_whitelist_data = createHashMap};
 
     // State per UID: [query in flight, cache expiry, cached roles, waiting owners].

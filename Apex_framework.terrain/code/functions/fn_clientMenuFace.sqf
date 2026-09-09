@@ -59,7 +59,7 @@ if (_type isEqualTo 'Select') then {
 	if (_index isNotEqualTo -1) then {
 		_face = localNamespace getVariable ['QS_unit_selectedFace',face player];
 		player setVariable ['QS_unit_face',_face,TRUE];
-		['setFace',player,_face] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+		[player,_face] remoteExecCall ['QS_fnc_serverSetPlayerFace',2,FALSE];
 		missionProfileNamespace setVariable ['QS_unit_face',_face];
 		saveMissionProfileNamespace;
 	};

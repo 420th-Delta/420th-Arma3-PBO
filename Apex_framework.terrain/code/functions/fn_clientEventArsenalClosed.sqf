@@ -95,7 +95,7 @@ if (_canLoadFaceProfile) then {
 	_profileFace = missionProfileNamespace getVariable ['QS_unit_face','default'];
 	if ((toLowerANSI _profileFace) in _availableFaces) then {
 		if ((toLowerANSI (face player)) isNotEqualTo (toLowerANSI _profileFace)) then {
-			['setFace',player,_profileFace] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+			[player,_profileFace] remoteExecCall ['QS_fnc_serverSetPlayerFace',2,FALSE];
 		};
 	};
 };

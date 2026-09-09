@@ -27,7 +27,30 @@ private _getSide = {
 };
 
 private _sideA = [_unit] call _getSide;
-private _sideB = [_instigator] call _getSide;
+
+// A remote-controlled AI keeps its own combat side even when Arma reports the
+// controlling player's body as the instigator. Prefer that AI (including a
+// vehicle crew member) when the mission's remote-control owner marker exists.
+private _attacker = _instigator;
+private _remoteControlledAttacker = objNull;
+private _sourceVehicle = vehicle _source;
+private _attackerCandidates = [_source];
+if (!isNull _sourceVehicle) then {
+    _attackerCandidates append (crew _sourceVehicle);
+};
+{
+    if (
+        (!isNull _x) &&
+        {isPlayer (_x getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])}
+    ) exitWith {
+        _remoteControlledAttacker = _x;
+    };
+} forEach _attackerCandidates;
+if (!isNull _remoteControlledAttacker) then {
+    _attacker = _remoteControlledAttacker;
+};
+
+private _sideB = [_attacker] call _getSide;
 
 // Explosive and missile damage may report no instigator, or report its
 // instigator as the sideEnemy pseudo-side. Resolve either case from the firing

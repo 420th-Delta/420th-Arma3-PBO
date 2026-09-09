@@ -38,6 +38,10 @@ _szArray = if (diag_tickTime > (_vehicle getVariable ['QS_zones_eventHD_checkInt
 _szArray params ['_inSafezone','_safezoneLevel','_safezoneActive'];
 private _scale = 1;
 private _aircraft_crit = FALSE;
+private _localPlayerSide = side (group player);
+if (_localPlayerSide isEqualTo sideUnknown) then {
+	_localPlayerSide = player getVariable ['QS_unit_side',WEST];
+};
 if (
 	((_vehicle getVariable ['QS_spawnMenu_spawnedBy','']) isNotEqualTo '') &&
 	{call TGC_fnc_isFriendlyFire}
@@ -45,7 +49,7 @@ if (
 if (!isNull _instigator) then {
 	if (
 		(!(_vehicle in [_source,_instigator])) &&
-		{((side (group _instigator)) in [(player getVariable ['QS_unit_side',WEST]),sideEnemy])}
+		{((side (group _instigator)) in [_localPlayerSide,sideEnemy])}
 	) then {
 		_scale = [0.05,0] select isNil 'TGC_allowFF';
 	} else {
@@ -73,7 +77,7 @@ if (!isNull _source) then {
 	};
 	if (
 		(!(_vehicle in [_source,_instigator])) &&
-		{((side (group _instigator)) in [(player getVariable ['QS_unit_side',WEST]),sideEnemy])}
+		{((side (group _instigator)) in [_localPlayerSide,sideEnemy])}
 	) then {
 		_scale = [0.05,0] select isNil 'TGC_allowFF';
 	} else {

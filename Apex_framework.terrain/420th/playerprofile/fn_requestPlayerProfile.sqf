@@ -14,6 +14,9 @@ params [
 ];
 
 if (_requestOwner < 2) exitWith {};
+// This function is normally called inside QS_fnc_remoteExec, so it retains
+// RemoteExec context. Bind the claimed owner to the actual network sender.
+if (isRemoteExecuted && {_requestOwner isNotEqualTo remoteExecutedOwner}) exitWith {};
 private _requesterIndex = allPlayers findIf {owner _x isEqualTo _requestOwner};
 if (_requesterIndex < 0) exitWith {};
 
@@ -36,5 +39,9 @@ diag_log format ["TGC_fnc_requestPlayerProfile: accepted request for %1 (%2) fro
 // Database functions reject RemoteExec-derived calls. Hand the validated request
 // to the server-owned worker created during postInit instead.
 private _queue = missionNamespace getVariable ["TGC_playerProfile_queryQueue", []];
-_queue pushBack [_requestOwner, _uid, _playerName];
+if ((count _queue) >= 64) exitWith {
+    [124, [_playerName, _uid, [], false]] remoteExecCall ["QS_fnc_remoteExec", _requestOwner, false];
+};
+if ((_queue findIf {(_x # 0 isEqualTo _requestOwner) && {(_x # 1) isEqualTo _uid}}) isNotEqualTo -1) exitWith {};
+_queue pushBack [_requestOwner, _uid, _playerName, diag_tickTime];
 missionNamespace setVariable ["TGC_playerProfile_queryQueue", _queue];

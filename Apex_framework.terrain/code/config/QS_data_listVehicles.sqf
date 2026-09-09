@@ -204,7 +204,7 @@ if (_type isEqualTo 'defend_helitypes_2') exitWith {
 	[
 		'o_heli_light_02_dynamicloadout_f','i_heli_light_03_dynamicloadout_f',
 		'o_heli_light_02_dynamicloadout_f','i_heli_light_03_dynamicloadout_f',
-		'O_Heli_Attack_02_dynamicLoadout_black_F','O_Heli_Attack_02_dynamicLoadout_F','O_VTOL_02_infantry_dynamicLoadout_F'
+		'O_Heli_Attack_02_dynamicLoadout_black_F','O_Heli_Attack_02_dynamicLoadout_F','O_T_VTOL_02_infantry_dynamicLoadout_F'
 	]
 };
 if (_type isEqualTo 'defend_helitypes_3') exitWith {

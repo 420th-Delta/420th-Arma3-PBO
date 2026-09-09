@@ -275,6 +275,12 @@ if (_isRemoteRequest) exitWith {
 			_data params [['_rankID',0],['_rankName',''],['_hierarchy',0],['_invite',FALSE],['_membersPermission',FALSE],['_ranksPermission',FALSE],['_skinsPermission',FALSE]];
 			_rankName = [_rankName,40] call _fnCleanText;
 			_hierarchy = (round _hierarchy) max 0 min 10;
+			// extDB serializes SQF booleans as "true"/"false". MariaDB permission
+			// columns are numeric, so bind explicit integers for strict SQL modes.
+			_invite = [0,1] select (_invite isEqualTo TRUE);
+			_membersPermission = [0,1] select (_membersPermission isEqualTo TRUE);
+			_ranksPermission = [0,1] select (_ranksPermission isEqualTo TRUE);
+			_skinsPermission = [0,1] select (_skinsPermission isEqualTo TRUE);
 			if (_rankName isEqualTo '') exitWith {[_unit,'Please enter a rank name.'] call _fnNotice};
 			if (_rankID isEqualTo 0) then {
 				if (!_isOwner && {!_isFounder} && {_hierarchy >= _actorHierarchy}) exitWith {[_unit,'You cannot create a rank equal to or above your own hierarchy.'] call _fnNotice};

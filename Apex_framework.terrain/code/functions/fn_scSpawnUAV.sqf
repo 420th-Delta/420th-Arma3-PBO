@@ -13,6 +13,8 @@ Description:
 	Spawn UAV Patrol
 __________________________________________________/*/
 
+if (!(missionNamespace getVariable ['QS_enemyUAVSpawningEnabled',FALSE])) exitWith {[]};
+
 private _return = [];
 _centerPos = missionNamespace getVariable 'QS_AOpos';
 _centerRadius = missionNamespace getVariable 'QS_aoSize';
@@ -75,7 +77,7 @@ if (!isNull _vehicle) then {
 	_grp setGroupIdGlobal ['UAV Recon'];
 	_grp addEventHandler ['EnemyDetected',{call (missionNamespace getVariable 'QS_fnc_AIGroupEventEnemyDetected2')}];
 	if (_type in ['o_uav_02_dynamicloadout_f','i_uav_02_dynamicloadout_f']) then {
-		['setFeatureType',_vehicle,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_vehicle];
+		[_vehicle,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 		if ((random 1) > 0.333) then {
 			_vehicle flyInHeightASL [500,(300 + (random 100)),(500 + (random 500))];
 		};

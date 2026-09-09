@@ -118,7 +118,9 @@ private _query =
 private _args = format ["%1:ina:%2", _mode, _query];
 if (QS_missionConfig_dbQueryDebug) then {diag_log format ["fn_dbQuery.sqf: Executing query %1", _query]};
 private _deadline = diag_tickTime + _queryTimeout;
+private _perfDbSubmit = ['dbQuery.callExtension.submit',0,[_function]] call QS_fnc_perfBegin;
 private _keyResponse = "extDB3" callExtension _args;
+[_perfDbSubmit,0,[count _keyResponse,missionNamespace getVariable ['TGC_dbActiveQueries',0]]] call QS_fnc_perfEnd;
 
 if (!_wait) exitWith {""};
 if (diag_tickTime >= _deadline) then {
@@ -153,7 +155,9 @@ while {!_complete} do {
 	};
 	_responsePolls = _responsePolls + 1;
 
+	private _perfDbPoll = ['dbQuery.callExtension.poll',0,[_function]] call QS_fnc_perfBegin;
 	private _messageRaw = "extDB3" callExtension format ["4:%1", _key];
+	[_perfDbPoll,0,[count _messageRaw]] call QS_fnc_perfEnd;
 	if (diag_tickTime >= _deadline) then {
 		throw format ["fn_dbQuery.sqf: Timed out during response poll %1 for query %2", _responsePolls, _query];
 	};
@@ -196,7 +200,9 @@ while {!_complete} do {
 				if (diag_tickTime >= _deadline) then {
 					throw format ["fn_dbQuery.sqf: Timed out after %1 seconds reading multipart query %2", _queryTimeout, _query];
 				};
+				private _perfDbPart = ['dbQuery.callExtension.multipart',0,[_function]] call QS_fnc_perfBegin;
 				private _pipe = "extDB3" callExtension format ["5:%1", _key];
+				[_perfDbPart,0,[count _pipe]] call QS_fnc_perfEnd;
 				if (diag_tickTime >= _deadline) then {
 					throw format ["fn_dbQuery.sqf: Timed out during multipart read for query %1", _query];
 				};

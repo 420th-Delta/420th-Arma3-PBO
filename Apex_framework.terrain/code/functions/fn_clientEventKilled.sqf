@@ -23,7 +23,7 @@ if (currentChannel > 5) then {
 };
 player setVariable ['QS_client_killedPosition',getPosASL player,FALSE];
 BIS_fnc_feedback_deltaDamage = 0;
-[3,-1] spawn (missionNamespace getVariable 'QS_fnc_clientRadio');
+[3,-1,_co] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 if ((actionIDs _co) isNotEqualTo []) then {
 	removeAllActions _co;
 };

@@ -45,13 +45,13 @@ disableChannels[] = {{2,true,true}};
 forceRotorLibSimulation = 0;							/*/ Advanced Flight Model /*/
 scriptedPlayer = 1;
 corpseManagerMode = 0;
-corpseLimit = 30;
+corpseLimit = 20;
 corpseRemovalMinTime = 60;
-corpseRemovalMaxTime = 1200;
+corpseRemovalMaxTime = 600;
 wreckManagerMode = 0;
 wreckLimit = 10;
 wreckRemovalMinTime = 60;
-wreckRemovalMaxTime = 1200;
+wreckRemovalMaxTime = 600;
 minPlayerDistance = 50;
 disableRandomization[] = {};
 disableGateRandomization = 1;
@@ -84,13 +84,13 @@ respawnOnStart = 0;
 zeusCompositionScriptLevel = 2;
 
 // Security - CfgRemoteExec + CfgDisabledCommands
-// #include "code\config\security.hpp"						// Delete this line if you are having issues with Mod/DLC compatibility. This file contains CfgRemoteExec + CfgDisabledCommands
+#include "code\config\security.hpp"						// CfgRemoteExec + CfgDisabledCommands
 
 // Pylon Manager
 class CfgPylonManager
 {
 //Blacklisted Magazines
-blacklistedMagazines[] = {"rhs_weap_cbu87","rhs_weap_cbu89","rhs_weap_cbu100","BombCluster_03_F","BombCluster_01_F"};
+blacklistedMagazines[] = {};
 
 //Nothing is rearm everywhere
 //rearmObjects[] = {"B_Slingload_01_Ammo_F","B_Truck_01_ammo_F"};
@@ -99,13 +99,17 @@ blacklistedMagazines[] = {"rhs_weap_cbu87","rhs_weap_cbu89","rhs_weap_cbu100","B
 //rearmRange = 20;
 };
 
-enableDebugConsole[] = { "76561198000424164", "76561198017084053", "76561198123202265" };
+enableDebugConsole[] = { "76561198000424164", "76561198017084053", "76561198123202265", "76561198095745182", "76561198380562677", "76561198450616335", "76561198179855306"};
 
 // CfgFunctions
 class CfgFunctions {
 	#include "420th\userinputmenus\CfgFunctions.cpp"
 	class QS {
 		class apex_framework {
+			class perfInit {file = "code\functions\fn_perfInit.sqf"; preInit = 1;};
+			class perfBegin {file = "code\functions\fn_perfBegin.sqf";};
+			class perfEnd {file = "code\functions\fn_perfEnd.sqf";};
+			class corruptTransformDiagnostics {file = "code\functions\fn_corruptTransformDiagnostics.sqf"; postInit = 1;};
 			class addWeapon {file = "code\functions\fn_addWeapon.sqf";};
 			class ahScanString {file = "code\functions\fn_ahScanString.sqf";};
 			class attachToRelative {file = "code\functions\fn_attachToRelative.sqf";};
@@ -200,6 +204,7 @@ class CfgFunctions {
 			class clientDiary {file = "code\functions\fn_clientDiary.sqf";};
 			class clientDisableUserInput {file = "code\functions\fn_clientDisableUserInput.sqf";};
 			class clientEarplugs {file = "code\functions\fn_clientEarplugs.sqf";};
+			class clientModKickWarning {file = "code\functions\fn_clientModKickWarning.sqf";};
 			class clientEventAnimChanged {file = "code\functions\fn_clientEventAnimChanged.sqf";};
 			class clientEventAnimDone {file = "code\functions\fn_clientEventAnimDone.sqf";};
 			class clientEventAnimStateChanged {file = "code\functions\fn_clientEventAnimStateChanged.sqf";};
@@ -409,7 +414,9 @@ class CfgFunctions {
 			class clientRequestMedevac {file = "code\functions\fn_clientRequestMedevac.sqf";};
 			class clientRespawnPosition {file = "code\functions\fn_clientRespawnPosition.sqf";};
 			class clientServiceVehicle {file = "code\functions\fn_clientServiceVehicle.sqf";};
+			class clientApplyEntityState {file = "code\functions\fn_clientApplyEntityState.sqf";};
 			class clientSetUnitInsignia {file = "code\functions\fn_clientSetUnitInsignia.sqf";};
+			class clientSetTeamFeature {file = "code\functions\fn_clientSetTeamFeature.sqf";};
 			class clientSimulationManager {file = "code\functions\fn_clientSimulationManager.sqf";};
 			class clientVehicleEventCargoLoaded {file = "code\functions\fn_clientVehicleEventCargoLoaded.sqf";};
 			class clientVehicleEventCargoUnloaded {file = "code\functions\fn_clientVehicleEventCargoUnloaded.sqf";};
@@ -663,11 +670,16 @@ class CfgFunctions {
 			class serverEventHandler {file = "code\functions\fn_serverEventHandler.sqf";};
 			class serverGetDonatorSkins {file = "code\functions\fn_serverGetDonatorSkins.sqf";};
 			class serverPMC {file = "code\functions\fn_serverPMC.sqf";};
+			class serverPublishEntityState {file = "code\functions\fn_serverPublishEntityState.sqf";};
 			class serverPrivateChannels {file = "code\functions\fn_serverPrivateChannels.sqf";};
 			class serverObjectsMapper {file = "code\functions\fn_serverObjectsMapper.sqf";};
 			class serverObjectsRecycler {file = "code\functions\fn_serverObjectsRecycler.sqf";};
 			class serverRestart {file = "code\functions\fn_serverRestart.sqf";};
 			class serverSetAISkill {file = "code\functions\fn_serverSetAISkill.sqf";};
+			class serverSetEntityFeatureType {file = "code\functions\fn_serverSetEntityFeatureType.sqf";};
+			class serverValidateClientMods {file = "code\functions\fn_serverValidateClientMods.sqf";};
+			class serverSetPlayerFace {file = "code\functions\fn_serverSetPlayerFace.sqf";};
+			class serverSetTeamFeature {file = "code\functions\fn_serverSetTeamFeature.sqf";};
 			class serverUnitConfigure {file = "code\functions\fn_serverUnitConfigure.sqf";};
 			class setCollectible {file = "code\functions\fn_setCollectible.sqf";};
 			class setCruiseControl {file = "code\functions\fn_setCruiseControl.sqf";};
@@ -724,6 +736,7 @@ class CfgFunctions {
 			class vehicleAPSParams {file = "code\functions\fn_vehicleAPSParams.sqf";};
 			class vehicleGetPassiveStealth {file = "code\functions\fn_vehicleGetPassiveStealth.sqf";};
 			class vehicleLoadouts {file = "code\functions\fn_vehicleLoadouts.sqf";};
+			class removeAircraftBombs {file = "code\functions\fn_removeAircraftBombs.sqf";};
 			class vEventControlsShifted {file = "code\functions\fn_vEventControlsShifted.sqf";};
 			class vEventRopeAttach {file = "code\functions\fn_vEventRopeAttach.sqf";};
 			class vEventRopeBreak {file = "code\functions\fn_vEventRopeBreak.sqf";};
@@ -767,7 +780,8 @@ class CfgFunctions {
 			class zeusMission {file = "code\functions\fn_zeusMission.sqf";};
 			class zoneManager {file = "code\functions\fn_zoneManager.sqf";};
 			class zonePreset {file = "code\functions\fn_zonePreset.sqf";};
-			class deleteOutOfBoundsLoop {file = "code\functions\fn_deleteOutOfBoundsLoop.sqf"; postInit = 1;};
+			class enemyUAVDiagnostics {file = "code\functions\fn_enemyUAVDiagnostics.sqf"; postInit = 1;};
+			// class deleteOutOfBoundsLoop {file = "code\functions\fn_deleteOutOfBoundsLoop.sqf"; postInit = 1;};
 		};
 	};
     class TGC {
@@ -776,6 +790,7 @@ class CfgFunctions {
             class enableChannel {};
             class getChannelMask {};
             class refreshChannels {};
+            class refreshStaffChannelAccess {};
             class setChannelMasks {};
         };
         class Curators {

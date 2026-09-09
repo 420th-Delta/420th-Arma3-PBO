@@ -1,5 +1,3 @@
-SLT_fnc_RE_Server = { params ["_arguments","_code"]; _varName = ("SLT" + str (round random 10000)); TempCode = compile ("if(!isServer) exitWith{};_this call " + str _code + "; " + (_varName + " = nil;")); TempArgs = _arguments; call compile (_varName + " = [TempArgs,TempCode]; publicVariable '" + _varName + "'; [[], {(" + _varName + " select 0) spawn (" + _varName + " select 1);}] remoteExec ['spawn',2];"); };
-
 with uiNamespace do {SLTScriptDisplayName = "Team Name Tags";}; 
  
 SLT_fnc_enableScript = { 
@@ -174,15 +172,15 @@ SLT_fnc_enableScript = {
  }; 
  
 SLT_fnc_disableScript = { 
- {
  if (!isNil 'TeamNameTagEvent') then {removeMissionEventHandler ['Draw3D',TeamNameTagEvent];};
  if (!isNil 'TeamNameTagAIUpdater') then {terminate TeamNameTagAIUpdater;};
  TeamNameTagEvent = nil;
  TeamNameTagAIUpdater = nil;
  TNTNearbyFriendlyAI = nil;
- } remoteExec ['bis_fnc_call',0];
- {} remoteExec ['BIS_fnc_call',0,'TeamNameTag'];
 };
+
+QS_fnc_teamNameTagsEnable = SLT_fnc_enableScript;
+QS_fnc_teamNameTagsDisable = SLT_fnc_disableScript;
  
 SLT_fnc_init = { 
  params[["_useToggleOptions",true]]; 
@@ -216,7 +214,7 @@ SLT_fnc_init = {
   SLTEnableButton ctrlSetText "ENABLE"; 
   SLTEnableButton ctrlCommit 0; 
   SLTEnableButton ctrlAddEventHandler ["ButtonClick",{ 
-   [[],missionNamespace getVariable "SLT_fnc_enableScript"] call (missionNamespace getVariable "SLT_fnc_RE_Server"); 
+   ['NAME_TAGS',TRUE] remoteExecCall ['QS_fnc_serverSetTeamFeature',2,FALSE];
    closeDialog 0; 
   }]; 
  
@@ -225,7 +223,7 @@ SLT_fnc_init = {
   SLTDisableButton ctrlSetText "DISABLE"; 
   SLTDisableButton ctrlCommit 0; 
   SLTDisableButton ctrlAddEventHandler ["ButtonClick",{ 
-   [[],missionNamespace getVariable "SLT_fnc_disableScript"] call (missionNamespace getVariable "SLT_fnc_RE_Server"); 
+   ['NAME_TAGS',FALSE] remoteExecCall ['QS_fnc_serverSetTeamFeature',2,FALSE];
    closeDialog 0; 
   }]; 
  
@@ -242,4 +240,4 @@ SLT_fnc_init = {
  deleteVehicle this; 
 }; 
  
-[] spawn SLT_fnc_enableScript;
+[] spawn QS_fnc_teamNameTagsEnable;

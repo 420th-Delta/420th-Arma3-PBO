@@ -1066,8 +1066,8 @@ _QS_module_dynSim_checkDelay = _timeNow + _QS_module_dynSim_delay;
 {
 	(_x # 0) setDynamicSimulationDistance (_x # 1);
 } forEach [
-	['GROUP',1250],
-	['VEHICLE',1000],
+	['GROUP',4000],
+	['VEHICLE',4000],
 	['EMPTYVEHICLE',250],
 	['PROP',100]
 ];
@@ -1494,13 +1494,6 @@ for '_x' from 0 to 1 step 0 do {
 								{((missionNamespace getVariable 'QS_aoHQ') isNotEqualTo [])} &&
 								{(!isNil {missionNamespace getVariable 'QS_HQpos'})}
 							) then {
-								{
-									if (_x isEqualType _objNull) then {
-										if (!isNull _x) then {
-											0 = (missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
-										};
-									};
-								} count (missionNamespace getVariable 'QS_aoHQ');
 								['REMOVE','ENEMY_HQ_0'] call _fn_zoneManager;
 							};
 							_aoStartTime = diag_tickTime + 10;
@@ -1713,6 +1706,21 @@ for '_x' from 0 to 1 step 0 do {
 						{(missionNamespace getVariable 'QS_aoCycleVar')}
 					) then {
 						diag_log 'Main AO deactivating';
+						// Capture the Normal AO objects that previously waited on player proximity.
+						// They are force-deleted by the lifecycle timer below.
+						private _normalAO_cleanupObjects = [];
+						private _normalAO_unhideObjects = [];
+						missionNamespace setVariable ['QS_normalAO_deferredAIObjects',[],_false];
+						{
+							if ((_x isEqualType _objNull) && {!isNull _x}) then {
+								_normalAO_cleanupObjects pushBackUnique _x;
+							};
+						} forEach (missionNamespace getVariable ['QS_aoHQ',[]]);
+						{
+							if ((_x isEqualType _objNull) && {!isNull _x}) then {
+								_normalAO_cleanupObjects pushBackUnique _x;
+							};
+						} forEach (missionNamespace getVariable ['QS_HC_AO_enemyArray',[]]);
 						_aoDuration = round (diag_tickTime - _aoStartTime);
 						_aoStats = missionProfileNamespace getVariable ['QS_statistics_classic_aoDuration',[]];
 						_aoStatsIndex = _aoStats findIf { (_x # 0) isEqualTo _aoName };
@@ -1744,10 +1752,21 @@ for '_x' from 0 to 1 step 0 do {
 							['QS_IA_TASK_AO_1'],
 							['QS_IA_TASK_AO_2']
 						];
-						if (alive (missionNamespace getVariable 'QS_radioTower')) then {
-							(missionNamespace getVariable 'QS_radioTower') setDamage [1,_true];
+						private _normalAO_radioTower = missionNamespace getVariable ['QS_radioTower',_objNull];
+						if (!isNull _normalAO_radioTower) then {
+							_normalAO_cleanupObjects pushBackUnique _normalAO_radioTower;
+							if (alive _normalAO_radioTower) then {
+								_normalAO_radioTower setDamage [1,_true];
+							};
 						};
-						[2,'QS_ao_jammer_1'] call _fn_gpsJammer;
+						private _normalAO_jammerIndex = (missionNamespace getVariable ['QS_mission_gpsJammers',[]]) findIf {((_x # 0) isEqualTo 'QS_ao_jammer_1')};
+						if (_normalAO_jammerIndex isNotEqualTo -1) then {
+							private _normalAO_jammerObject = ((missionNamespace getVariable 'QS_mission_gpsJammers') # _normalAO_jammerIndex) # 4;
+							if (!isNull _normalAO_jammerObject) then {
+								_normalAO_cleanupObjects pushBackUnique _normalAO_jammerObject;
+							};
+						};
+						[2,'QS_ao_jammer_1',_true] call _fn_gpsJammer;
 						{
 							_element = _x;
 							_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x # 0) isEqualTo _element)};
@@ -1759,33 +1778,36 @@ for '_x' from 0 to 1 step 0 do {
 							'QS_ao_HQ',
 							'QS_ao_SD'
 						];
-						if (((missionNamespace getVariable 'QS_enemyGroundReinforceArray') findIf {(alive _x)}) isNotEqualTo -1) then {
+						if ((missionNamespace getVariable 'QS_enemyGroundReinforceArray') isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
+									_normalAO_cleanupObjects pushBackUnique _x;
 									_x setDamage 1;
 								};
-							} count (missionNamespace getVariable 'QS_enemyGroundReinforceArray');
+							} forEach (missionNamespace getVariable 'QS_enemyGroundReinforceArray');
 						};
-						if (((missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray') findIf {(alive _x)}) isNotEqualTo -1) then {
+						if ((missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray') isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
+									_normalAO_cleanupObjects pushBackUnique _x;
 									_x setDamage 1;
 								};
-							} count (missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray');
+							} forEach (missionNamespace getVariable 'QS_enemyVehicleReinforcementsArray');
 						};
 						if ((missionNamespace getVariable 'QS_enemyJungleCamp_array') isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
-									0 = (missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
+									_normalAO_cleanupObjects pushBackUnique _x;
 								};
-							} count (missionNamespace getVariable 'QS_enemyJungleCamp_array');
+							} forEach (missionNamespace getVariable 'QS_enemyJungleCamp_array');
 						};
-						if (((missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew') findIf {(alive _x)}) isNotEqualTo -1) then {
+						if ((missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew') isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
+									_normalAO_cleanupObjects pushBackUnique _x;
 									_x setDamage 1;
 								};
-							} count (missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew');
+							} forEach (missionNamespace getVariable 'QS_enemyVehicleReinforcements_crew');
 						};
 						if ((missionNamespace getVariable ['QS_aoAnimals',[]]) isNotEqualTo []) then {
 							{
@@ -1817,7 +1839,7 @@ for '_x' from 0 to 1 step 0 do {
 						if ((missionNamespace getVariable ['QS_ao_civVehicles',[]]) isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
-									(missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
+									_normalAO_cleanupObjects pushBackUnique _x;
 								};
 							} forEach (missionNamespace getVariable ['QS_ao_civVehicles',[]]);
 							missionNamespace setVariable ['QS_ao_civVehicles',[],_false];
@@ -1828,7 +1850,7 @@ for '_x' from 0 to 1 step 0 do {
 									if (_x in allMines) then {
 										deleteVehicle _x;
 									} else {
-										(missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
+										_normalAO_cleanupObjects pushBackUnique _x;
 									};
 								};
 							} forEach (missionNamespace getVariable ['QS_entities_ao_customEntities',[]]);
@@ -1837,7 +1859,7 @@ for '_x' from 0 to 1 step 0 do {
 						if ((missionNamespace getVariable ['QS_entities_ao_customStructures',[]]) isNotEqualTo []) then {
 							{
 								if (!isNull _x) then {
-									(missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'NOW_DISCREET',0];
+									_normalAO_cleanupObjects pushBackUnique _x;
 								};
 							} forEach (missionNamespace getVariable ['QS_entities_ao_customStructures',[]]);
 							missionNamespace setVariable ['QS_entities_ao_customStructures',[],_false];
@@ -1928,7 +1950,7 @@ for '_x' from 0 to 1 step 0 do {
 							{
 								if (!isNull _x) then {
 									if (isObjectHidden _x) then {
-										(missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'UNHIDE_DISCREET',0];
+										_normalAO_unhideObjects pushBackUnique _x;
 									};
 								};
 							} forEach (missionNamespace getVariable 'QS_virtualSectors_hiddenTerrainObjects');
@@ -1962,11 +1984,99 @@ for '_x' from 0 to 1 step 0 do {
 						};
 						missionNamespace setVariable ['QS_ao_createDelayedMinefield',_false,_false];
 						['DEBRIEF',_ao,_QS_AOpos] call _fn_aoBriefing;
+						private _normalAO_defendScript = scriptNull;
 						if ((_ao # 8) isNotEqualTo 0) then {
 							_defendAO = _true;
 							_defendAOActive = _true;
 							_isDefendLocal = _true;
 							_defendAOScript = 0 spawn _fn_aoDefend;
+							_normalAO_defendScript = _defendAOScript;
+						};
+						// Preserve the HQ through Defend, then remove all captured remnants 30 seconds
+						// after the final mission script finishes. A Normal AO without Defend starts
+						// the same 30-second delay immediately.
+						[
+							_normalAO_cleanupObjects,
+							_normalAO_unhideObjects,
+							_QS_AOpos,
+							((_ao # 8) isNotEqualTo 0),
+							_normalAO_defendScript
+						] spawn {
+							params ['_cleanupObjects','_unhideObjects','_aoPosition','_waitForDefend','_defendScript'];
+							if (_waitForDefend) then {
+								waitUntil {
+									uiSleep 1;
+									scriptDone _defendScript
+								};
+							};
+							uiSleep 30;
+							private _perfAO = ['core.endAOCleanup',count _cleanupObjects,[_waitForDefend]] call QS_fnc_perfBegin;
+							private _perfAttachmentRequests = 0;
+							{
+								if ((_x isEqualType objNull) && {!isNull _x}) then {
+									_cleanupObjects pushBackUnique _x;
+								};
+							} forEach (missionNamespace getVariable ['QS_normalAO_deferredAIObjects',[]]);
+							missionNamespace setVariable ['QS_normalAO_deferredAIObjects',[],FALSE];
+							{
+								if (
+									(!isNull _x) &&
+									{((_x distance2D _aoPosition) < 1500)} &&
+									{(!(_x getVariable ['QS_dead_prop',FALSE]))}
+								) then {
+									_cleanupObjects pushBackUnique _x;
+								};
+							} forEach allDead;
+							private _cleanupGroups = [];
+							private _deletedCount = 0;
+							private _unhiddenCount = 0;
+							{
+								if (!isNull _x) then {
+									if (_x isKindOf 'CAManBase') then {
+										private _unitGroup = group _x;
+										if (!isNull _unitGroup) then {
+											_cleanupGroups pushBackUnique _unitGroup;
+										};
+									};
+									{
+										[0,_x] call (missionNamespace getVariable 'QS_fnc_eventAttach');
+										private _perfDelete = ['core.endAOCleanup.attachment',1,[typeOf _x,netId _x]] call QS_fnc_perfBegin;
+										deleteVehicle _x;
+										[_perfDelete,-1] call QS_fnc_perfEnd;
+										_perfAttachmentRequests = _perfAttachmentRequests + 1;
+									} forEach (attachedObjects _x);
+									missionNamespace setVariable [
+										'QS_analytics_entities_deleted',
+										((missionNamespace getVariable ['QS_analytics_entities_deleted',0]) + 1),
+										FALSE
+									];
+									private _perfDeleteEntity = ['core.endAOCleanup.entity',1,[typeOf _x,netId _x]] call QS_fnc_perfBegin;
+									if ((_x isKindOf 'CAManBase') && {!isNull (objectParent _x)} && {(objectParent _x) isKindOf 'AllVehicles'}) then {
+										(objectParent _x) deleteVehicleCrew _x;
+									} else {
+										deleteVehicle _x;
+									};
+									[_perfDeleteEntity,-1] call QS_fnc_perfEnd;
+									_deletedCount = _deletedCount + 1;
+								};
+							} forEach _cleanupObjects;
+							{
+								if ((!isNull _x) && {local _x} && {(units _x) isEqualTo []}) then {
+									deleteGroup _x;
+								};
+							} forEach _cleanupGroups;
+							{
+								if (!isNull _x) then {
+									_x hideObjectGlobal FALSE;
+									_unhiddenCount = _unhiddenCount + 1;
+								};
+							} forEach _unhideObjects;
+							[_perfAO,_deletedCount,[count _cleanupObjects,_perfAttachmentRequests,_unhiddenCount]] call QS_fnc_perfEnd;
+							diag_log format [
+								'***** NORMAL AO CLEANUP ***** Forced cleanup completed: %1 entities, %2 terrain objects *****',
+								_deletedCount,
+								_unhiddenCount
+							];
 						};
 						_aoStartDelay = time + (30 + (random 15));
 					};
@@ -3662,7 +3772,11 @@ for '_x' from 0 to 1 step 0 do {
 		_vRespawn_checkDelay = time + _vRespawn_delay;
 	};
 	if (_timeNow > _QS_cleanup_checkDelay) then {
+		private _perfCleanup = ['core.periodicCleanup',count (missionNamespace getVariable ['QS_garbageCollector',[]])] call QS_fnc_perfBegin;
+		private _perfDeleteRequests = 0;
+		private _perfDeadCensus = ['core.allDead'] call QS_fnc_perfBegin;
 		private _cleanupAllDead = allDead;
+		[_perfDeadCensus,count _cleanupAllDead] call QS_fnc_perfEnd;
 		private _cleanupAllDeadMen = _cleanupAllDead select {(_x isKindOf 'CAManBase')};
 		private _cleanupAllMines = allMines;
 		private _cleanupDeadMenCount = count _cleanupAllDeadMen;
@@ -3704,7 +3818,10 @@ for '_x' from 0 to 1 step 0 do {
 						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
 						_false
 					];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _x;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 			};
 			if ((_forEachIndex mod 16) isEqualTo 15) then {
@@ -3737,7 +3854,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_managed_flares isNotEqualTo []) then {
 				{
 					if (diag_tickTime > (_x # 1)) then { 
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle (_x # 0);
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				} forEach _managed_flares;
 			};
@@ -3800,12 +3920,21 @@ for '_x' from 0 to 1 step 0 do {
 														missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 														if (!isNull (objectParent _QS_obj)) then {
 															if ((objectParent _QS_obj) isKindOf 'AllVehicles') then {
+																private _perfDeleteCrew = ['core.cleanup.deleteVehicleCrew',1] call QS_fnc_perfBegin;
 																(objectParent _QS_obj) deleteVehicleCrew _QS_obj;
+																[_perfDeleteCrew,-1] call QS_fnc_perfEnd;
+																_perfDeleteRequests = _perfDeleteRequests + 1;
 															} else {
+																private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 																deleteVehicle _QS_obj;
+																[_perfDelete,-1] call QS_fnc_perfEnd;
+																_perfDeleteRequests = _perfDeleteRequests + 1;
 															};
 														} else {
+															private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 															deleteVehicle _QS_obj;
+															[_perfDelete,-1] call QS_fnc_perfEnd;
+															_perfDeleteRequests = _perfDeleteRequests + 1;
 														};
 													};
 												};
@@ -3819,12 +3948,31 @@ for '_x' from 0 to 1 step 0 do {
 													{(_allDeadVehiclesCount > _deadVehiclesLimitMax)}
 												) then {
 													missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+													private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 													deleteVehicle _QS_obj;
+													[_perfDelete,-1] call QS_fnc_perfEnd;
+													_perfDeleteRequests = _perfDeleteRequests + 1;
 												};
 											};											
 										};		
 										if (_QS_instructions isEqualTo 'CUSTOM') then {
 
+										};
+										if (_QS_instructions isEqualTo 'SPAWN_MENU_LOGISTICS') then {
+											if (!(_QS_obj getVariable ['QS_logistics_deployed',_false])) then {
+												private _spawnMenuBaseRadius = 1000;
+												private _spawnMenuPlayerRadius = if (
+													((_QS_objWorldPos distance2D (markerPos 'QS_marker_base_marker')) <= _spawnMenuBaseRadius)
+												) then {
+													50
+												} else {
+													2000
+												};
+												if ((_allPlayers inAreaArray [_QS_objWorldPos,_spawnMenuPlayerRadius,_spawnMenuPlayerRadius,0,_false]) isEqualTo []) then {
+													_QS_attemptRecycle = _true;
+													_QS_deleteThis = _true;
+												};
+											};
 										};
 										if (_QS_instructions isEqualTo 'UNHIDE_DISCREET') then {
 											if ((_allPlayers inAreaArray [_QS_objWorldPos,100,100,0,_false]) isEqualTo []) then {
@@ -3860,15 +4008,27 @@ for '_x' from 0 to 1 step 0 do {
 							if (_x isKindOf 'CAManBase') then {
 								if (!isNull (objectParent _x)) then {
 									if ((objectParent _x) isKindOf 'AllVehicles') then {
+										private _perfDeleteCrew = ['core.cleanup.deleteVehicleCrew',1] call QS_fnc_perfBegin;
 										(objectParent _x) deleteVehicleCrew _x;
+										[_perfDeleteCrew,-1] call QS_fnc_perfEnd;
+										_perfDeleteRequests = _perfDeleteRequests + 1;
 									} else {
+										private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 										deleteVehicle _x;
+										[_perfDelete,-1] call QS_fnc_perfEnd;
+										_perfDeleteRequests = _perfDeleteRequests + 1;
 									};
 								} else {
+									private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 									deleteVehicle _x;
+									[_perfDelete,-1] call QS_fnc_perfEnd;
+									_perfDeleteRequests = _perfDeleteRequests + 1;
 								};
 							} else {
+								private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 								deleteVehicle _x;
+								[_perfDelete,-1] call QS_fnc_perfEnd;
+								_perfDeleteRequests = _perfDeleteRequests + 1;
 							};
 							uiSleep 0.007;
 						} else {
@@ -3908,7 +4068,9 @@ for '_x' from 0 to 1 step 0 do {
 			'Ruins',
 			'SmokeShell'
 		] + _jetJunk + _backpackDroneTypes;
+		private _perfEntityCensus = ['core.cleanupEntities'] call QS_fnc_perfBegin;
 		_allMissionObjectsAll = entities [_cleanupEntityTypes,[],_false,_false];
+		[_perfEntityCensus,count _allMissionObjectsAll] call QS_fnc_perfEnd;
 		_missionCraters = [];
 		_missionWeaponHolders = [];
 		_missionGroundWeaponHolders = [];
@@ -3926,7 +4088,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_missionObject isKindOf 'CraterLong') then {
 				if ((_allPlayers inAreaArray [_missionObject,500,500,0,_false]) isEqualTo []) then {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				} else {
 					if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
 						0 = _missionCraters pushBack _missionObject;
@@ -3937,7 +4102,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_missionObject isKindOf 'WeaponHolder') then {
 				if ((_missionObject distance2D _baseMarker) < 300) then {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				} else {
 					0 = _missionWeaponHolders pushBack _missionObject;
 				};
@@ -3948,7 +4116,10 @@ for '_x' from 0 to 1 step 0 do {
 					0 = _missionGroundWeaponHolders pushBack _missionObject;
 				} else {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 				uiSleep 0.005;
 			};
@@ -3957,7 +4128,10 @@ for '_x' from 0 to 1 step 0 do {
 					0 = _missionWeaponHolderSimulated pushBack _missionObject;
 				} else {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _missionObject;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 				uiSleep 0.005;
 			};
@@ -3975,7 +4149,10 @@ for '_x' from 0 to 1 step 0 do {
 					if ((_allUnits inAreaArray [_missionObject,250,250,0,_false]) isEqualTo []) then {
 						if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
 							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+							private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 							deleteVehicle _missionObject;
+							[_perfDelete,-1] call QS_fnc_perfEnd;
+							_perfDeleteRequests = _perfDeleteRequests + 1;
 						};
 					} else {
 						if (isNil {_missionObject getVariable 'QS_cleanup_protected'}) then {
@@ -3988,7 +4165,10 @@ for '_x' from 0 to 1 step 0 do {
 			if (_missionObject isKindOf 'Ruins') then {
 				if (_missionObject isKindOf 'Land_TTowerBig_2_ruins_F') then {
 					if ((_allPlayers inAreaArray [_missionObject,1000,1000,0,_false]) isEqualTo []) then {
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle _missionObject;
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				} else {
 					if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
@@ -4028,7 +4208,10 @@ for '_x' from 0 to 1 step 0 do {
 			{
 				if (!isNull _x) then {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _x;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 				};
 			} count _deleteNow;
 			_deleteNow = [];
@@ -4044,7 +4227,10 @@ for '_x' from 0 to 1 step 0 do {
 				for '_x' from 0 to (_n - 1) step 1 do {
 					if (!isNull (_array # _i)) then {
 						missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle (_array # _i);
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 					_i = _i + 1;
 					uiSleep 0.01;
@@ -4078,12 +4264,21 @@ for '_x' from 0 to 1 step 0 do {
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					if (!isNull (objectParent _x)) then {
 						if ((objectParent _x) isKindOf 'AllVehicles') then {
+							private _perfDeleteCrew = ['core.cleanup.deleteVehicleCrew',1] call QS_fnc_perfBegin;
 							(objectParent _x) deleteVehicleCrew _x;
+							[_perfDeleteCrew,-1] call QS_fnc_perfEnd;
+							_perfDeleteRequests = _perfDeleteRequests + 1;
 						} else {
+							private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 							deleteVehicle _x;
+							[_perfDelete,-1] call QS_fnc_perfEnd;
+							_perfDeleteRequests = _perfDeleteRequests + 1;
 						};
 					} else {
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle _x;
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				};
 				if ((_forEachIndex mod 16) isEqualTo 15) then {
@@ -4094,7 +4289,10 @@ for '_x' from 0 to 1 step 0 do {
 		if (_cleanupAllMines isNotEqualTo []) then {
 			{
 				if ((_allUnits inAreaArray [_x,500,500,0,_false]) isEqualTo []) then {
+					private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 					deleteVehicle _x;
+					[_perfDelete,-1] call QS_fnc_perfEnd;
+					_perfDeleteRequests = _perfDeleteRequests + 1;
 					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 				};
 				if ((_forEachIndex mod 16) isEqualTo 15) then {
@@ -4103,7 +4301,10 @@ for '_x' from 0 to 1 step 0 do {
 			} forEach _cleanupAllMines;
 		};
 		if ((count (missionNamespace getVariable ['QS_prisoners',[]])) > _maxPrisoners) then {
+			private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 			deleteVehicle ((missionNamespace getVariable 'QS_prisoners') # 0);
+			[_perfDelete,-1] call QS_fnc_perfEnd;
+			_perfDeleteRequests = _perfDeleteRequests + 1;
 			missionNamespace setVariable ['QS_prisoners',((missionNamespace getVariable 'QS_prisoners') select {(alive _x)}),_true];
 		};
 
@@ -4123,11 +4324,17 @@ for '_x' from 0 to 1 step 0 do {
 							{
 								missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 								[0,_x] call _fn_eventAttach;
-								deleteVehicle _x
+								private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
+								deleteVehicle _x;
+								[_perfDelete,-1] call QS_fnc_perfEnd;
+								_perfDeleteRequests = _perfDeleteRequests + 1;
 							} forEach (attachedObjects _uav);
 						};
 						missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+						private _perfDelete = ['core.cleanup.deleteVehicle',1] call QS_fnc_perfBegin;
 						deleteVehicle _uav;
+						[_perfDelete,-1] call QS_fnc_perfEnd;
+						_perfDeleteRequests = _perfDeleteRequests + 1;
 					};
 				} count _allUnitsUav;
 			};
@@ -4149,6 +4356,7 @@ for '_x' from 0 to 1 step 0 do {
 			};
 			_QS_checkUAVsTime = _timeNow + _QS_checkUAVsTime_delay;
 		};
+		[_perfCleanup,_perfDeleteRequests,[count _cleanupAllDead,count _cleanupAllMines,count _allMissionObjectsAll,count (missionNamespace getVariable ['QS_garbageCollector',[]])]] call QS_fnc_perfEnd;
 		_QS_cleanup_checkDelay = _timeNow + _QS_cleanup_delay;
 	};
 

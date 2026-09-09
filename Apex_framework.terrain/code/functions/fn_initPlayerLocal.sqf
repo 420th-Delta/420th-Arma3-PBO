@@ -29,6 +29,20 @@ if (!isMissionProfileNamespaceLoaded) then {
 };
 missionNamespace setVariable ['QS_init_doorCloser',TRUE,FALSE];
 uiNamespace setVariable ['BIS_fnc_advHint_hintHandlers',TRUE];
+
+// Report non-official mods to the server for Workshop ID and hash allowlist checking.
+private _clientWorkshopMods = [];
+{
+	private _isDefault = _x param [2,FALSE,[FALSE]];
+	private _isOfficial = _x param [3,FALSE,[FALSE]];
+	private _modHash = _x param [5,'',['']];
+	private _workshopID = _x param [7,'',['']];
+	if ((!_isDefault) && {!_isOfficial}) then {
+		_clientWorkshopMods pushBackUnique [_workshopID,(_x param [0,'',['']]),_modHash];
+	};
+} forEach getLoadedModsInfo;
+[_clientWorkshopMods] remoteExecCall ['QS_fnc_serverValidateClientMods',2,FALSE];
+
 if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0) then {
 	['BASE'] spawn (missionNamespace getVariable 'QS_fnc_localObjects');
 };
@@ -424,6 +438,13 @@ if ((call (missionNamespace getVariable 'QS_fnc_clientGetSupporterLevel')) > 0) 
 	['QS_eval_frameInterval_30',0]
 ];
 /*/====================== PLAYER OBJECT =====/*/
+private _initialPlayerSide = side (group player);
+if (_initialPlayerSide isEqualTo sideUnknown) then {
+	_initialPlayerSide = side player;
+};
+if (_initialPlayerSide isEqualTo sideUnknown) then {
+	_initialPlayerSide = WEST;
+};
 {
 	player setVariable _x;
 } forEach [
@@ -460,7 +481,7 @@ if ((call (missionNamespace getVariable 'QS_fnc_clientGetSupporterLevel')) > 0) 
 	['QS_client_shots_sniper',0,FALSE],
 	['QS_client_hits_sniper',0,FALSE],
 	['QS_client_lastCombatDamageTime',-1,FALSE],
-	['QS_unit_side',WEST,TRUE]
+	['QS_unit_side',_initialPlayerSide,TRUE]
 ];
 // Remove BIS Zeus stuff
 if (!isNil {player getVariable 'BIS_fnc_addCuratorPlayer_handler'}) then {
@@ -982,6 +1003,8 @@ if (isNil {missionProfileNamespace getVariable 'QS_client_radioChannels_profile'
 	};
 };
 [4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+missionNamespace setVariable ['QS_client_channelAccessInitialized',TRUE,FALSE];
+[] call TGC_fnc_refreshStaffChannelAccess;
 [] spawn {
 	while {TRUE} do {
 		uiSleep 1;

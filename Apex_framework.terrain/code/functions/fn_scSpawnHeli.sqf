@@ -89,7 +89,7 @@ clearItemCargoGlobal _air;
 clearBackpackCargoGlobal _air;
 _air setPos (_randomPos vectorAdd [0,0,300]);
 _air enableRopeAttach FALSE;
-['setFeatureType',_air,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_air];
+[_air,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 _unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _pilotType,_pilotType],_randomPos,[],0,'NONE'];
 _unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 _unit assignAsDriver _air;

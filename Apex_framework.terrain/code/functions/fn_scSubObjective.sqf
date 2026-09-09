@@ -254,6 +254,12 @@ if (_type isEqualTo 1) exitWith {
 				} forEach (attachedObjects _this);
 			};
 			_uncertaintyPos = [((_position # 0) + (100 - (random 200))),((_position # 1) + (100 - (random 200))),0];
+			{
+				if (_x in allMapMarkers) then {
+					deleteMarker _x;
+				};
+			} forEach ((missionNamespace getVariable ['QS_virtualSectors_sub_1_markers',[]]) + ['QS_marker_virtualSectors_sub_0','QS_marker_virtualSectors_sub_00']);
+			missionNamespace setVariable ['QS_virtualSectors_sub_1_markers',[],FALSE];
 			_marker1 = createMarker ['QS_marker_virtualSectors_sub_0',[-1000,-1000,0]];
 			_marker1 setMarkerAlphaLocal 0;
 			_marker1 setMarkerShapeLocal 'ICON';
@@ -396,6 +402,12 @@ if (_type isEqualTo 1) exitWith {
 				};
 			};
 			_uncertaintyPos = [((_position # 0) + (100 - (random 200))),((_position # 1) + (100 - (random 200))),0];
+			{
+				if (_x in allMapMarkers) then {
+					deleteMarker _x;
+				};
+			} forEach ((missionNamespace getVariable ['QS_virtualSectors_sub_2_markers',[]]) + ['QS_marker_virtualSectors_sub_1','QS_marker_virtualSectors_sub_11']);
+			missionNamespace setVariable ['QS_virtualSectors_sub_2_markers',[],FALSE];
 			_marker1 = createMarker ['QS_marker_virtualSectors_sub_1',[-1000,-1000,0]];
 			_marker1 setMarkerAlphaLocal 0;
 			_marker1 setMarkerShapeLocal 'ICON';
@@ -531,6 +543,12 @@ if (_type isEqualTo 1) exitWith {
 				} forEach (units _grp);
 			};
 			_uncertaintyPos = [((_position # 0) + (100 - (random 200))),((_position # 1) + (100 - (random 200))),0];
+			{
+				if (_x in allMapMarkers) then {
+					deleteMarker _x;
+				};
+			} forEach ((missionNamespace getVariable ['QS_virtualSectors_sub_3_markers',[]]) + ['QS_marker_virtualSectors_sub_2','QS_marker_virtualSectors_sub_22']);
+			missionNamespace setVariable ['QS_virtualSectors_sub_3_markers',[],FALSE];
 			_marker1 = createMarker ['QS_marker_virtualSectors_sub_2',[-1000,-1000,0]];
 			_marker1 setMarkerAlphaLocal 0;
 			_marker1 setMarkerShapeLocal 'ICON';

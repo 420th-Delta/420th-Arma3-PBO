@@ -122,7 +122,16 @@ if (
 			} forEach _damage;
 			if (!(_cancelled)) then {
 				if (_repairingPerformed || _waterDamaged) then {
+					// setDamage can overwrite individual hit-point values. Clear total damage
+					// first, then explicitly restore every configured hit point so destroyed
+					// components such as aircraft landing gear are repaired as well.
 					_vehicle setDamage [0,FALSE];
+					private _postRepairHitPoints = (getAllHitPointsDamage _vehicle) param [0,[]];
+					{
+						if (_x isNotEqualTo '') then {
+							_vehicle setHitPointDamage [_x,0,FALSE];
+						};
+					} forEach _postRepairHitPoints;
 					50 cutText [localize 'STR_QS_Text_278','PLAIN DOWN',0.333];
 				};
 			};

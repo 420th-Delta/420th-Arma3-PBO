@@ -998,8 +998,24 @@ if (
 			};
 
 			if (_currentTask_type isEqualTo 'PATROL') then {
-				_patrolIndex = _grp getVariable ['QS_AI_GRP_PATROLINDEX',0];
-				_patrolPos = _currentTask_position # _patrolIndex;
+				if (
+					(!(_currentTask_position isEqualType [])) ||
+					{(_currentTask_position isEqualTo [])} ||
+					{((_currentTask_position findIf {!(_x isEqualType []) || {(count _x) < 2}}) isNotEqualTo -1)}
+				) exitWith {
+					_grp setVariable ['QS_AI_GRP_TASK',['',[],(serverTime + 60),-1],FALSE];
+					_grp setVariable ['QS_AI_GRP_PATROLINDEX',0,FALSE];
+				};
+				private _patrolIndex = _grp getVariable ['QS_AI_GRP_PATROLINDEX',0];
+				if (
+					(!(_patrolIndex isEqualType 0)) ||
+					{(_patrolIndex < 0)} ||
+					{(_patrolIndex >= (count _currentTask_position))}
+				) then {
+					_patrolIndex = 0;
+					_grp setVariable ['QS_AI_GRP_PATROLINDEX',_patrolIndex,FALSE];
+				};
+				private _patrolPos = _currentTask_position # _patrolIndex;
 				if (
 					(_grpIsReady && ((_grpLeader distance2D _patrolPos) < 50)) || 
 					{(_uiTime > _currentTask_timeout)}

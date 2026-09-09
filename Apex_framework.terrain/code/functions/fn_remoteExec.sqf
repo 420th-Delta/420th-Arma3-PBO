@@ -1627,13 +1627,15 @@ if (_case < 80) exitWith {
 		_type = _this # 1;
 		if (_type isEqualTo 1) then {
 			comment 'Datalink';
+			if (!(missionNamespace getVariable ['QS_virtualSectors_sub_1_active',FALSE])) exitWith {};
 			missionNamespace setVariable ['QS_virtualSectors_sub_1_active',FALSE,FALSE];
 			(missionNamespace getVariable 'QS_virtualSectors_sub_1_obj') hideObjectGlobal TRUE;
-			if ((missionNamespace getVariable 'QS_virtualSectors_sub_1_markers') isNotEqualTo []) then {
-				{
-					_x setMarkerAlpha 0;
-				} forEach (missionNamespace getVariable 'QS_virtualSectors_sub_1_markers');
-			};
+			{
+				if (_x in allMapMarkers) then {
+					deleteMarker _x;
+				};
+			} forEach (missionNamespace getVariable ['QS_virtualSectors_sub_1_markers',[]]);
+			missionNamespace setVariable ['QS_virtualSectors_sub_1_markers',[],FALSE];
 			comment 'Communicate here';
 			['QS_virtualSectors_sub_1_task'] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
 			['SC_SUB_COMPLETED',['',localize 'STR_QS_Notif_069']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
@@ -1674,6 +1676,7 @@ if (_case < 80) exitWith {
 		};
 		if (_type isEqualTo 3) then {
 			comment 'Supply depot';
+			if (!(missionNamespace getVariable ['QS_virtualSectors_sub_3_active',FALSE])) exitWith {};
 			missionNamespace setVariable ['QS_virtualSectors_sub_3_active',FALSE,FALSE];
 			if (missionNamespace getVariable ['QS_virtualSectors_active',FALSE]) then {
 				private ['_QS_virtualSectors_scoreSides','_scoreEast','_scoreToRemove'];
@@ -1702,8 +1705,20 @@ if (_case < 80) exitWith {
 				};
 			} forEach ((units EAST) + (units RESISTANCE));
 			(missionNamespace getVariable 'QS_virtualSectors_sub_3_obj') hideObjectGlobal TRUE;
-			if ((missionNamespace getVariable 'QS_virtualSectors_sub_3_markers') isNotEqualTo []) then {
-				_marker1 = createMarker ['QS_marker_virtualSectors_sd',[-1000,-1000,0]];
+			{
+				if (_x in allMapMarkers) then {
+					deleteMarker _x;
+				};
+			} forEach (missionNamespace getVariable ['QS_virtualSectors_sub_3_markers',[]]);
+			missionNamespace setVariable ['QS_virtualSectors_sub_3_markers',[],FALSE];
+			{
+				if (_x in allMapMarkers) then {
+					deleteMarker _x;
+				};
+			} forEach (missionNamespace getVariable ['QS_virtualSectors_sd_marker',[]]);
+			missionNamespace setVariable ['QS_virtualSectors_sd_marker',[],FALSE];
+			private _marker1 = createMarker ['QS_marker_virtualSectors_sd',[-1000,-1000,0]];
+			if (_marker1 isNotEqualTo '') then {
 				_marker1 setMarkerAlphaLocal 0;
 				_marker1 setMarkerShapeLocal 'ICON';
 				_marker1 setMarkerTypeLocal 'mil_dot';
@@ -1712,12 +1727,7 @@ if (_case < 80) exitWith {
 				_marker1 setMarkerSizeLocal [0.5,0.5];
 				_marker1 setMarkerPosLocal (missionNamespace getVariable ['QS_virtualSectors_sd_position',[-1000,-1000,0]]);
 				_marker1 setMarkerAlpha 1;
-				(missionNamespace getVariable 'QS_virtualSectors_sd_marker') pushBack _marker1;		
-				{
-					if ((markerAlpha _x) isNotEqualTo 0) then {
-						_x setMarkerAlpha 0;
-					};
-				} forEach (missionNamespace getVariable 'QS_virtualSectors_sub_3_markers');
+				missionNamespace setVariable ['QS_virtualSectors_sd_marker',[_marker1],FALSE];
 			};		
 			comment 'Communicate here';
 			['QS_virtualSectors_sub_3_task'] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
@@ -2356,6 +2366,7 @@ if (_case < 100) exitWith {
 		private _grp = grpNull;
 		private _var = '';
 		private _syncedGroups = 0;
+		private _variableWhitelist = missionNamespace getVariable ['QS_AI_HC_groupVariableWhitelist',[]];
 		{
 			if (
 				(local _x) &&
@@ -2364,10 +2375,10 @@ if (_case < 100) exitWith {
 				_grp = _x;
 				{
 					_var = _x;
-					if !(_var in ['QS_AI_GRP_HC_LocalEH','QS_AI_GRP_HC_AgentLocalEH']) then {
+					if (!isNil {_grp getVariable _var}) then {
 						_grp setVariable [_var,_grp getVariable _var,_claimedOwner];
 					};
-				} forEach ((allVariables _grp) select [0,128]);
+				} forEach _variableWhitelist;
 				_syncedGroups = _syncedGroups + 1;
 			};
 			if (_syncedGroups >= 256) exitWith {};

@@ -91,7 +91,7 @@ _______________________________________________/*/
 		};
 		if ((missionNamespace getVariable ['QS_missionConfig_Arsenal',0]) isEqualTo 3) then {
 			if ((face _unit) isNotEqualTo _face) then {
-				['setFace',_unit,(face _unit)] remoteExec ['QS_fnc_remoteExecCmd',-2,_unit];
+				[_unit,(face _unit)] remoteExecCall ['QS_fnc_serverSetPlayerFace',2,FALSE];
 			};
 		};
 		if (_chatDisabled) then {

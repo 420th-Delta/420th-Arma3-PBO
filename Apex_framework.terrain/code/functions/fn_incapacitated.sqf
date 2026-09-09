@@ -14,6 +14,60 @@ Description:
 ______________________________________________/*/
 
 params ['_unit','_selectionName','_damage','_source','_projectile','_hitPartIndex','_instigator','_hitPoint','_directHit'];
+
+private _getCombatSide = {
+	params ['_entity'];
+	if (isNull _entity) exitWith {sideUnknown};
+
+	private _entitySide = side (group _entity);
+	if (_entitySide isEqualTo sideUnknown) then {
+		_entitySide = side _entity;
+	};
+	_entitySide
+};
+
+// A remote-controlled AI keeps its own combat side even if Arma reports the
+// controlling player's body as the instigator.
+private _attacker = _instigator;
+private _remoteControlledAttacker = objNull;
+private _sourceVehicle = vehicle _source;
+private _attackerCandidates = [_source];
+if (!isNull _sourceVehicle) then {
+	_attackerCandidates append (crew _sourceVehicle);
+};
+{
+	private _remoteOwner = remoteControlled _x;
+	if (isNull _remoteOwner) then {
+		_remoteOwner = _x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull];
+	};
+	if (
+		(!isNull _x) &&
+		{isPlayer _remoteOwner}
+	) exitWith {
+		_remoteControlledAttacker = _x;
+	};
+} forEach _attackerCandidates;
+if (!isNull _remoteControlledAttacker) then {
+	_attacker = _remoteControlledAttacker;
+};
+if (isNull _attacker && {!isNull _source}) then {
+	private _sourceController = effectiveCommander _source;
+	_attacker = [_source,_sourceController] select (!isNull _sourceController);
+};
+
+private _unitSide = [_unit] call _getCombatSide;
+if (_unitSide isEqualTo sideUnknown) then {
+	_unitSide = _unit getVariable ['QS_unit_side',WEST];
+};
+private _attackerSide = [_attacker] call _getCombatSide;
+private _attackerIsPlayerControlled =
+	(isPlayer _attacker) ||
+	{!isNull _remoteControlledAttacker};
+private _useGenericEnemyCasualtyChat =
+	(_unitSide isEqualTo WEST) &&
+	{_attackerSide in [EAST,RESISTANCE]} &&
+	{_attackerIsPlayerControlled};
+
 if (isPlayer _unit) then {
 	if (dialog) then {
 		closeDialog 2;
@@ -123,7 +177,8 @@ if (isForcedWalk _unit) then {
 };
 if (!isPlayer _unit) exitWith {};
 if ((lifeState _unit) isNotEqualTo 'INCAPACITATED') exitWith {
-	['systemChat',(format ['%1 %2',profileName,localize 'STR_QS_Chat_114'])] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+	private _casualtyText = [localize 'STR_QS_Chat_114',localize 'STR_QS_Chat_113'] select _useGenericEnemyCasualtyChat;
+	['systemChat',(format ['%1 %2',profileName,_casualtyText])] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 	_unit setDamage [1,TRUE];
 };
 showHUD [FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE];
@@ -206,6 +261,9 @@ if (!isNull _instigator) then {
 		};
 	};
 } else {
+	_incapacitatedText = format ['%1 %2',_profileName,localize 'STR_QS_Chat_115'];
+};
+if (_useGenericEnemyCasualtyChat) then {
 	_incapacitatedText = format ['%1 %2',_profileName,localize 'STR_QS_Chat_115'];
 };
 ['systemChat',_incapacitatedText] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
@@ -570,8 +628,8 @@ for '_x' from 0 to 1 step 0 do {
 			_QS_buttonMedevac ctrlEnable FALSE;
 			_QS_buttonMedevac ctrlSetText (localize 'STR_QS_Menu_100');
 			_QS_buttonMedevac ctrlSetTooltip (localize 'STR_QS_Menu_101');
-			_QS_buttonMedevac ctrlRemoveAllEventHandlers 'OnButtonClick';
-			_QS_buttonMedevac ctrlRemoveAllEventHandlers 'OnButtonDown';
+			_QS_buttonMedevac ctrlRemoveAllEventHandlers 'ButtonClick';
+			_QS_buttonMedevac ctrlRemoveAllEventHandlers 'ButtonDown';
 			_QS_buttonAction = 'call (missionNamespace getVariable "QS_fnc_clientRequestMedevac")';
 			_QS_buttonCtrl = _QS_buttonMedevac;
 			_QS_buttonCtrl buttonSetAction _QS_buttonAction;

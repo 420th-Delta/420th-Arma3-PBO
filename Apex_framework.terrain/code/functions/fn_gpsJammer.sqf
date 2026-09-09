@@ -176,7 +176,7 @@ if (_type isEqualTo 1) exitWith {
 	_jammer;
 };
 if (_type isEqualTo 2) exitWith {
-	params ['','_id'];
+	params ['','_id',['_deferObjectCleanup',FALSE]];
 	_gpsJammers = missionNamespace getVariable ['QS_mission_gpsJammers',[]];
 	if (_gpsJammers isNotEqualTo []) then {
 		_jammerIndex = _gpsJammers findIf {((_x # 0) isEqualTo _id)};
@@ -185,7 +185,10 @@ if (_type isEqualTo 2) exitWith {
 			(_gpsJammers # _jammerIndex) params ['','','','',['_jammerObject',objNull],['_assocObjects',[]]];
 			if (!isNull _jammerObject) then {
 				_jammerObject setDamage [1,FALSE];
-				(missionNamespace getVariable 'QS_garbageCollector') pushBack [_jammerObject,'NOW_DISCREET',0];
+				// Normal AO teardown owns this object when deferred cleanup is requested.
+				if (!(_deferObjectCleanup)) then {
+					(missionNamespace getVariable 'QS_garbageCollector') pushBack [_jammerObject,'NOW_DISCREET',0];
+				};
 			};
 			if (_assocObjects isNotEqualTo []) then {
 				{

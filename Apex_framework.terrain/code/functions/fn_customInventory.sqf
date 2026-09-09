@@ -15,6 +15,8 @@ _____________________________________________________________/*/
 
 params ['_entity','_type','_preset'];
 if (!isNil {_entity getVariable 'QS_vehicle_customInventory'}) exitWith {};
+private _perfInventory = ['customInventory.total',1,[typeOf _entity,netId _entity]] call QS_fnc_perfBegin;
+private _perfCargoCalls = 0;
 
 
 
@@ -502,11 +504,17 @@ if (_type isEqualTo 0) then {
 		};
 		{
 			_magazineTypeUnique = _x;
+			private _perfCargo = ['customInventory.addMagazineCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addMagazineCargoGlobal [_magazineTypeUnique,({_x isEqualTo _magazineTypeUnique} count _magazinesToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _magazineTypesToAdd;
 		//comment 'Items';
 		for '_x' from 0 to 5 step 1 do {
+			private _perfCargo = ['customInventory.addItemCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addItemCargoGlobal [(selectRandom _allItems),1];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		};
 		//comment 'Weapons';
 		_weaponTypesToAdd = [];
@@ -518,7 +526,10 @@ if (_type isEqualTo 0) then {
 		};		
 		{
 			_weaponTypeUnique = _x;
+			private _perfCargo = ['customInventory.addWeaponCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addWeaponCargoGlobal [_weaponTypeUnique,({_x isEqualTo _weaponTypeUnique} count _weaponsToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _weaponTypesToAdd;
 };
 if (_type isEqualTo 1) then {
@@ -560,13 +571,28 @@ if (_type isEqualTo 1) then {
 			_cfgTransportMaxMagazines = round ((getNumber (_cfgEntity >> 'transportMaxMagazines')) * 1);
 			_cfgTransportMaxWeapons = round ((getNumber (_cfgEntity >> 'transportMaxWeapons')) * 0.5);
 		};
+		private _perfCargo = ['customInventory.clearItemCargoGlobal',1] call QS_fnc_perfBegin;
 		clearItemCargoGlobal _entity;
+		[_perfCargo,1] call QS_fnc_perfEnd;
+		_perfCargoCalls = _perfCargoCalls + 1;
+		private _perfCargo = ['customInventory.clearWeaponCargoGlobal',1] call QS_fnc_perfBegin;
 		clearWeaponCargoGlobal _entity;
+		[_perfCargo,1] call QS_fnc_perfEnd;
+		_perfCargoCalls = _perfCargoCalls + 1;
+		private _perfCargo = ['customInventory.clearMagazineCargoGlobal',1] call QS_fnc_perfBegin;
 		clearMagazineCargoGlobal _entity;
+		[_perfCargo,1] call QS_fnc_perfEnd;
+		_perfCargoCalls = _perfCargoCalls + 1;
+		private _perfCargo = ['customInventory.clearBackpackCargoGlobal',1] call QS_fnc_perfBegin;
 		clearBackpackCargoGlobal _entity;
+		[_perfCargo,1] call QS_fnc_perfEnd;
+		_perfCargoCalls = _perfCargoCalls + 1;
 		//comment 'Items';
 		{
+			private _perfCargo = ['customInventory.addItemCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addItemCargoGlobal _x;
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach [
 			[QS_core_classNames_itemFirstAidKit,(round (10 + (random 5)))],
 			['SmokeShell',(round (5 + (random 5)))],
@@ -589,7 +615,10 @@ if (_type isEqualTo 1) then {
 		};
 		{
 			_magazineTypeUnique = _x;
+			private _perfCargo = ['customInventory.addMagazineCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addMagazineCargoGlobal [_magazineTypeUnique,({_x isEqualTo _magazineTypeUnique} count _magazinesToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _magazineTypesToAdd;
 		//comment 'Weapons';
 		for '_x' from 0 to (_maxWeapons - 1) step 1 do {
@@ -604,7 +633,10 @@ if (_type isEqualTo 1) then {
 		};
 		{
 			_weaponTypeUnique = _x;
+			private _perfCargo = ['customInventory.addWeaponCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addWeaponCargoGlobal [_weaponTypeUnique,({_x isEqualTo _weaponTypeUnique} count _weaponsToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _weaponTypesToAdd;		
 		//comment 'Backpacks';
 		for '_x' from 0 to (_maxBackpacks - 1) step 1 do {
@@ -619,7 +651,10 @@ if (_type isEqualTo 1) then {
 		};
 		{
 			_backpackTypeUnique = _x;
+			private _perfCargo = ['customInventory.addBackpackCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addBackpackCargoGlobal [_backpackTypeUnique,({_x isEqualTo _backpackTypeUnique} count _backpacksToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _backpackTypesToAdd;
 		
 		//comment 'Now randomized';
@@ -633,11 +668,17 @@ if (_type isEqualTo 1) then {
 		};
 		{
 			_magazineTypeUnique = _x;
+			private _perfCargo = ['customInventory.addMagazineCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addMagazineCargoGlobal [_magazineTypeUnique,({_x isEqualTo _magazineTypeUnique} count _magazinesToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _magazineTypesToAdd;
 		//comment 'Items';
 		for '_x' from 0 to 5 step 1 do {
+			private _perfCargo = ['customInventory.addItemCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addItemCargoGlobal [(selectRandom _allItems),1];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		};
 		//comment 'Weapons';
 		_weaponTypesToAdd = [];
@@ -649,7 +690,11 @@ if (_type isEqualTo 1) then {
 		};		
 		{
 			_weaponTypeUnique = _x;
+			private _perfCargo = ['customInventory.addWeaponCargoGlobal',1] call QS_fnc_perfBegin;
 			_entity addWeaponCargoGlobal [_weaponTypeUnique,({_x isEqualTo _weaponTypeUnique} count _weaponsToAdd)];
+			[_perfCargo,1] call QS_fnc_perfEnd;
+			_perfCargoCalls = _perfCargoCalls + 1;
 		} forEach _weaponTypesToAdd;		
 	};
 };
+[_perfInventory,1,[_perfCargoCalls]] call QS_fnc_perfEnd;

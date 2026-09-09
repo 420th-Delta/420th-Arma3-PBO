@@ -13,6 +13,7 @@ Description:
 	Setup unit
 ______________________________________________________/*/
 
+private _perfUnitSetup = ['unitSetup.total',1,[typeOf _this,netId _this]] call QS_fnc_perfBegin;
 _unit = _this;
 _unitType = toLowerANSI (typeOf _unit);
 
@@ -32,6 +33,7 @@ if (
 	{((missionNamespace getVariable ['QS_missionConfig_dlcUnits','']) isNotEqualTo '')}
 ) exitWith {
 	_unit setVariable ['QS_AI_UNIT_enabled',TRUE,QS_system_AI_owners];
+	[_perfUnitSetup,1] call QS_fnc_perfEnd;
 	_unit
 };
 _unit = _this;
@@ -546,9 +548,10 @@ _unit selectWeapon (primaryWeapon _unit);
 if (!(missionNamespace getVariable ['QS_defendActive',FALSE])) then {
 	[_unit] call (missionNamespace getVariable 'QS_fnc_setCollectible');
 };
-if ((!isDedicated) && hasInterface ) exitWith {_unit};
+if ((!isDedicated) && hasInterface ) exitWith {[_perfUnitSetup,1] call QS_fnc_perfEnd; _unit};
 _unit setVariable ['QS_AI_UNIT_enabled',TRUE,QS_system_AI_owners];
 if (!isNull (objectParent _unit)) then {
 	_unit enableAIFeature ['RADIOPROTOCOL',FALSE];
 };
+[_perfUnitSetup,1] call QS_fnc_perfEnd;
 _unit;

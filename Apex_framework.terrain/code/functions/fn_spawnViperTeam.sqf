@@ -100,6 +100,8 @@ if (_type in ['CLASSIC','SC']) exitWith {
 		['QS_AI_GRP_TASK',['HUNT',_position1,serverTime,-1],QS_system_AI_owners],
 		['QS_AI_GRP_CONFIG',['GENERAL','INF_VIPER',(count (units _grp))],QS_system_AI_owners],
 		['QS_AI_GRP_DATA',[_position1],QS_system_AI_owners],
+		// This persistent group is replenished by the server and must remain server-local.
+		['QS_AI_GRP_HC_EXCLUDED',TRUE,TRUE],
 		['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners]
 	];
 	(units _grp);

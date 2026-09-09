@@ -10,6 +10,7 @@ Author:
 params [["_init", ""]];
 
 if (!isServer) exitWith {};
+if (isRemoteExecuted) exitWith {};
 if (_init in ["preInit", "postInit"]) exitWith {
     [""] spawn TGC_fnc_processPlayerProfileQueue;
 };
@@ -29,7 +30,12 @@ while {true} do {
         continue;
     };
 
-    (_queue deleteAt 0) params ["_requestOwner", "_uid", "_playerName"];
+    (_queue deleteAt 0) params ["_requestOwner", "_uid", "_playerName", ["_queuedAt", diag_tickTime]];
+    if ((diag_tickTime - _queuedAt) > 60) then {continue};
+    private _requesterStillConnected = allPlayers findIf {
+        (owner _x isEqualTo _requestOwner) && {(getPlayerUID _x) isNotEqualTo ""}
+    };
+    if (_requesterStillConnected isEqualTo -1) then {continue};
     diag_log format ["TGC_fnc_processPlayerProfileQueue: processing %1 (%2) for owner %3", _playerName, _uid, _requestOwner];
 
     try {

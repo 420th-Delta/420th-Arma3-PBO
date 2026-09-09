@@ -40,6 +40,8 @@ Example 1:
 _____________________________________________________________________/*/
 
 params ['_type','_centerPos','_radius','_whitelist','_isFlatEmpty','_blacklistEnabled','_selectBestPlaces','_findEmptyPosition','_forceFind'];
+private _perfPosition = ['findRandomPos.total',0,[_type,_radius]] call QS_fnc_perfBegin;
+private _perfAttempts = 0;
 private _timeout = diag_tickTime + 30;
 private _return = [];
 private _testPos = [0,0,0];
@@ -138,6 +140,7 @@ if (_type isEqualTo 'WORLD') then {
 	_inset = [2000,500] select (_worldName in ['Tanoa','Stratis']);
 	_max = worldSize - (_inset * 2);
 	for '_x' from 0 to _attempts step _step do {
+		_perfAttempts = _perfAttempts + 1;
 		if (diag_tickTime > _timeout) exitWith {
 			diag_log format ['***** DEBUG ***** SAFE POS FAILURE * %1 * %2 * %3 * %4 * %5 * %6 * %7 * %8 * %9',_type,_centerPos,_radius,_whitelist,_isFlatEmpty,_blacklistEnabled,_selectBestPlaces,_findEmptyPosition,_forceFind];
 			_return = getArray (configFile >> 'CfgWorlds' >> worldName >> 'safePositionAnchor');
@@ -148,7 +151,9 @@ if (_type isEqualTo 'WORLD') then {
 				if (_landPos) then {
 					if (!(surfaceIsWater _testPos)) then {
 						if (_bestPlacesEnabled) then {
+							private _perfBest = ['findRandomPos.selectBestPlaces',0] call QS_fnc_perfBegin;
 							_bestPlaces = selectBestPlaces ([_testPos] + _selectBestPlaces);
+							[_perfBest,0,[count _bestPlaces]] call QS_fnc_perfEnd;
 							if (_bestPlaces isNotEqualTo []) then {
 								if ((count _bestPlaces) > 1) then {
 									_testPos = (selectRandom _bestPlaces) # 0;
@@ -179,7 +184,9 @@ if (_type isEqualTo 'WORLD') then {
 				} else {
 					if (surfaceIsWater _testPos) then {
 						if (_bestPlacesEnabled) then {
+							private _perfBest = ['findRandomPos.selectBestPlaces',0] call QS_fnc_perfBegin;
 							_bestPlaces = selectBestPlaces ([_testPos] + _selectBestPlaces);
+							[_perfBest,0,[count _bestPlaces]] call QS_fnc_perfEnd;
 							if (_bestPlaces isNotEqualTo []) then {
 								if ((count _bestPlaces) > 1) then {
 									_testPos = (selectRandom _bestPlaces) # 0;
@@ -211,6 +218,7 @@ if (_type isEqualTo 'WORLD') then {
 } else {
 	if (_type isEqualTo 'RADIUS') then {
 		for '_x' from 0 to _attempts step _step do {
+			_perfAttempts = _perfAttempts + 1;
 			if (diag_tickTime > _timeout) exitWith {
 				diag_log format ['***** DEBUG ***** SAFE POS FAILURE * %1 * %2 * %3 * %4 * %5 * %6 * %7 * %8 * %9',_type,_centerPos,_radius,_whitelist,_isFlatEmpty,_blacklistEnabled,_selectBestPlaces,_findEmptyPosition,_forceFind];
 				_return = getArray (configFile >> 'CfgWorlds' >> worldName >> 'safePositionAnchor');
@@ -224,7 +232,9 @@ if (_type isEqualTo 'WORLD') then {
 					if (_landPos) then {
 						if (!(surfaceIsWater _testPos)) then {
 							if (_bestPlacesEnabled) then {
+								private _perfBest = ['findRandomPos.selectBestPlaces',0] call QS_fnc_perfBegin;
 								_bestPlaces = selectBestPlaces ([_testPos] + _selectBestPlaces);
+								[_perfBest,0,[count _bestPlaces]] call QS_fnc_perfEnd;
 								if (_bestPlaces isNotEqualTo []) then {
 									if ((count _bestPlaces) > 1) then {
 										_testPos = (selectRandom _bestPlaces) # 0;
@@ -255,7 +265,9 @@ if (_type isEqualTo 'WORLD') then {
 					} else {
 						if (surfaceIsWater _testPos) then {
 							if (_bestPlacesEnabled) then {
+								private _perfBest = ['findRandomPos.selectBestPlaces',0] call QS_fnc_perfBegin;
 								_bestPlaces = selectBestPlaces ([_testPos] + _selectBestPlaces);
+								[_perfBest,0,[count _bestPlaces]] call QS_fnc_perfEnd;
 								if (_bestPlaces isNotEqualTo []) then {
 									if ((count _bestPlaces) > 1) then {
 										_testPos = (selectRandom _bestPlaces) # 0;
@@ -289,4 +301,5 @@ if (_type isEqualTo 'WORLD') then {
 if (_return isEqualTo []) then {
 	_return = [worldSize,worldSize,0];
 };
+[_perfPosition,0,[_perfAttempts,diag_tickTime >= _timeout]] call QS_fnc_perfEnd;
 _return;

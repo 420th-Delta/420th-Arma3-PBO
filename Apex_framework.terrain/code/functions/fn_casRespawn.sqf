@@ -291,7 +291,7 @@ if ((missionNamespace getVariable ['QS_missionConfig_carrierEnabled',0]) isEqual
 			(_this # 0) allowDamage TRUE;
 		}
 	];
-	['setFeatureType',_casJet,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_casJet];
+	[_casJet,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 	if ((toLowerANSI (typeOf _casJet)) in ['c_plane_civil_01_racing_f','c_plane_civil_01_f','i_c_plane_civil_01_f']) then {
 		[_casJet] call (missionNamespace getVariable 'QS_fnc_Q51');
 	};

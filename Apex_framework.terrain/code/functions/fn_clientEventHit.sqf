@@ -21,8 +21,54 @@ params [
 ];
 private _vehicleCausedBy = vehicle _causedBy;
 private _vehicleUnit = vehicle _unit;
+
+private _getUnitSide = {
+	params ['_entity'];
+	if (isNull _entity) exitWith {sideUnknown};
+
+	private _entitySide = side (group _entity);
+	if (_entitySide isEqualTo sideUnknown) then {
+		_entitySide = side _entity;
+	};
+	_entitySide
+};
+
+// Attribute remote-controlled fire to the controlled unit's combat side, not
+// to the side of the player body controlling it.
+private _attacker = _instigator;
+private _causedByController = effectiveCommander _vehicleCausedBy;
+private _remoteControlledAttacker = objNull;
+private _attackerCandidates = [_causedBy];
+if (!isNull _vehicleCausedBy) then {
+	_attackerCandidates append (crew _vehicleCausedBy);
+};
+{
+	if (
+		(!isNull _x) &&
+		{isPlayer (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}
+	) exitWith {
+		_remoteControlledAttacker = _x;
+	};
+} forEach _attackerCandidates;
+if (!isNull _remoteControlledAttacker) then {
+	_attacker = _remoteControlledAttacker;
+};
+if (isNull _attacker) then {
+	_attacker = [_causedBy,_causedByController] select (!isNull _causedByController);
+};
+
+private _unitSide = [_unit] call _getUnitSide;
+if (_unitSide isEqualTo sideUnknown) then {
+	_unitSide = _unit getVariable ['QS_unit_side',WEST];
+};
+private _attackerSide = [_attacker] call _getUnitSide;
+private _isEastOrIndependentAgainstWest =
+	(_unitSide isEqualTo WEST) &&
+	{_attackerSide in [EAST,RESISTANCE]};
+
 if (
 	(isNull _causedBy) ||
+	{_isEastOrIndependentAgainstWest} ||
 	{((!isPlayer _causedBy) && (!isPlayer _instigator) && (!(unitIsUAV _instigator)))} ||
 	{((crew _vehicleCausedBy) isEqualTo [])} ||
 	{(_unit in [_causedBy,_instigator])} ||

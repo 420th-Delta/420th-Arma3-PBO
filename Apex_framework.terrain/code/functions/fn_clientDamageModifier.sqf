@@ -16,14 +16,21 @@ ___________________________________________________________________/*/
 params ['_unit','','_damage','_source','_projectile','_hitPartIndex','_instigator','','_directHit'];
 private _return = 0.925;
 _objectParent = objectParent _unit;
+private _unitSide = side (group _unit);
+if (_unitSide isEqualTo sideUnknown) then {
+	_unitSide = side _unit;
+};
+if (_unitSide isEqualTo sideUnknown) then {
+	_unitSide = _unit getVariable ['QS_unit_side',WEST];
+};
 (_unit getVariable ['QS_inzone',[]]) params ['_inSafezone','_safezoneLevel','_safezoneActive'];
 if (_inSafezone && _safezoneActive && (_safezoneLevel > 1)) exitWith {0};
 if (isNull _objectParent) then {
 	if (_source isEqualType objNull) then {
 		if (!isNull _source) then {
 			if (
-				((side (group _instigator)) in [(_unit getVariable ['QS_unit_side',WEST]),sideEnemy]) ||
-				{((side (group _source)) in [(_unit getVariable ['QS_unit_side',WEST]),sideEnemy])}
+				((side (group _instigator)) in [_unitSide,sideEnemy]) ||
+				{((side (group _source)) in [_unitSide,sideEnemy])}
 			) then {
 				_return = [0.05,0] select isNil 'TGC_allowFF';
 				if (_inSafezone && _safezoneActive) then {
@@ -68,7 +75,7 @@ if (isNull _objectParent) then {
 	} else {
 		if (
 			(!isNull _instigator) &&
-			{((side (group _instigator)) in [(_unit getVariable ['QS_unit_side',WEST]),sideEnemy])}
+			{((side (group _instigator)) in [_unitSide,sideEnemy])}
 		) then {
 			_return = [0.05,0] select isNil 'TGC_allowFF';
 			if (_inSafezone && _safezoneActive) then {
@@ -78,6 +85,9 @@ if (isNull _objectParent) then {
 	};
 } else {
 	if (alive _objectParent) then {
+		if (call TGC_fnc_isFriendlyFire) exitWith {
+			_return = 0;
+		};
 		if (_objectParent isKindOf 'Air') then {
 			if ((call (missionNamespace getVariable ['QS_missionConfig_reducedDamage',{1}])) isEqualTo 1) then {
 				_return = 0.333;
@@ -92,7 +102,7 @@ if (isNull _objectParent) then {
 				(_unit isEqualTo (driver _objectParent)) &&
 				{(!isNull _instigator)} &&
 				{(!(_unit in [_source,_instigator]))} &&
-				{((side (group _instigator)) in [(_unit getVariable ['QS_unit_side',WEST]),sideEnemy])}
+				{((side (group _instigator)) in [_unitSide,sideEnemy])}
 			) then {
 				_return = 0;
 			};

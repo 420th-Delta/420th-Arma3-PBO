@@ -15,6 +15,7 @@ __________________________________________________*/
 
 params ['_killed','_killer','_instigator','_useEffects'];
 if ((getObjectType _killed) isNotEqualTo 8) exitWith {};
+private _perfKilled = ['eventEntityKilled.handler',1,[typeOf _killed,netId _killed]] call QS_fnc_perfBegin;
 missionNamespace setVariable ['QS_analytics_entities_killed',((missionNamespace getVariable 'QS_analytics_entities_killed') + 1),FALSE];
 missionNamespace setVariable ['QS_system_entitiesKilled',((missionNamespace getVariable ['QS_system_entitiesKilled',0]) + 1),FALSE];
 if (_killed isKindOf 'Man') then {
@@ -53,8 +54,17 @@ if (_killed isKindOf 'Man') then {
 		};
 	};
 } else {
+	private _killedType = toLowerANSI (typeOf _killed);
+	// Parachutes inherit from Air, but destroying one must not create a secondary explosion.
+	private _isParachute =
+		(_killed isKindOf 'ParachuteBase') ||
+		{(_killedType in QS_core_classNames_steerablePs)} ||
+		{(_killedType in QS_core_classNames_vehicleParachutes)};
+	// getFuelCargo returns 0 once an object is dead, so inspect its configured capacity instead.
+	private _transportFuel = getNumber ((configOf _killed) >> 'transportFuel');
 	if (
-		((getFuelCargo _killed) > -1) &&
+		(!_isParachute) &&
+		(_transportFuel > 0) &&
 		((['LandVehicle','Air','Ship','Thing','ReammoBox_F'] findIf { _killed isKindOf _x }) isNotEqualTo -1)
 	) then {
 		([_killed,'SAFE'] call QS_fnc_inZone) params ['_inSafezone','_safezoneLevel','_safezoneActive'];
@@ -84,7 +94,9 @@ if (_killed isKindOf 'Man') then {
 					params ['_explosionType','_explosionPosition'];
 					uiSleep 0.01;
 					if (diag_fps > 8) then {
+						private _perfExplosion = ['eventEntityKilled.secondaryExplosion',1,[_explosionType]] call QS_fnc_perfBegin;
 						createVehicle [_explosionType,_explosionPosition];
+						[_perfExplosion,-1] call QS_fnc_perfEnd;
 					};
 				};
 			};
@@ -145,6 +157,7 @@ if (_killed isKindOf 'Man') then {
 					(isNull _killed) ||
 					(diag_tickTime > _timeout)
 				) exitWith {};
+				private _perfWreck = ['eventEntityKilled.setWrecked',1,[_killedType,netId _killed]] call QS_fnc_perfBegin;
 				[
 					_killed,
 					1,
@@ -152,6 +165,7 @@ if (_killed isKindOf 'Man') then {
 					[FALSE,_killedType,'',_displayName],
 					_isAir
 				] call QS_fnc_setWrecked;
+				[_perfWreck,-1] call QS_fnc_perfEnd;
 			};
 		};
 	};
@@ -212,8 +226,10 @@ if (isPlayer _killed) then {
 					{
 						if (alive _x) then {
 							[0,_x] call QS_fnc_eventAttach;
+							private _perfAttached = ['eventEntityKilled.destroyAttachment',1,[typeOf _x,netId _x]] call QS_fnc_perfBegin;
 							_x setDamage [1,FALSE];
 							deleteVehicle _x;
+							[_perfAttached,-1] call QS_fnc_perfEnd;
 							uiSleep 0.01;
 						};
 					} forEach _attachedObjects;
@@ -222,3 +238,4 @@ if (isPlayer _killed) then {
 		};
 	};
 };
+[_perfKilled,1] call QS_fnc_perfEnd;

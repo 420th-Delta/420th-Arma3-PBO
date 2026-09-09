@@ -19,8 +19,9 @@ _vehicle setVariable ['TGC_vehicle_side',_vehicleSide,TRUE];
 (missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]]) pushBackUnique _vehicle;
 
 if (!isNil 'TGC_fnc_addSpawnMenuVehicleHandlers') then {
+	_vehicle setVariable ['QS_client_spawnMenuHandlers',TRUE,FALSE];
 	[_vehicle] call TGC_fnc_addSpawnMenuVehicleHandlers;
-	[_vehicle] remoteExecCall ['TGC_fnc_addSpawnMenuVehicleHandlers',-2,_vehicle];
+	[_vehicle] call QS_fnc_serverPublishEntityState;
 };
 
 if (unitIsUAV _vehicle) then {

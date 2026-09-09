@@ -96,6 +96,7 @@ if (!(['cluster',(typeOf _jetActual),FALSE] call (missionNamespace getVariable '
 } else {
 	[_jetActual,1,[]] call (missionNamespace getVariable 'QS_fnc_vehicleLoadouts');
 };
+[_jetActual] call (missionNamespace getVariable 'QS_fnc_removeAircraftBombs');
 _jetPilot addEventHandler [
 	'Killed',
 	{
@@ -145,7 +146,7 @@ _jetPilot addEventHandler [
 		{call (missionNamespace getVariable 'QS_fnc_AIXMissileCountermeasure')}
 	]
 ];
-['setFeatureType',_jetActual,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_jetActual];
+[_jetActual,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 _jetPilot assignAsDriver _jetActual;
 _jetPilot moveInDriver _jetActual;
 _jetPilot enableStamina FALSE;
@@ -181,6 +182,9 @@ _grp setCombatBehaviour 'COMBAT';
 _grp setBehaviourStrong 'COMBAT';
 _grp setSpeedMode 'FULL';
 [9,EAST,_grp,(leader _grp),_jetActual] call (missionNamespace getVariable 'QS_fnc_AIGetKnownEnemies');
+if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
+	[_jetActual,'normalAO.enemyCAS'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
+};
 if (!((toLowerANSI _jetSelect) in ['o_plane_fighter_02_stealth_f'])) then {
 	if (!(missionNamespace getVariable ['QS_defendActive',FALSE])) then {
 		['EnemyJet',[localize 'STR_QS_Notif_054']] remoteExec ['QS_fnc_showNotification',-2,FALSE];

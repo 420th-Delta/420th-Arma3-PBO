@@ -464,7 +464,7 @@ if (_u isKindOf 'Air') then {
 	_u setVehicleReceiveRemoteTargets TRUE;
 	_u setVehicleReportOwnPosition TRUE;
 	[_u,1,[]] call (missionNamespace getVariable 'QS_fnc_vehicleLoadouts');
-	['setFeatureType',_u,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_u];
+	[_u,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
 	// Planes
 	if (_u isKindOf 'Plane') then {
 		_u addEventHandler ['Gear',{}];

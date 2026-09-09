@@ -281,13 +281,36 @@ if (_type isEqualto 'enableAI') exitWith {
 	_1 enableAIFeature [_2,TRUE];
 };
 if (_type isEqualto 'enableAIFeature') exitWith {
-	if (_1 isEqualType objNull) then {
+	if (
+		(isNil '_2') ||
+		{!(_2 isEqualType [])} ||
+		{(count _2) isNotEqualTo 2} ||
+		{!((_2 # 0) isEqualType '')} ||
+		{!((_2 # 1) isEqualType FALSE)}
+	) exitWith {
+		diag_log format [
+			'QS_fnc_remoteExecCmd enableAIFeature rejected invalid feature payload: targets=%1 feature=%2 remoteOwner=%3 clientOwner=%4',
+			_1,_2,_rxID,clientOwner
+		];
+	};
+	if ((_1 isEqualType objNull) && {!isNull _1}) then {
 		_1 enableAIFeature _2;
 	};
 	if (_1 isEqualType []) then {
+		private _invalidTargets = 0;
 		{
-			_x enableAIFeature _2;
+			if ((_x isEqualType objNull) && {!isNull _x}) then {
+				_x enableAIFeature _2;
+			} else {
+				_invalidTargets = _invalidTargets + 1;
+			};
 		} forEach _1;
+		if (_invalidTargets > 0) then {
+			diag_log format [
+				'QS_fnc_remoteExecCmd enableAIFeature skipped %1 invalid targets: targets=%2 feature=%3 remoteOwner=%4 clientOwner=%5',
+				_invalidTargets,_1,_2,_rxID,clientOwner
+			];
+		};
 	};
 };
 if (_type isEqualTo 'setVelocity') exitWith {
