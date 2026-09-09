@@ -95,9 +95,9 @@ if (_clientToServer) then {
 	missionNamespace setVariable ['QS_remoteExec_rateMap',_rateMap,FALSE];
 
 	/* Bind the most dangerous global object operations to the actual sender. */
-	if ((!_rejectRequest) && {_case in [39,69,71]}) then {
+	if ((!_rejectRequest) && {_case in [39,69,71,111]}) then {
 		private _sender = (allPlayers select {((owner _x) isEqualTo _rxID) && {!(_x isKindOf 'HeadlessClient_F')}}) param [0,objNull];
-		if (isNull _sender) then {
+		if (isNull _sender || {!alive _sender}) then {
 			_rejectRequest = TRUE;
 			_rejectReason = 'sender';
 		} else {
@@ -139,6 +139,79 @@ if (_clientToServer) then {
 				if (((count _this) < 3) || {!((_this # 2) isEqualType FALSE)} || {isNull _object} || {((_sender distance2D _object) > 100)}) then {
 					_rejectRequest = TRUE;
 					_rejectReason = 'case 71 ownership';
+				};
+			};
+			if (_case isEqualTo 111) then {
+				private _entity = _this param [1,objNull,[objNull]];
+				private _state = _this param [2,-1,[0]];
+				private _claimedOwner = _this param [4,-1,[0]];
+				private _ownerUID = _entity getVariable ['QS_spawnMenu_spawnedBy',''];
+				private _entityType = toLowerANSI (typeOf _entity);
+				private _preset6Containers = [
+					'land_cargo10_blue_f',
+					'land_cargo20_light_blue_f',
+					'land_cargo20_cyan_f',
+					'land_cargo20_blue_f'
+				];
+				private _preset6Turrets = [
+					'b_sam_system_03_f',
+					'b_sam_system_02_f',
+					'b_aaa_system_01_f',
+					'b_sam_system_01_f'
+				];
+				private _newPreset6Types = [
+					'land_cargo20_light_blue_f',
+					'land_cargo20_cyan_f',
+					'land_cargo20_blue_f',
+					'b_sam_system_02_f',
+					'b_aaa_system_01_f',
+					'b_sam_system_01_f'
+				];
+				private _spawnMenuEntities = missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]];
+				private _busyKey = netId _entity;
+				if (_busyKey isEqualTo '') then {
+					_busyKey = str _entity;
+				};
+				private _deployBusyMap = serverNamespace getVariable ['QS_deploy_serverBusyMap',createHashMap];
+				private _invalidPreset6State = (
+					(_entityType in _preset6Containers) &&
+					{_state isNotEqualTo 1}
+				) || {
+					(_entityType in _preset6Turrets) &&
+					{_state isNotEqualTo 0}
+				};
+				if (
+					((count _this) < 7) ||
+					{!(_state in [0,1])} ||
+					{isNull _entity} ||
+					{!alive _entity} ||
+					{(_claimedOwner isNotEqualTo _rxID)} ||
+					{((_sender distance2D _entity) > 12)} ||
+					{!(_entity getVariable ['QS_logistics_deployable',FALSE])} ||
+					{_deployBusyMap getOrDefault [_busyKey,FALSE]} ||
+					{
+						(_ownerUID isNotEqualTo '') &&
+						{_ownerUID isNotEqualTo (getPlayerUID _sender)}
+					} ||
+					{
+						(_entityType in _newPreset6Types) &&
+						{_ownerUID isNotEqualTo (getPlayerUID _sender)}
+					} ||
+					{_invalidPreset6State} ||
+					{
+						(_entityType in _newPreset6Types) &&
+						{(_spawnMenuEntities find _entity) isEqualTo -1}
+					} ||
+					{
+						(_entityType in (_preset6Containers + _preset6Turrets)) &&
+						{(_entity getVariable ['QS_deploy_preset',-1]) isNotEqualTo 6}
+					}
+				) then {
+					_rejectRequest = TRUE;
+					_rejectReason = 'case 111 ownership or state';
+				} else {
+					_deployBusyMap set [_busyKey,TRUE];
+					serverNamespace setVariable ['QS_deploy_serverBusyMap',_deployBusyMap,FALSE];
 				};
 			};
 		};
@@ -2665,7 +2738,25 @@ if (_case < 120) exitWith {
 	// Deploy/Retract asset
 	if (_case isEqualTo 111) then {
 		params ['','_entity','_state','_profileName','_clientOwner',['_faction',sideUnknown]];
-		[_entity,_state,_profileName,_clientOwner,_faction] spawn QS_fnc_deployAsset;
+		if (_clientToServer) then {
+			private _sender = (allPlayers select {
+				((owner _x) isEqualTo _rxID) &&
+				{!(_x isKindOf 'HeadlessClient_F')}
+			}) param [0,objNull];
+			private _busyKey = netId _entity;
+			if (_busyKey isEqualTo '') then {
+				_busyKey = str _entity;
+			};
+			[_entity,_state,name _sender,_rxID,side (group _sender),_busyKey] spawn {
+				params ['_entity','_state','_profileName','_clientOwner','_faction','_busyKey'];
+				[_entity,_state,_profileName,_clientOwner,_faction] call QS_fnc_deployAsset;
+				private _deployBusyMap = serverNamespace getVariable ['QS_deploy_serverBusyMap',createHashMap];
+				_deployBusyMap deleteAt _busyKey;
+				serverNamespace setVariable ['QS_deploy_serverBusyMap',_deployBusyMap,FALSE];
+			};
+		} else {
+			[_entity,_state,_profileName,_clientOwner,_faction] spawn QS_fnc_deployAsset;
+		};
 	};
 	// Wreck Recovery
 	if (_case isEqualTo 112) then {
