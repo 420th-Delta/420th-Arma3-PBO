@@ -53,6 +53,16 @@ if (!isServer) exitWith {
         };
     };
 
+    // The periodic server refresh replaces QS_whitelist_data directly rather
+    // than using the per-player response above. Reconcile entitlement-based
+    // channels on those broadcasts as well, including mid-session grants and
+    // revocations.
+    "QS_whitelist_data" addPublicVariableEventHandler {
+        if (missionNamespace getVariable ["QS_client_channelAccessInitialized", false]) then {
+            [] call TGC_fnc_refreshStaffChannelAccess;
+        };
+    };
+
     0 spawn {
         waitUntil {
             uiSleep 0.1;
