@@ -62,7 +62,7 @@ isNil {
     // the optional cross-team receive membership of a custom channel.
     [1,[_sideChannel <= 0,_sideChannel <= 0]] call TGC_fnc_enableChannel;
     if (_sideChannel > 0) then {
-        // Arma 2.22+: custom 1Ã¢â‚¬â€œ10 -> UI 6Ã¢â‚¬â€œ15; custom 11Ã¢â‚¬â€œ50 -> UI 26Ã¢â‚¬â€œ65.
+		// Arma 2.22+: custom 1-10 -> UI 6-15; custom 11-50 -> UI 26-65.
         private _sideUI = _sideChannel + ([5,15] select (_sideChannel > 10));
         [_sideUI,[TRUE,TRUE]] call TGC_fnc_enableChannel;
     };

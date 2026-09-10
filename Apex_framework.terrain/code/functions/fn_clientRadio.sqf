@@ -60,7 +60,9 @@ if (_type isEqualTo 0) then {
 				// Observe the new membership before retiring the captured old body.
 				[_unit,_oldUnit,_channels] spawn {
 					params ['_newBody','_oldBody','_channels'];
-					private _until = diag_tickTime + 3;
+					// Keep one bounded observer alive long enough for the normal one-second
+					// add retry and slower channel-roster replication to converge.
+					private _until = diag_tickTime + 10;
 					waitUntil {
 						uiSleep 0.1;
 						private _done = FALSE;
