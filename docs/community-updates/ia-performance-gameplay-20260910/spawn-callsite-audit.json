@@ -1,14 +1,14 @@
 [
   {
     "file": "fn_AI.sqf",
-    "line": 2099,
+    "line": 2118,
     "kind": "expanded-slots",
     "arguments": 9,
     "call": "['VEHICLE_SLOTS',_landing,1,(_landing getDir _goal),_class,TRUE,TRUE,400,{\n\t\t\tparams ['_point'];\n\t\t\t(_point distance2D (markerPos 'QS_marker_base_marker')) > 1200 &&\n\t\t\t{(_point distance2D _pos) < (_radius + 500)} && {!([_point,_goal,25] call QS_fnc_waterIntersect)}\n\t\t}]"
   },
   {
     "file": "fn_AI.sqf",
-    "line": 2203,
+    "line": 2224,
     "kind": "expanded-slots",
     "arguments": 9,
     "call": "['SLOTS',_landing,_quantity,_heading,'O_Soldier_F',TRUE,TRUE,180,{\n\t\t\tparams ['_point'];\n\t\t\t(_point distance2D (markerPos 'QS_marker_base_marker')) > 1200 &&\n\t\t\t{(_point distance2D _pos) < (_radius + 500)} && {!([_point,_goal,25] call QS_fnc_waterIntersect)}\n\t\t}]"
@@ -95,7 +95,9 @@
     "line": 166,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[_spawnPosDefault,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE]"
+    "call": "[_spawnPosDefault,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "ground reinforcements",
+    "review_note": "Retains the compact legacy contract without a ninth-argument expanded-placement opt-in."
   },
   {
     "file": "fn_aoEnemyReinforceVehicles.sqf",
@@ -249,35 +251,45 @@
     "line": 94,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[_position,(random 360),EAST,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+    "call": "[_position,(random 360),EAST,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "helicopter cargo preparation",
+    "review_note": "Compact staging for the existing helicopter insertion; not an ordinary ground-patrol grid request."
   },
   {
     "file": "fn_scSpawnGroup.sqf",
     "line": 143,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[_position,_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+    "call": "[_position,_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "ground reinforcements",
+    "review_note": "Retains the compact legacy contract without a ninth-argument expanded-placement opt-in."
   },
   {
     "file": "fn_scSpawnGroup.sqf",
     "line": 242,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[_position,_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+    "call": "[_position,_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "ground reinforcements",
+    "review_note": "Retains the compact legacy contract without a ninth-argument expanded-placement opt-in."
   },
   {
     "file": "fn_scSpawnGroup.sqf",
     "line": 340,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+    "call": "[_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "ground reinforcements",
+    "review_note": "Retains the compact legacy contract without a ninth-argument expanded-placement opt-in."
   },
   {
     "file": "fn_scSpawnGroup.sqf",
     "line": 453,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[[(_worldSize + (random 1000)),(_worldSize + (random 1000)),(50 + (random 50))],_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+    "call": "[[(_worldSize + (random 1000)),(_worldSize + (random 1000)),(50 + (random 50))],_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "elevated off-map staging",
+    "review_note": "Deliberate off-map creation at altitude 50-100 m; outside the outdoor expansion eligibility checks even with opt-in."
   },
   {
     "file": "fn_scSpawnLandVehicle.sqf",
@@ -340,7 +352,9 @@
     "line": 43,
     "kind": "legacy-compact",
     "arguments": 8,
-    "call": "[_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE]"
+    "call": "[_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE]",
+    "placement_context": "side-mission guards",
+    "review_note": "Retains the compact legacy contract without a ninth-argument expanded-placement opt-in."
   },
   {
     "file": "fn_smEnemyEast.sqf",
@@ -477,7 +491,7 @@
   },
   {
     "file": "fn_spawnGroup.sqf",
-    "line": 192,
+    "line": 195,
     "kind": "expanded-slots",
     "arguments": 9,
     "call": "['SLOTS',_pos,count _groupComposition,_dir,'O_Soldier_F',TRUE,FALSE,_groundExclusion,_groundValid]"

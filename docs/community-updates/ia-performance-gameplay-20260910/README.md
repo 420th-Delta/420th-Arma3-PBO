@@ -1,12 +1,13 @@
 # JollyRogerEXP performance and gameplay update review
 
-**Status: local remediation and controlled native verification complete; human/deployment acceptance remains.** Start with the [local test report](LOCAL_TEST_REPORT.md) and [remediation ledger](REMEDIATION_LEDGER.md) for current fixes and evidence. The original review below describes the imported contribution before corrective work. Reviewed on 2026-09-10 against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`. Contributor: [JollyRogerEXP](https://github.com/JollyRogerEXP). The initial code commits preserve the supplied changes with documented integration repairs and whitespace cleanup; subsequent corrections remain separately reviewable.
+**Status: two review and remediation passes plus controlled native verification are complete; human/deployment acceptance remains.** Start with the [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md), [local test report](LOCAL_TEST_REPORT.md), [static result](second-pass-static-validation.json) and [remediation ledger](REMEDIATION_LEDGER.md) for current decisions, fixes and evidence. The original review below describes the imported contribution before corrective work. Reviewed on 2026-09-10 against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`; the independent second pass was adjudicated on 2026-09-11. Contributor: [JollyRogerEXP](https://github.com/JollyRogerEXP). The initial code commits preserve the supplied changes with documented integration repairs and whitespace cleanup; subsequent corrections remain separately reviewable.
 
 ## Reading order
 
-1. Read the findings and commit table below.
-2. Read the affected subsystem report: [AI and insertion](review-ai.md), [player support and damage](review-support.md), or [systems](review-systems.md).
-3. Use the contributor's [release notes](RELEASE_NOTES.md) and [technical reference](TECHNICAL_NOTES.md) for intended behavior and acceptance scenarios. These two files are supplied documentation; only one trailing space in the technical reference was removed for Git whitespace validation. Their test counts are contributor claims: the referenced 15 verifiers, 58,320 assertions, SQF-VM adapters and detailed logs were not included or independently rerun.
+1. Read the [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md) for every independent-review finding and the retained decisions.
+2. Read the findings and commit table below.
+3. Read the affected subsystem report: [AI and insertion](review-ai.md), [player support and damage](review-support.md), or [systems](review-systems.md).
+4. Use the contributor's [release notes](RELEASE_NOTES.md) and [technical reference](TECHNICAL_NOTES.md) for intended behavior and acceptance scenarios. These two files are supplied documentation; only one trailing space in the technical reference was removed for Git whitespace validation. Their test counts are contributor claims: the referenced 15 verifiers, 58,320 assertions, SQF-VM adapters and detailed logs were not included or independently rerun.
 
 ## Findings recorded at import
 
@@ -19,9 +20,18 @@ Line references in the subsystem reports identify the incoming package, before u
 | SUP-3 | P2, confirmed missing server resource check | Mortar deployment accepts the client's success acknowledgment without verifying that the required tube was spent. Track the reservation and server-observed inventory state. |
 | AI-01 | P2, confirmed cleanup ownership gap | Register final-reserve rotary aircraft and crew with an AO teardown owner. Census tracking alone does not retire surviving helicopters at AO end. |
 | SYS-02 | P2, confirmed placement-boundary gap | Revalidate each caller's player/base exclusions at the actual displaced slots. A valid FOB anchor can produce a unit about 296 m from a player despite its 350 m admission rule. |
-| SYS-01 | Compatibility prerequisite | The eleventh custom radio channel needs Arma 3 2.22. Local validation used 2.22; the deployed server/client versions still need confirmation. This is not evidence that deployment currently uses an older version. |
+| SYS-01 | Compatibility prerequisite, resolved | The eleventh custom radio channel needs Arma 3 2.22. Local validation used 2.22, and Seathre confirmed the deployed server is on 2.22 or later. Client-version and channel-capacity checks remain deployment concerns. |
 
 Additional acceptance concerns are documented in the subsystem reports: remote-control locality, scheduled RPC interleaving, failed spawn propagation, terrain-search frame cost, city cleanup overlap and radio policy. No FPS gain is established by this review.
+
+## Gameplay policy disclosures
+
+- Normal unattended incapacitation now uses a **240-second** bleed-out window instead of 600 seconds. Existing transport and medevac rules can extend it.
+- The pilot/fighter-pilot forced-death branch is skipped for `forward_observer`, `jtac`, `jtac_WL`, `mortar_gunner`, the existing staff exception, and the active Kavala revive case. Other incapacitation death conditions still apply.
+- Mega Defense uses a finite 30-minute timer and bypasses the optional `QS_defend_blockTimeout` overtime extension. Early HQ loss/failure and administrator cancellation still end it. Ordinary Defense gains 600–1200 seconds only when that optional flag is enabled; no production automatic TRUE setter was found.
+- The custom Side channel grants all-player Side voice. If custom allocation fails, the native team-local Side fallback intentionally grants the same all-player voice policy; it does not make Side cross-team.
+
+These are deliberate retained gameplay and communication policies. The second review's alternatives and the evidence supporting each decision are in the [adjudication](REVIEW_PASS_2_ADJUDICATION.md).
 
 ## Commit classification
 
@@ -38,11 +48,11 @@ Additional acceptance concerns are documented in the subsystem reports: remote-c
 
 The first seven groups are independent from the large gameplay activation. Group 5's managed-cover exclusion is inert until the gameplay controller sets it. Group 7 keeps the unrelated newer upstream UAV/recycler configuration values. Group 8 contains 45 files because Primary, Taru, combat-air, role services, core cleanup and registration form dependency cycles across shared files. Arbitrary file splitting would produce calls to absent functions or incompatible state. A finer split requires semantic hunk extraction and validation of every intermediate revision; the subfeature split proposals are retained in the reviewer reports. Group 8 must not be cherry-picked by individual files.
 
-A final documentation commit records this review and the contributor's reference material. Existing PR #55 is separate from this branch; its pending air-defense additions were not used as the base.
+A final documentation commit records this review and the contributor's reference material. Existing PR #55 is separate from this branch; its pending air-defense additions were not used as the base. The branches share only `fn_remoteExec.sqf`. A final `git merge-tree` simulation in both orders produced the same conflict-free tree and retained #55's case-111 deployable-asset guard plus this branch's case-65/75 rappel guards. There is no technical order requirement; prefer #55 first because it is already open, then rebase this branch and rerun the combined security/integration cells.
 
 ### Corrective commit classification
 
-The original nine commits remain intact. Nine follow-up commits bring the local stack to 18, separated by the behavior they repair:
+The original nine commits remain intact. The first remediation pass added nine commits, producing the 18-commit reviewed snapshot. They are separated by the behavior they repair:
 
 | Group | Scope |
 | --- | --- |
@@ -57,6 +67,8 @@ The original nine commits remain intact. Nine follow-up commits bring the local 
 | Verification documentation | Issue ledger, preserved failure history, sanitized campaign results and remaining human/deployment acceptance. |
 
 The [exact corrective path groups](remediation-commit-plan.json) map all 35 modified production files once: support 4, AI/spawn 17, rappel 1, radio 5, cleanup 3, baseline client audio 2 and baseline mapper/snapshot synchronization 3. Apply AI/spawn before cleanup because Kavala also adopts its final-position validator. Test tooling and verification documents follow as separate groups.
+
+The second pass adds six commits, bringing the prepared stack to 24: AI creation/artillery/cutoff ordering; bound rappel RPC and active-descent cleanup; radio retirement/mapping cleanup; support cooldown and role policy; portable focused fixtures; and final adjudication/evidence documentation. Its ten production paths are grouped separately in the same commit plan. New commits carry explanatory bodies; the earlier nine follow-up commits remain unchanged as historical review artifacts.
 
 The pinned MFD control is a local test option, not a mission content change or repair to the stock game asset. No game binaries, private configuration or raw operational logs belong in these commits.
 

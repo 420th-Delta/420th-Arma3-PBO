@@ -100,5 +100,57 @@
     "docs/community-updates/ia-performance-gameplay-20260910/spawn-callsite-audit.json",
     "docs/community-updates/ia-performance-gameplay-20260910/stock-mfd-investigation.md",
     "docs/community-updates/ia-performance-gameplay-20260910/support-remediation.md"
-  ]
+  ],
+  "second_pass": {
+    "ai": [
+      "Apex_framework.terrain/code/functions/fn_AI.sqf",
+      "Apex_framework.terrain/code/functions/fn_AIHandleGroup.sqf",
+      "Apex_framework.terrain/code/functions/fn_spawnGroup.sqf"
+    ],
+    "rappel": [
+      "Apex_framework.terrain/code/functions/fn_AIXHeliInsert.sqf",
+      "Apex_framework.terrain/code/functions/fn_remoteExec.sqf",
+      "Apex_framework.terrain/code/scripts/AR_AdvancedRappelling_ext.sqf"
+    ],
+    "radio": [
+      "Apex_framework.terrain/TGC/Functions/Channels/fn_refreshStaffChannelAccess.sqf",
+      "Apex_framework.terrain/code/functions/fn_clientRadio.sqf"
+    ],
+    "support": [
+      "Apex_framework.terrain/code/functions/fn_mortarSupport.sqf",
+      "Apex_framework.terrain/code/functions/fn_roles.sqf"
+    ],
+    "native_test_tooling": [
+      "tests/ia-update/README.md",
+      "tests/ia-update/ai-spawn-baseline/manifest.json",
+      "tests/ia-update/ai-spawn-baseline/spawnGroup.sqf",
+      "tests/ia-update/ai-spawn-baseline/stop-entity-selection.sqf",
+      "tests/ia-update/ai-spawn-baseline/stop-exempt.sqf",
+      "tests/ia-update/ai-spawn-server.sqf",
+      "tests/ia-update/campaign.py",
+      "tests/ia-update/radio-cleanup-client.sqf",
+      "tests/ia-update/rappel-security-client.sqf",
+      "tests/ia-update/rappel-security-dependencies.sqf",
+      "tests/ia-update/rappel-security-server.sqf",
+      "tests/ia-update/run.py",
+      "tests/ia-update/support-client.sqf",
+      "tests/ia-update/support-rpc.sqf",
+      "tests/ia-update/validate_config.py"
+    ],
+    "verification_docs": [
+      "docs/community-updates/ia-performance-gameplay-20260910/LOCAL_TEST_REPORT.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/PR_BODY.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/README.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/REMEDIATION_LEDGER.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/REVIEW_PASS_2_ADJUDICATION.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/ai-spawn-remediation.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/merge-systems.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/native-campaign.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/radio-cleanup-remediation.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/remediation-commit-plan.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/second-pass-static-validation.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/spawn-callsite-audit.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/support-remediation.md"
+    ]
+  }
 }

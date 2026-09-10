@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "upstream_base": "a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7",
+  "scope": "Final second-pass working tree before commit; static lint and syntax checks are not engine execution.",
+  "t0_lint": {
+    "tool_sha256": "bf1282f690b28ac6d9e5bc556f5b92e83baac3ffc738c8b4490e9146adfaab69",
+    "baseline_sha256": "54c9b9e7912a3fb4ca35162d806bce9dfc9a15f08b4467585bb971dd93d5ae20",
+    "base_report_sha256": "2a72c899b1764b8fbbee44dd44188219200e4de187ece8495e6a9536852b366a",
+    "current_report_sha256": "e4a2a51d22f13f69f4d6ba4d40038c2b21c38cc3964ac0ff3b5b4a54036d5365",
+    "base_violations": 3810,
+    "current_violations": 3824,
+    "new_vs_base": 40,
+    "removed_vs_base": 26,
+    "new_by_rule": {
+      "orphans": 1,
+      "undeclared-locals": 39
+    },
+    "removed_by_rule": {
+      "sentinel-loops": 2,
+      "undeclared-locals": 19,
+      "whitelist-drift": 5
+    },
+    "new_disposition": {
+      "manual_mega_defense_entry": 1,
+      "converted_rappel_body_bindings": 38,
+      "string_form_private_false_positive": 1
+    }
+  },
+  "checks": {
+    "newly_edited_production_sqf_lexical": 10,
+    "embedded_compile_final_bodies_lexical": 18,
+    "git_diff_check": "pass",
+    "python_compile": "pass",
+    "json_parse": "pass",
+    "production_paths_match_commit_plan": 10,
+    "test_paths_match_commit_plan": 15,
+    "documentation_paths_match_commit_plan": 13,
+    "pr_55_overlap_paths": 1,
+    "pr_55_merged_dispatcher_blob": "509b1a8d91261ecdba960a39754a4795ae6e406a",
+    "pr_55_merge_tree_both_orders_match": true,
+    "pr_55_merge_conflicts": 0,
+    "cfgconvert": "8c3d17da3d64-config",
+    "native_campaign_attempts": 58
+  }
+}
