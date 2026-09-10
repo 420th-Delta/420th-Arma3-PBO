@@ -1051,26 +1051,44 @@ for '_x' from 0 to 1 step 0 do {
 						};
 					};
 				};
-				_position = selectRandom QS_buildingPositions_inner_ground;
-				if ((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1) then {
-					while {((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
+/* Legacy Code as of 9.9.2026 */
+//|				_position = selectRandom QS_buildingPositions_inner_ground;
+//|				if ((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1) then {
+//|					while {((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+// Updated Code
+				// Bounded patrol replacement: keep the existing building points,
+				// height/player/visibility checks and 15 m infantry separation.
+				_position = [];
+				for '_attempt' from 1 to 40 do {
+					if (QS_buildingPositions_inner_ground isEqualTo []) exitWith {};
+					private _candidate = selectRandom QS_buildingPositions_inner_ground;
+					if ((_candidate # 2) <= _maxHeight &&
+						{((_candidate nearEntities ['CAManBase',15]) findIf {alive _x}) < 0} &&
+						{(_unitsToAvoid findIf {(_candidate distance2D _x) < _minDistanceFromPlayers}) < 0} &&
+						{([AGLToASL _candidate,_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isEqualTo 0}) exitWith {_position = _candidate;};
+					uiSleep 0.001;
+// End Updated Code
 				};
-				if ((_position # 2) > _maxHeight) then {
-					while {((_position # 2) > _maxHeight)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				if (([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0) then {
-					while {(([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				_unit setPos _position;
+/* Legacy Code as of 9.9.2026 */
+//|				if ((_position # 2) > _maxHeight) then {
+//|					while {((_position # 2) > _maxHeight)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				if (([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0) then {
+//|					while {(([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				_unit setPos _position;
+// Updated Code
+				if (_position isEqualTo []) then {deleteVehicle _unit;} else {_unit setPos _position;};
+// End Updated Code
 			};
 			_arrayindexes = [];
 		};
@@ -1251,6 +1269,11 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _aaUnits) < _aaPatrolThresh) then {
 				if (({(alive _x)} count _aaUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _aaPatrolCenter getPos [(random _aaPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _aaUnitTypes;
 				_unit = _aaGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1277,6 +1300,11 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _sniperUnits) < _aaPatrolThresh) then {
 				if (({(alive _x)} count _sniperUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _sniperPatrolCenter getPos [(random _sniperPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _sniperUnitTypes;
 				_unit = _sniperGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1303,6 +1331,11 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _atUnits) < _atPatrolThresh) then {
 				if (({(alive _x)} count _atUnits) >= _atPatrolThresh) exitWith {};
 				_spawnPos = _atPatrolCenter getPos [(random _atPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _atUnitTypes;
 				_unit = _atGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];

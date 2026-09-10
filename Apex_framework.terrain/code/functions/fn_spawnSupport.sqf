@@ -33,6 +33,11 @@ if (_type isEqualTo 'REPAIR') then {
 		_grp = createGroup [EAST,TRUE];
 		_roadPosition = _roads # _roadIndex;
 		_vehicleType = selectRandomWeighted _vTypes;
+// Added Code
+		private _slots = ['VEHICLE_SLOTS',_roadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType]] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _grp;};
+		_roadPosition = _slots # 0;
+// End Updated Code
 		_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],_roadPosition,[],0,'NONE'];
 		_vehicle setDir (random 360);
 		_vehicle lock 3;
@@ -82,6 +87,11 @@ if (_type isEqualTo 'MEDICAL') then {
 		if (_roadIndex isEqualTo -1) exitWith {};
 		_grp = createGroup [EAST,TRUE];
 		_roadPosition = _roads # _roadIndex;
+// Added Code
+		private _slots = ['VEHICLE_SLOTS',_roadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vTypes,_vTypes]] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _grp;};
+		_roadPosition = _slots # 0;
+// End Updated Code
 		_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vTypes,_vTypes],_roadPosition,[],0,'NONE'];
 		_vehicle setDir (random 360);
 		_vehicle lock 3;

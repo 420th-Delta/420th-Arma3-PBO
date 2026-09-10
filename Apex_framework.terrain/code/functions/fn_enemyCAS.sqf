@@ -37,16 +37,29 @@ _spawnPos = _spawnPosOptions;
 
 
 _QS_AOpos = missionNamespace getVariable 'QS_AOpos';
-private _new = FALSE;
-if (isNull (missionNamespace getVariable 'QS_enemyCasGroup')) then {
-	_new = TRUE;
-	missionNamespace setVariable ['QS_enemyCasGroup',(createGroup [EAST,TRUE]),FALSE];
-};
-_grp = missionNamespace getVariable 'QS_enemyCasGroup';
-_jetPilot = (missionNamespace getVariable 'QS_enemyCasGroup') createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_fighter_pilot_f','o_fighter_pilot_f'],[-100,-100,0],[],0,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|private _new = FALSE;
+//|if (isNull (missionNamespace getVariable 'QS_enemyCasGroup')) then {
+//|	_new = TRUE;
+//|	missionNamespace setVariable ['QS_enemyCasGroup',(createGroup [EAST,TRUE]),FALSE];
+//|};
+//|_grp = missionNamespace getVariable 'QS_enemyCasGroup';
+//|_jetPilot = (missionNamespace getVariable 'QS_enemyCasGroup') createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_fighter_pilot_f','o_fighter_pilot_f'],[-100,-100,0],[],0,'NONE'];
+// Updated Code
+// One flight per group: CAP orders cannot retask another jet's ground pass.
+// The existing aircraft array still owns population limits and vehicle cleanup.
+private _new = TRUE;
+private _grp = createGroup [EAST,TRUE];
+if (isNull _grp) exitWith {};
+_jetPilot = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_fighter_pilot_f','o_fighter_pilot_f'],[-100,-100,0],[],0,'NONE'];
+if (isNull _jetPilot) exitWith {deleteGroup _grp;};
+// End Updated Code
 _jetPilot setVariable ['QS_dynSim_ignore',TRUE,FALSE];
 _jetPilot enableDynamicSimulation FALSE;
 _jetActual = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _jetSelect,_jetSelect],_spawnPos,[],0,'FLY'];
+// Added Code
+if (isNull _jetActual) exitWith {deleteVehicle _jetPilot; deleteGroup _grp;};
+// End Updated Code
 _jetActual engineOn TRUE;
 _jetActual setAirplaneThrottle 1;
 _jetActual allowCrewInImmobile [TRUE,TRUE];
@@ -100,11 +113,21 @@ if (!(['cluster',(typeOf _jetActual),FALSE] call (missionNamespace getVariable '
 _jetPilot addEventHandler [
 	'Killed',
 	{
-		(vehicle _jetPilot) setDamage [1,TRUE];
+/* Legacy Code as of 9.9.2026 */
+//|		(vehicle _jetPilot) setDamage [1,TRUE];
+// Updated Code
+		params ['_unit'];
+		(vehicle _unit) setDamage [1,TRUE];
+// End Updated Code
 	}
 ];
 {
-	_jetActual addEventHandler _x;
+/* Legacy Code as of 9.9.2026 */
+//|	_jetActual addEventHandler _x;
+// Updated Code
+	private _eh = _jetActual addEventHandler _x;
+	if ((_x # 0) isEqualTo 'IncomingMissile') then {_jetActual setVariable ['QS_combatAir_missileEH',_eh,FALSE];};
+// End Updated Code
 } forEach [
 	['Landing',{}],
 	['LandingCanceled',{}],
@@ -195,3 +218,7 @@ if (!((toLowerANSI _jetSelect) in ['o_plane_fighter_02_stealth_f'])) then {
 	};
 };
 (missionNamespace getVariable 'QS_enemyCasArray2') pushBack _jetActual;
+// Added Code
+// Installed ordnance selects CAP or CAS; classes, loadouts and spawn limits remain native.
+if (!isNil 'QS_fnc_combatAir') then {['REGISTER',_grp,'AMBIENT'] call QS_fnc_combatAir;};
+// End Updated Code

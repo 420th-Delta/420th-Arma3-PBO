@@ -844,7 +844,14 @@ missionNamespace setVariable ['QS_module_services_script',scriptNull,FALSE];
 /*/===================== Gear manager module/*/
 _QS_module_gearManager = TRUE && ((missionNamespace getVariable ['QS_missionConfig_Arsenal',0]) isNotEqualTo 3);
 _arsenalType = missionNamespace getVariable ['QS_missionConfig_Arsenal',1];
-missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+/* Legacy Code as of 9.9.2026 */
+//|missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+// Updated Code
+// Forward Observer shares configured JTAC equipment, including its laser designator.
+private _artilleryArsenalRole = player getVariable ['QS_unit_role','rifleman'];
+if (_artilleryArsenalRole isEqualTo 'forward_observer') then {_artilleryArsenalRole = 'jtac';};
+missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),_artilleryArsenalRole] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+// End Updated Code
 _QS_module_gearManager_delay = 3;
 _QS_module_gearManager_checkDelay = time + _QS_module_gearManager_delay;
 _playerThreshold = 0;

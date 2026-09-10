@@ -233,7 +233,28 @@ if (_type isEqualTo 'GET_ROLE_DESCRIPTION') exitWith {
 		'',
 		['_role','rifleman']
 	];
-	([_role] call (missionNamespace getVariable 'QS_fnc_roleDescription'));	
+/* Legacy Code as of 9.9.2026 */
+//|	([_role] call (missionNamespace getVariable 'QS_fnc_roleDescription'));
+// Updated Code
+	// Forward Observer description uses the same role UI and a matching Altis support-role image.
+	if (_role isEqualTo 'forward_observer') exitWith {
+		parseText "<t size='1.3'>Forward Observer</t><br/><img image='media\images\roles\arid\forward_observer.jpg' size='10'/><br/>One slot. Artillery Order through 0 &gt; 8.<br/>Shared ammunition resupplies each Primary AO and Defense. Defense receives double ammunition.<br/>Keep friendlies at least 175 m clear of the selected dispersion area.<br/>Choose munition, rounds and dispersion, then Request Fire Mission. Laser and IR shells share ammunition. Limited ICM shells. No smoke, illumination or mines. Broadway confirms accepted requests after 10-12 seconds; final impact is expected 20-25 seconds after acceptance."
+	};
+	private _description = [_role] call (missionNamespace getVariable 'QS_fnc_roleDescription');
+	if (_role in ['jtac','jtac_WL']) then {
+		_description = composeText [_description,lineBreak,lineBreak,
+			'Support (0 > 8): Airstrike Order. Select one bomb and its dispersion, then Request Fire Mission. Broadway confirms accepted requests after 10-12 seconds; impact is expected 20-25 seconds after acceptance.',lineBreak,
+			'Bombs are shared by the allowed JTAC slots, including empty slots. Your menu shows your remaining share. Role changes and respawns do not refill it.',lineBreak,
+			'Resupplied each Primary AO and Defense. Keep friendlies 175 m clear of the dispersion area. Laser-guided bombs need a friendly designation within 50 m of the target.'];
+	};
+	if (_role isEqualTo 'mortar_gunner') then {
+		_description = composeText [_description,lineBreak,lineBreak,
+			'Support (0 > 8): Request Mk6 Mortar, Request Mortar Resupply or Reset Mortar Section. Requests have separate 10-minute cooldowns.',lineBreak,
+			'Up to three mortars. Eight HE rounds per tube; five tubes per resupply crate. No smoke or illumination. Empty crates can be replaced when resupply is ready.',lineBreak,
+			'Reset clears your mortars and crate without changing cooldowns. Equipment also clears on role departure, death, respawn, disconnect or moving more than 500 m away.'];
+	};
+	_description
+// End Updated Code
 };
 if (_type isEqualTo 'COMPACT_QUEUE') exitWith {
 	params ['','_queue'];
@@ -865,6 +886,10 @@ if (_type isEqualTo 'INIT_ROLE') exitWith {
 	params ['','_role'];
 	playSoundUI ['OMLightSwitch',0.5,1.5,FALSE];
 	player setVariable ['QS_unit_role',_role,FALSE];
+// Added Code
+	// Remove/add only this role's support menu as soon as the role changes.
+	['CLIENT'] call QS_fnc_artillerySupport;
+// End Updated Code
 	private _medic = (getMissionConfigValue ['ReviveRequiredTrait',1]) isEqualTo 0;
 	private _traitsData = [
 		[['medic',_medic,FALSE]],
@@ -1219,7 +1244,13 @@ if (_type isEqualTo 'INIT_ROLE') exitWith {
 		uiSleep 0.1;
 		[player] call (missionNamespace getVariable 'QS_fnc_clientArsenal');
 		uiSleep 0.1;
-		missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),_this] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+/* Legacy Code as of 9.9.2026 */
+//|		missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),_this] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+// Updated Code
+		// Match the Arsenal and gear-manager aliases for this new role.
+		private _arsenalRole = [_this,'jtac'] select (_this isEqualTo 'forward_observer');
+		missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),_arsenalRole] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+// End Updated Code
 	};
 	['SET_SAVED_LOADOUT',_role] call (missionNamespace getVariable 'QS_fnc_roles');
 	uiNamespace setVariable ['QS_client_respawnCooldown',diag_tickTime + 30];
@@ -1284,6 +1315,41 @@ if (_type isEqualTo 'SET_SAVED_LOADOUT') exitWith {
 	};
 };
 if (_type isEqualTo 'INIT_SYSTEM') exitWith {
+// Added Code
+
+	// Register after @Apex_cfg loads and before the existing server role manifest
+	// is built. Exactly one unrestricted WEST slot; no population or whitelist extras.
+	// The external role file and all existing role definitions remain authoritative.
+	if (isServer) then {
+		private _roleData = missionNamespace getVariable ['QS_roles_data',[[],[],[],[]]];
+		private _westRoles = _roleData # 1;
+		private _entry = ['forward_observer',WEST,1,1,-1,0,4,0,{TRUE},{TRUE},{''}];
+		private _index = _westRoles findIf {(_x # 0) isEqualTo 'forward_observer'};
+		if (_index < 0) then {_westRoles pushBack _entry;} else {_westRoles set [_index,_entry];};
+		_roleData set [1,_westRoles];
+		missionNamespace setVariable ['QS_roles_data',_roleData,FALSE];
+		private _info = missionNamespace getVariable ['QS_roles_UI_info',[]];
+		private _icon = 'a3\ui_f\data\map\vehicleicons\iconMan_ca.paa';
+		private _mapIcon = _icon;
+		_index = _info findIf {(_x # 0) isEqualTo 'mortar_gunner'};
+		if (_index >= 0) then {_icon = (_info # _index) # 2; _mapIcon = (_info # _index) # 3;};
+		_entry = ['forward_observer','Forward Observer',_icon,_mapIcon];
+		_index = _info findIf {(_x # 0) isEqualTo 'forward_observer'};
+		if (_index < 0) then {_info pushBack _entry;} else {_info set [_index,_entry];};
+		missionNamespace setVariable ['QS_roles_UI_info',_info,FALSE];
+		// Use the configured JTAC kit (rifleman fallback). Artillery ammunition belongs to the
+		// server support pool, never to an inventory or a saved player loadout.
+		private _loadouts = missionNamespace getVariable ['QS_roles_defaultLoadouts',[]];
+		private _source = _loadouts findIf {(_x # 0) isEqualTo 'jtac'};
+		if (_source < 0) then {_source = _loadouts findIf {(_x # 0) isEqualTo 'rifleman'};};
+		if (_source >= 0) then {
+			_entry = ['forward_observer',+((_loadouts # _source) # 1)];
+			_index = _loadouts findIf {(_x # 0) isEqualTo 'forward_observer'};
+			if (_index < 0) then {_loadouts pushBack _entry;} else {_loadouts set [_index,_entry];};
+			missionNamespace setVariable ['QS_roles_defaultLoadouts',_loadouts,FALSE];
+		};
+	};
+// End Updated Code
 
 	{
 		missionNamespace setVariable _x;

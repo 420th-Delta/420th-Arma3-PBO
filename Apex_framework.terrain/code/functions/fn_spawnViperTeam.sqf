@@ -14,6 +14,25 @@ Description:
 _________________________________________________/*/
 
 params ['_type','_quantity','_total',['_viperGroup',grpNull]];
+// Added Code
+// Low server turnout: no piecemeal specialist replenishment. At most a 1%
+// chance per native opportunity, and only with more than eight nearby ground
+// players. The native scheduler retains its five-minute retry interval.
+private _connected = allPlayers select {isPlayer _x && {!(_x isKindOf 'HeadlessClient_F')}};
+private _smallServer = count _connected < 25;
+private _viperAllowed = TRUE;
+if (_smallServer && {_type in ['CLASSIC','SC']}) then {
+	private _center = missionNamespace getVariable ['QS_aoPos',[0,0,0]];
+	private _radius = (missionNamespace getVariable ['QS_aoSize',300]) + 600;
+	private _ground = _connected select {
+		alive _x && {!captive _x} && {lifeState _x in ['HEALTHY','INJURED']} &&
+		{side (group _x) isEqualTo WEST} && {!((vehicle _x) isKindOf 'Air')} && {(_x distance2D _center) <= _radius}
+	};
+	_viperAllowed = _quantity isEqualTo 0 && {count _ground > 8} && {random 1 < 0.01};
+	if (_viperAllowed) then {_total = 6;};
+};
+if (!_viperAllowed) exitWith {[]};
+// End Updated Code
 _unitTypes = ['viper_types_2'] call QS_data_listUnits;
 private _lowPop = (count allPlayers) < 15;
 if (_type in ['CLASSIC','SC']) exitWith {
@@ -38,6 +57,10 @@ if (_type in ['CLASSIC','SC']) exitWith {
 		_iterations = _iterations + 1;
 	};
 	if (_iterations > 300) exitWith {};
+// Added Code
+	private _slots = ['SLOTS',_position1,_total - _quantity,random 360] call QS_fnc_spawnGroup;
+	if (_slots isEqualTo []) exitWith {[]};
+// End Updated Code
 	private _unit = objNull;
 	private _grp = _viperGroup;
 	if (isNull _grp) then {
@@ -46,7 +69,11 @@ if (_type in ['CLASSIC','SC']) exitWith {
 	private _unitType = '';
 	for '_x' from 0 to ((_total - _quantity) - 1) step 1 do {
 		_unitType = selectRandomWeighted _unitTypes;
-		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_position1,[],0,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_position1,[],0,'NONE'];
+// Updated Code
+		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_slots # _x,[],0,'NONE'];
+// End Updated Code
 		_unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 		_unit setVehiclePosition [(getPosWorld _unit),[],0,'NONE'];
 		_unit setAnimSpeedCoef 1.15;

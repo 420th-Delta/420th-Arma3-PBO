@@ -33,29 +33,45 @@ private _getUnitSide = {
 	_entitySide
 };
 
-// Attribute remote-controlled fire to the controlled unit's combat side, not
-// to the side of the player body controlling it.
-private _attacker = _instigator;
-private _causedByController = effectiveCommander _vehicleCausedBy;
-private _remoteControlledAttacker = objNull;
-private _attackerCandidates = [_causedBy];
-if (!isNull _vehicleCausedBy) then {
-	_attackerCandidates append (crew _vehicleCausedBy);
-};
-{
-	if (
-		(!isNull _x) &&
-		{isPlayer (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}
-	) exitWith {
-		_remoteControlledAttacker = _x;
+/* Legacy Code as of 9.9.2026 */
+//|// Attribute remote-controlled fire to the controlled unit's combat side, not
+//|// to the side of the player body controlling it.
+//|private _attacker = _instigator;
+//|private _causedByController = effectiveCommander _vehicleCausedBy;
+//|private _remoteControlledAttacker = objNull;
+//|private _attackerCandidates = [_causedBy];
+//|if (!isNull _vehicleCausedBy) then {
+//|	_attackerCandidates append (crew _vehicleCausedBy);
+// Updated Code
+// Use the physical firing unit for combat side; use its controller only for
+// accountability. Controlling friendly AI does not grant friendly-fire immunity.
+private _attacker = ['ATTACKER',_causedBy,_instigator,_unit] call TGC_fnc_isFriendlyFire;
+private _controller = objNull;
+if (!isNull _attacker) then {
+	_controller = remoteControlled _attacker;
+	if (!isPlayer _controller) then {
+		_controller = _attacker getVariable ['bis_fnc_moduleRemoteControl_owner',objNull];
 	};
-} forEach _attackerCandidates;
-if (!isNull _remoteControlledAttacker) then {
-	_attacker = _remoteControlledAttacker;
+// End Updated Code
 };
-if (isNull _attacker) then {
-	_attacker = [_causedBy,_causedByController] select (!isNull _causedByController);
-};
+/* Legacy Code as of 9.9.2026 */
+//|{
+//|	if (
+//|		(!isNull _x) &&
+//|		{isPlayer (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}
+//|	) exitWith {
+//|		_remoteControlledAttacker = _x;
+//|	};
+//|} forEach _attackerCandidates;
+//|if (!isNull _remoteControlledAttacker) then {
+//|	_attacker = _remoteControlledAttacker;
+//|};
+//|if (isNull _attacker) then {
+//|	_attacker = [_causedBy,_causedByController] select (!isNull _causedByController);
+//|};
+// Updated Code
+if (isPlayer _controller) then {_instigator = _controller;};
+// End Updated Code
 
 private _unitSide = [_unit] call _getUnitSide;
 if (_unitSide isEqualTo sideUnknown) then {

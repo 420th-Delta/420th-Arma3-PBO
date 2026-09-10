@@ -17,7 +17,19 @@ params ['_type'];
 if (_type isEqualTo 0) exitWith {
 	scriptName 'QS AI FIRE MISSION - ARTY';
 	//comment 'Artillery';
-	params ['','_grpLeader','_firePosition','_fireShells','_fireRounds'];
+/* Legacy Code as of 9.9.2026 */
+//|	params ['','_grpLeader','_firePosition','_fireShells','_fireRounds'];
+// Updated Code
+	params ['','_grpLeader','_firePosition','_fireShells','_fireRounds',['_primaryTuning',[]]];
+	// PRIMARY MORTARS ONLY: the controller passes this token after fresh-target
+	// checks and spending an AO allowance slot. Native calls omit it entirely.
+	// Defense and aircraft calls retain their original settings and code paths.
+	private _primaryMortar = (count _primaryTuning) >= 2 &&
+		{(_primaryTuning # 0) isEqualTo (missionNamespace getVariable ['QS_primaryPressure_epoch',-1])} &&
+		{missionNamespace getVariable ['QS_primaryPressure_running',FALSE]} &&
+		{!(missionNamespace getVariable ['QS_defendActive',FALSE])} &&
+		{(vehicle _grpLeader) isKindOf 'StaticMortar'};
+// End Updated Code
 	_vehicle = vehicle _grpLeader;
 	_vehicle setVehicleAmmo 1;
 	_grp = group _grpLeader;
@@ -29,6 +41,14 @@ if (_type isEqualTo 0) exitWith {
 		_fireRounds = round (_fireRounds * 2);
 	};
 	private _radius = 90;
+// Added Code
+	if (_primaryMortar) then {
+		// Apply AFTER the native doubling rule: four shells below 20 ground
+		// players, six at 20+, with an absolute six-shell cap for this salvo.
+		_fireRounds = 1 max (6 min (_primaryTuning # 1));
+		_radius = 45;
+	};
+// End Updated Code
 	private _firstShell = TRUE;
 	_grpLeader doWatch [(_firePosition # 0),(_firePosition # 1),(1000 + (random 1000))];
 	uiSleep (3 + (random 5));
@@ -37,6 +57,9 @@ if (_type isEqualTo 0) exitWith {
 			if ((!alive _vehicle) || {(!alive _grpLeader)} || {(isNull (objectParent _grpLeader))}) exitWith {};
 			_grpLeader doArtilleryFire [(_firePosition getPos [(_radius * (sqrt (random 1))),(random 360)]),_fireShells,1];
 			_radius = _radius * (random [0.7,0.75,1]);
+// Added Code
+			if (_primaryMortar) then {_radius = 25 max _radius;};
+// End Updated Code
 			if (_firstShell) then {
 				_firstShell = FALSE;
 				uiSleep (_sleep_1 + (random _sleep_1));
@@ -48,10 +71,34 @@ if (_type isEqualTo 0) exitWith {
 		_grp setVariable ['QS_AI_GRP_DATA',[FALSE,(serverTime + 45)],FALSE];
 	};
 };
+// Added Code
+// GROUND_SUPPORT_FLIGHT_GUARDS_BEGIN
+private _fn_groundFlightEligible = {
+    params ['_target'];
+    !isNil 'QS_fnc_groundTargetPriority' && {(_target call QS_fnc_groundTargetPriority) >= 0}
+};
+private _fn_groundRequestRelease = {
+    params ['_group','_target','_request','_onlyIdle'];
+    if ((_request param [0,objNull]) isEqualTo _target &&
+        {(_group getVariable ['QS_AI_GRP_fireMission',[]]) isEqualTo _request} &&
+        {!_onlyIdle || {serverTime >= (_group getVariable ['QS_combatAir_groundUntil',0])}}) then {
+        _group setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+    };
+};
+// GROUND_SUPPORT_FLIGHT_GUARDS_END
+// End Updated Code
 if (_type isEqualTo 1) exitWith {
 	scriptName 'QS AI FIRE MISSION - HELI';
 	//comment 'Heli CAS';
 	params ['','_supportProvider','_supportGroup','_targetObject','_targetPosition','_smokePosition','_duration'];
+// Added Code
+	private _groundRequest = +(_supportGroup getVariable ['QS_AI_GRP_fireMission',[]]);
+	if (!([_targetObject] call _fn_groundFlightEligible)) exitWith {
+		[_supportGroup,_targetObject,_groundRequest,TRUE] call _fn_groundRequestRelease;
+	};
+	// A delayed support request cannot take over an occupied combat flight.
+	if (!isNil 'QS_fnc_combatAir' && {!(['START',_supportGroup,_targetObject,_duration] call QS_fnc_combatAir)}) exitWith {};
+// End Updated Code
 	_vehicle = vehicle _supportProvider;
 	_targetAssistant = createSimpleObject ['A3\Structures_F_Heli\VR\Helpers\Sign_sphere10cm_F.p3d',_targetPosition,TRUE];
 	[1,_targetAssistant,[_targetObject,[0,0,1]]] call QS_fnc_eventAttach;
@@ -95,6 +142,39 @@ if (_type isEqualTo 1) exitWith {
 	private _relDir = _vehicle getRelDir _targetPosition;
 	private _relPos = _vehicle getRelPos [0,0];
 	private _distance2D = _vehicle distance2D _targetPosition;
+// Added Code
+	// GROUND_SUPPORT_OBSERVED_PICK_BEGIN
+	private _fn_groundObservedPick = {
+	    params ['_observer','_candidates','_origin','_radius','_now'];
+	    private _best = objNull; private _bestTier = 5; private _nearest = 1e10;
+	    private _seen = []; private _ranked = [];
+	    if (isNil 'QS_fnc_groundTargetPriority') exitWith {_best};
+	    // Classify unique assets before limiting the more expensive report reads.
+	    {
+	        private _asset = vehicle _x;
+	        if (!(_asset in _seen)) then {
+	            _seen pushBack _asset;
+	            private _tier = _asset call QS_fnc_groundTargetPriority;
+	            if (_tier >= 0 && {isTouchingGround _asset}) then {_ranked pushBack [_tier,_forEachIndex,_asset];};
+	        };
+	    } forEach _candidates;
+	    _ranked sort TRUE;
+	    {
+	        _x params ['_tier','','_asset'];
+	        private _knowledge = _observer targetKnowledge _asset;
+	        private _age = _now - (_knowledge # 2);
+	        private _point = _knowledge # 6;
+	        if ((_knowledge # 0) && {(_knowledge # 2) >= 0} && {_age >= 0} && {_age < 30} && {_point isNotEqualTo [0,0,0]}) then {
+	            private _distance = _point distance2D _origin;
+	            if (_distance <= _radius && {_tier < _bestTier || {_tier isEqualTo _bestTier && {_distance < _nearest}}}) then {
+	                _best = _asset; _bestTier = _tier; _nearest = _distance;
+	            };
+	        };
+	    } forEach (_ranked select [0,64]);
+	    _best
+	};
+	// GROUND_SUPPORT_OBSERVED_PICK_END
+// End Updated Code
 	private _nearTargets = _supportProvider targets [TRUE,50,[],0,_targetPos];
 	private _exit = FALSE;
 	private _velocity = velocity _vehicle;
@@ -109,6 +189,9 @@ if (_type isEqualTo 1) exitWith {
 			(!canMove _vehicle) ||
 			{(!alive _vehicle)} ||
 			{(isNil {_supportGroup getVariable 'QS_AI_GRP_fireMission'})} ||
+// Added Code
+			{!([_targetObject] call _fn_groundFlightEligible)} ||
+// End Updated Code
 			{(_exit)}
 		) exitWith {};
 		if (_time > _moveDelay) then {
@@ -124,12 +207,18 @@ if (_type isEqualTo 1) exitWith {
 			_moveDelay = time + 5;
 		};
 		if ((_time > _watchDelay) || {(isNull _selectedTarget)}) then {
-			_nearTargets = _supportProvider targets [TRUE,75,[],0,_targetPosition];
-			if (_nearTargets isEqualTo []) then {
-				_selectedTarget = _laserTarget;
-			} else {
-				_selectedTarget = selectRandom _nearTargets;
-			};
+/* Legacy Code as of 9.9.2026 */
+//|			_nearTargets = _supportProvider targets [TRUE,75,[],0,_targetPosition];
+//|			if (_nearTargets isEqualTo []) then {
+//|				_selectedTarget = _laserTarget;
+//|			} else {
+//|				_selectedTarget = selectRandom _nearTargets;
+//|			};
+// Updated Code
+			_nearTargets = _supportProvider targets [TRUE,75,[WEST],30,_targetPosition];
+			_selectedTarget = [_supportProvider,_nearTargets,_targetPosition,75,time] call _fn_groundObservedPick;
+			if (isNull _selectedTarget) then {_selectedTarget = _laserTarget;};
+// End Updated Code
 			if ((behaviour _supportProvider) isNotEqualTo 'COMBAT') then {
 				_supportGroup setBehaviour 'COMBAT';
 			};
@@ -179,18 +268,40 @@ if (_type isEqualTo 1) exitWith {
 		];
 	};
 	if (!isNull _supportGroup) then {
-		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+// Updated Code
+		[_supportGroup,_targetObject,_groundRequest,FALSE] call _fn_groundRequestRelease;
+// End Updated Code
 	};
 	if ((alive _vehicle) && (canMove _vehicle)) then {
-		_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
-		_relPos set [2,100];
-		_supportGroup move _relPos;
+/* Legacy Code as of 9.9.2026 */
+//|		_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
+//|		_relPos set [2,100];
+//|		_supportGroup move _relPos;
+// Updated Code
+		// Managed CAS leaves the attack area before another ground request.
+		// Unmanaged providers retain their native departure movement.
+		if (isNil 'QS_fnc_combatAir' || {!(['EGRESS',_supportGroup,_targetPosition] call QS_fnc_combatAir)}) then {
+			_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
+			_relPos set [2,100];
+			_supportGroup move _relPos;
+		};
+// End Updated Code
 	};
 };
 if (_type isEqualTo 2) exitWith {
 	scriptName 'QS AI FIRE MISSION - PLANE';
 	//comment 'Plane CAS';
 	params ['','_supportProvider','_supportGroup','_targetObject','_targetPosition','_duration'];
+// Added Code
+	private _groundRequest = +(_supportGroup getVariable ['QS_AI_GRP_fireMission',[]]);
+	if (!([_targetObject] call _fn_groundFlightEligible)) exitWith {
+		[_supportGroup,_targetObject,_groundRequest,TRUE] call _fn_groundRequestRelease;
+	};
+	// A delayed support request cannot take over an occupied combat flight.
+	if (!isNil 'QS_fnc_combatAir' && {!(['START',_supportGroup,_targetObject,_duration] call QS_fnc_combatAir)}) exitWith {};
+// End Updated Code
 	_vehicle = vehicle _supportProvider;
 	_vehicle flyInHeight (200 + (random 100));
 	_vehicle forceSpeed -1;
@@ -243,6 +354,9 @@ if (_type isEqualTo 2) exitWith {
 			{(!canMove _vehicle)} ||
 			{(!alive _vehicle)} ||
 			{(isNil {_supportGroup getVariable 'QS_AI_GRP_fireMission'})} ||
+// Added Code
+			{!([_targetObject] call _fn_groundFlightEligible)} ||
+// End Updated Code
 			{(_exit)} ||
 			{(serverTime > _duration)} ||
 			{(isNull _laserTarget)}
@@ -327,19 +441,39 @@ if (_type isEqualTo 2) exitWith {
 		missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),FALSE];
 	};
 	if (!isNull _supportGroup) then {
-		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+// Updated Code
+		[_supportGroup,_targetObject,_groundRequest,FALSE] call _fn_groundRequestRelease;
+// End Updated Code
 	};
 	_supportProvider commandWatch objNull;
 	if ((alive _vehicle) && (canMove _vehicle)) then {
-		_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
-		_relPos set [2,300];
-		_supportGroup move _relPos;
+/* Legacy Code as of 9.9.2026 */
+//|		_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
+//|		_relPos set [2,300];
+//|		_supportGroup move _relPos;
+// Updated Code
+		// Managed CAS leaves the attack area before another ground request.
+		// Unmanaged providers retain their native departure movement.
+		if (isNil 'QS_fnc_combatAir' || {!(['EGRESS',_supportGroup,_targetPosition] call QS_fnc_combatAir)}) then {
+			_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
+			_relPos set [2,300];
+			_supportGroup move _relPos;
+		};
+// End Updated Code
 	};
 };
 if (_type isEqualTo 3) exitWith {
 	scriptName 'QS AI FIRE MISSION - UAV';
 	//comment 'UAV CAS';
 	params ['','_supportProvider','_supportGroup','_targetObject','_targetPosition','_duration'];
+// Added Code
+	private _groundRequest = +(_supportGroup getVariable ['QS_AI_GRP_fireMission',[]]);
+	if (!([_targetObject] call _fn_groundFlightEligible)) exitWith {
+		[_supportGroup,_targetObject,_groundRequest,TRUE] call _fn_groundRequestRelease;
+	};
+// End Updated Code
 	_vehicle = vehicle _supportProvider;
 	_targetAssistant = createSimpleObject ['A3\Structures_F_Heli\VR\Helpers\Sign_sphere10cm_F.p3d',_targetPosition,TRUE];
 	[1,_targetAssistant,[_targetObject,[0,0,1]]] call QS_fnc_eventAttach;
@@ -392,6 +526,9 @@ if (_type isEqualTo 3) exitWith {
 			(!canMove _vehicle) ||
 			{(!alive _vehicle)} ||
 			{(isNil {_supportGroup getVariable 'QS_AI_GRP_fireMission'})} ||
+// Added Code
+			{!([_targetObject] call _fn_groundFlightEligible)} ||
+// End Updated Code
 			{(_exit)} ||
 			{(serverTime > _duration)}
 		) exitWith {};
@@ -434,7 +571,11 @@ if (_type isEqualTo 3) exitWith {
 	};
 	if (!isNull _supportGroup) then {
 		_supportGroup enableAttack _attackEnabled;
-		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+// Updated Code
+		[_supportGroup,_targetObject,_groundRequest,FALSE] call _fn_groundRequestRelease;
+// End Updated Code
 	};
 	_vehicle flyInHeightASL [500,(300 + (random 100)),(500 + (random 500))];
 	_supportProvider commandWatch objNull;

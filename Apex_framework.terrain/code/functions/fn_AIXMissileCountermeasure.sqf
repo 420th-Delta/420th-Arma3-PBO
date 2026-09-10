@@ -14,6 +14,38 @@ Description:
 _________________________________________________/*/
 
 params ['_vehicle','','_shooter','_instigator','_projectile'];
+// Added Code
+// Managed combat flights react to missile warnings on their owning machine.
+// A real flare burst consumes the installed launcher ammunition; missile
+// guidance, countermeasure resistance and the pilot's maneuver remain native.
+if ((group (driver _vehicle)) getVariable ['QS_combatAir_managed',FALSE]) exitWith {
+	private _pilot = driver _vehicle;
+	if (!local _vehicle || {!alive _pilot} || {isPlayer _pilot} || {captive _pilot} || {((crew _vehicle) findIf {isPlayer _x || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}}) >= 0}) exitWith {};
+	private _flight = group _pilot;
+	// Cancel through the native finalizer before the flight can intercept.
+	// It owns and deletes its laser/assistant; no second mover takes over early.
+	if (!isNull _projectile && {!isNil {_flight getVariable 'QS_AI_GRP_fireMission'}}) then {
+		_flight setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+	};
+	private _attacker = vehicle _shooter;
+	if (_attacker isKindOf 'Air') then {
+		_vehicle setVariable ['QS_combatAir_threat',[_attacker,serverTime + 30],FALSE];
+		_flight setVariable ['QS_combatAir_nextCheck',0,FALSE];
+	};
+	if (serverTime >= (_vehicle getVariable ['QS_combatAir_flareAfter',0])) then {
+		private _launchers = (weapons _vehicle) select {_x isKindOf ['CMFlareLauncher',configFile >> 'CfgWeapons']};
+		if (_launchers isNotEqualTo []) then {
+			private _weapon = _launchers # 0;
+			private _modes = getArray (configFile >> 'CfgWeapons' >> _weapon >> 'modes');
+			private _mode = if ('AIBurst' in _modes) then {'AIBurst'} else {_modes param [0,'this']};
+			if ((_vehicle ammo _weapon) > 0) then {
+				_pilot forceWeaponFire [_weapon,_mode];
+				_vehicle setVariable ['QS_combatAir_flareAfter',serverTime + 3,FALSE];
+			};
+		};
+	};
+};
+// End Updated Code
 if (alive (effectiveCommander _vehicle)) then {
 	if (
 		(_vehicle isKindOf 'Air') &&

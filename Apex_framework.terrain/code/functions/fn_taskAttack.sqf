@@ -20,6 +20,12 @@ Returns:
 ______________________________________________________*/
 
 params ['_grp','_pos','_attackEnabled'];
+// Added Code
+// GROUND_REJECTION_GUARD_BEGIN
+// Skip waypoint creation when the requested group was not admitted.
+if (isNull _grp || {(units _grp) isEqualTo []}) exitWith {FALSE};
+// GROUND_REJECTION_GUARD_END
+// End Updated Code
 _grp enableAttack _attackEnabled;
 _pos set [2,1.5];
 _grp setVariable ['QS_AI_Groups',['QS_ATTACK',_pos],FALSE];

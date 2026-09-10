@@ -25,12 +25,27 @@ _worldSize = worldSize;
 _pilotType = "O_Helipilot_F";
 _side = EAST;
 _arrayHelicopters = [];
-_grp = createGroup [_side,TRUE];
+// Added Code
+_grp = grpNull;
 _playerCount = count allPlayers;
-for '_x' from 0 to 1 step 0 do {
-	_randomPos = [(random _worldSize),(random _worldSize),1000];
-	if ((allPlayers inAreaArray [_randomPos,2000,2000,0,FALSE]) isEqualTo []) exitWith {};
+// A blocked entry search returns an empty roster; never hold the AI loop.
+_randomPos = [];
+for '_attempt' from 1 to 24 do {
+	private _candidate = [(random _worldSize),(random _worldSize),1000];
+	if ((allPlayers inAreaArray [_candidate,2000,2000,0,FALSE]) isEqualTo []) exitWith {_randomPos = _candidate;};
 };
+if (_randomPos isEqualTo []) exitWith {[]};
+// End Updated Code
+_grp = createGroup [_side,TRUE];
+/* Legacy Code as of 9.9.2026 */
+//|_playerCount = count allPlayers;
+//|for '_x' from 0 to 1 step 0 do {
+//|	_randomPos = [(random _worldSize),(random _worldSize),1000];
+//|	if ((allPlayers inAreaArray [_randomPos,2000,2000,0,FALSE]) isEqualTo []) exitWith {};
+//|};
+// Updated Code
+if (isNull _grp) exitWith {[]};
+// End Updated Code
 if (_playerCount > 20) then {
 	if (_playerCount > 40) then {
 		if (_worldName in ['Tanoa','Enoch']) then {
@@ -81,7 +96,11 @@ _air = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _airType,_a
 _air engineOn TRUE;
 _air addEventHandler ['GetOut',{(_this # 2) setDamage 1;}];
 _air addEventHandler ['Killed',(missionNamespace getVariable 'QS_fnc_vKilled2')];
-_air addEventHandler ['IncomingMissile',(missionNamespace getVariable 'QS_fnc_AIXMissileCountermeasure')];
+/* Legacy Code as of 9.9.2026 */
+//|_air addEventHandler ['IncomingMissile',(missionNamespace getVariable 'QS_fnc_AIXMissileCountermeasure')];
+// Updated Code
+_air setVariable ['QS_combatAir_missileEH',_air addEventHandler ['IncomingMissile',(missionNamespace getVariable 'QS_fnc_AIXMissileCountermeasure')],FALSE];
+// End Updated Code
 _air setVariable ['QS_dynSim_ignore',TRUE,TRUE];
 clearMagazineCargoGlobal _air;
 clearWeaponCargoGlobal _air;

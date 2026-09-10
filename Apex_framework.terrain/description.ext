@@ -74,7 +74,11 @@ ReviveRequiredItemsFakConsumed = 1;						// Apex Framework Notes: If set as 0, F
 ReviveDelay = 6;										// Apex Framework Notes: Not used (we link to animation speed instead)										//time needed to revive someone (in secs)
 ReviveMedicSpeedMultiplier = 2;							// Apex Framework Notes: Not used																			//speed multiplier for revive performed by medic
 ReviveForceRespawnDelay = 3;							// Apex Framework Notes: Not used																			//time needed to perform force respawn (in secs)
-ReviveBleedOutDelay = 600;								// Apex Framework Notes: General bleedout time. default: 600 seconds (10 minutes)							//unconscious state duration (in secs)
+/* Legacy Code as of 9.9.2026 */
+//|ReviveBleedOutDelay = 600;								// Apex Framework Notes: General bleedout time. default: 600 seconds (10 minutes)							//unconscious state duration (in secs)
+// Updated Code
+ReviveBleedOutDelay = 240; // Four-minute normal bleed-out window; transport and medevac extensions remain native.
+// End Updated Code
 
 respawn = 3;											/*/ 0 = none. 1 = bird. 2 = instant where died. 3 = base or respawn_west marker. 4 = respawn with team, or bird. 5 = into AI or bird./*/
 respawnDelay = 5;										/*/ Delay prior to respawn/*/
@@ -177,6 +181,10 @@ class CfgFunctions {
 			class areaGradient {file = "code\functions\fn_areaGradient.sqf";};
 			class arrayShuffle {file = "code\functions\fn_arrayShuffle.sqf";};
 			class artillery {file = "code\functions\fn_artillery.sqf";};
+// Added Code
+			class artillerySupport {file = "code\functions\fn_artillerySupport.sqf"; postInit = 1;};
+			class mortarSupport {file = "code\functions\fn_mortarSupport.sqf";};
+// End Updated Code
 			class atAdjust {file = "code\functions\fn_atAdjust.sqf";};
 			class atClientMisc {file = "code\functions\fn_atClientMisc.sqf";};
 			class atNameCheck {file = "code\functions\fn_atNameCheck.sqf";};
@@ -7108,3 +7116,55 @@ class RscTitles {
 #include "code\dialogs\spawnMenu.hpp"
 #include "code\dialogs\pmc.hpp"
 dev = "Quiksilver";
+// Added Code
+
+// Forward Observer's native communication-menu entry. The expression receives the
+// map/cursor target; subsequent menus display server-owned ammunition counts.
+class CfgCommunicationMenu {
+    class QS_RequestMk6Mortar {
+        text = "Request Mk6 Mortar";
+        submenu = "";
+        expression = "['REQUEST_MORTAR'] call QS_fnc_mortarSupport";
+        icon = "\a3\Ui_f\data\GUI\Cfg\CommunicationMenu\artillery_ca.paa";
+        cursor = "";
+        enable = "1";
+        removeAfterExpressionCall = 0;
+    };
+    class QS_RequestMortarResupply {
+        text = "Request Mortar Resupply";
+        submenu = "";
+        expression = "['REQUEST_SUPPLY',_pos] call QS_fnc_mortarSupport";
+        icon = "\a3\Ui_f\data\GUI\Cfg\CommunicationMenu\supplydrop_ca.paa";
+        cursor = "\a3\Ui_f\data\IGUI\Cfg\Cursors\iconCursorSupport_ca.paa";
+        enable = "1";
+        removeAfterExpressionCall = 0;
+    };
+    class QS_ResetMortarSection {
+        text = "Reset Mortar Section";
+        submenu = "";
+        expression = "['REQUEST_RESET'] call QS_fnc_mortarSupport";
+        icon = "\a3\Ui_f\data\GUI\Cfg\CommunicationMenu\artillery_ca.paa";
+        cursor = "";
+        enable = "1";
+        removeAfterExpressionCall = 0;
+    };
+    class QS_CallAirstrike {
+        text = "Airstrike Order";
+        submenu = "";
+        expression = "['MENU',_pos] call QS_fnc_artillerySupport";
+        icon = "\a3\Ui_f\data\GUI\Cfg\CommunicationMenu\cas_ca.paa";
+        cursor = "\a3\Ui_f\data\IGUI\Cfg\Cursors\iconCursorSupport_ca.paa";
+        enable = "1";
+        removeAfterExpressionCall = 0;
+    };
+    class QS_CallForFire {
+        text = "Artillery Order";
+        submenu = "";
+        expression = "['MENU',_pos] call QS_fnc_artillerySupport";
+        icon = "\a3\Ui_f\data\GUI\Cfg\CommunicationMenu\artillery_ca.paa";
+        cursor = "\a3\Ui_f\data\IGUI\Cfg\Cursors\iconCursorSupport_ca.paa";
+        enable = "1";
+        removeAfterExpressionCall = 0;
+    };
+};
+// End Updated Code

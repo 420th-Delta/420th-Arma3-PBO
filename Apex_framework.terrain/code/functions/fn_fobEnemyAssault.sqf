@@ -45,6 +45,12 @@ while {!_foundSpawnPos} do {
 _infTypes = ['fob_assault_1'] call QS_data_listUnits;
 _infType = selectRandomWeighted _infTypes;
 _reinforceGroup = [_spawnPosDefault,(random 360),EAST,_infType,FALSE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+// Added Code
+// GROUND_REJECTION_GUARD_BEGIN
+// No admitted group means no waypoint work and zero added assault units.
+if (isNull _reinforceGroup || {(units _reinforceGroup) isEqualTo []}) exitWith {0};
+// GROUND_REJECTION_GUARD_END
+// End Updated Code
 _reinforceGroup setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
 /*/================================================ MANAGE UNITS/*/
 

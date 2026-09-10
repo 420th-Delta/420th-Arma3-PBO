@@ -13,6 +13,16 @@ Description:
 	Kavala
 __________________________________________________________________________/*/
 scriptName 'QS Custom AO Kavala';
+// Added Code
+if (!isServer) exitWith {};
+// KAVALA_REVIVE_START_BEGIN
+// One public state covers the entire activity, including its evacuation wait.
+// The core watches this handle if the scheduled mission exits abnormally.
+private _kavalaReviveScript = _thisScript;
+missionNamespace setVariable ['QS_kavalaRevive_script',_kavalaReviveScript,FALSE];
+missionNamespace setVariable ['QS_kavalaRevive_active',TRUE,TRUE];
+// KAVALA_REVIVE_START_END
+// End Updated Code
 missionNamespace setVariable ['QS_mission_blockSideMissions',TRUE,FALSE];
 missionNamespace setVariable ['QS_customAO_GT_active',TRUE,TRUE];
 missionNamespace setVariable ['QS_AOpos',[3476.77,13108.7,0],FALSE];
@@ -658,6 +668,24 @@ _missionObjectsHide spawn {
 		_x hideObjectGlobal TRUE;
 	} forEach _this;
 };
+// Added Code
+// A failed search skips this replacement, so the mission timer can progress.
+private _fn_replacementPosition = {
+    params ['_candidates','_height',['_spacing',FALSE]];
+    private _result = [];
+    if (_candidates isEqualTo []) exitWith {_result};
+    for '_attempt' from 1 to 40 do {
+        if (serverTime >= _missionEnd) exitWith {};
+        private _candidate = selectRandom _candidates;
+        if ((_candidate # 2) <= _height &&
+            {!_spacing || {((_candidate nearEntities ['CAManBase',15]) findIf {alive _x}) < 0}} &&
+            {(_unitsToAvoid findIf {(_candidate distance2D _x) < _minDistanceFromPlayers}) < 0} &&
+            {([AGLToASL _candidate,_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isEqualTo 0}) exitWith {_result = _candidate;};
+        uiSleep 0.001;
+    };
+    _result
+};
+// End Updated Code
 private _serverTime = serverTime;
 _unitsToAvoid = units WEST;
 for '_x' from 0 to 1 step 0 do {
@@ -768,22 +796,35 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				_houseEnemies pushBack _unit;
 				_enemies pushBack _unit;
-				_position = selectRandom QS_buildingPositions_inner;
-				if ((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1) then {
-					while {((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				if (([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0) then {
-					while {(([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				_unit setPos _position;
+/* Legacy Code as of 9.9.2026 */
+//|				_position = selectRandom QS_buildingPositions_inner;
+//|				if ((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1) then {
+//|					while {((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				if (([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0) then {
+//|					while {(([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				_unit setPos _position;
+// Updated Code
+				_position = [QS_buildingPositions_inner,1e6] call _fn_replacementPosition;
+                if (_position isEqualTo []) then {
+                    deleteVehicle _unit;
+                } else {
+                    _unit setPos _position;
+                };
+// End Updated Code
 				uiSleep 0.01;
-				if ((_position # 2) > 6) then {
+/* Legacy Code as of 9.9.2026 */
+//|				if ((_position # 2) > 6) then {
+// Updated Code
+				if (_position isNotEqualTo [] && {(_position # 2) > 6}) then {
+// End Updated Code
 					if ((secondaryWeapon _unit) isEqualTo '') then {
 						if ((random 1) > 0.333) then {
 							removeBackpack _unit;
@@ -841,26 +882,35 @@ for '_x' from 0 to 1 step 0 do {
 						};
 					};
 				};
-				_position = selectRandom QS_buildingPositions_inner_ground;
-				if ((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1) then {
-					while {((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				if ((_position # 2) > _maxHeight) then {
-					while {((_position # 2) > _maxHeight)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				if (([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0) then {
-					while {(([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0)} do {
-						_position = selectRandom QS_buildingPositions_inner_ground;
-						uiSleep 0.001;
-					};
-				};
-				_unit setPos _position;
+/* Legacy Code as of 9.9.2026 */
+//|				_position = selectRandom QS_buildingPositions_inner_ground;
+//|				if ((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1) then {
+//|					while {((_unitsToAvoid findIf {((_position distance2D _x) < _minDistanceFromPlayers)}) isNotEqualTo -1)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				if ((_position # 2) > _maxHeight) then {
+//|					while {((_position # 2) > _maxHeight)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				if (([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0) then {
+//|					while {(([(AGLToASL _position),_checkVisibleDistance,_unitsToAvoid,_sidesHiddenFrom,0,0] call _QS_fnc_posVisibility) isNotEqualTo 0)} do {
+//|						_position = selectRandom QS_buildingPositions_inner_ground;
+//|						uiSleep 0.001;
+//|					};
+//|				};
+//|				_unit setPos _position;
+// Updated Code
+				_position = [QS_buildingPositions_inner_ground,_maxHeight,TRUE] call _fn_replacementPosition;
+                if (_position isEqualTo []) then {
+                    deleteVehicle _unit;
+                } else {
+                    _unit setPos _position;
+                };
+// End Updated Code
 			};
 			_arrayindexes = [];
 		};
@@ -1041,6 +1091,11 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _aaUnits) < _aaPatrolThresh) then {
 				if (({(alive _x)} count _aaUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _aaPatrolCenter getPos [(random _aaPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _aaUnitTypes;
 				_unit = _aaGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1067,6 +1122,11 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _sniperUnits) < _aaPatrolThresh) then {
 				if (({(alive _x)} count _sniperUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _sniperPatrolCenter getPos [(random _sniperPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _sniperUnitTypes;
 				_unit = _sniperGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1093,6 +1153,11 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _atUnits) < _atPatrolThresh) then {
 				if (({(alive _x)} count _atUnits) >= _atPatrolThresh) exitWith {};
 				_spawnPos = _atPatrolCenter getPos [(random _atPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _atUnitTypes;
 				_unit = _atGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1193,12 +1258,22 @@ for '_x' from 0 to 1 step 0 do {
 		};
 	};
 	_timeMarker setMarkerText (format ['%1 %3 %2',(toString [32,32,32]),([((round(_missionEnd - serverTime))/60)+0.01,'HH:MM'] call (missionNamespace getVariable 'BIS_fnc_timeToString')),localize 'STR_QS_Marker_021']);
-	if ((count allPlayers) > 45) exitWith {
-		['CUSTOM_GEORGETOWN',['',localize 'STR_QS_Notif_068']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
-	};
+/* Legacy Code as of 9.9.2026 */
+//|	if ((count allPlayers) > 45) exitWith {
+//|		['CUSTOM_GEORGETOWN',['',localize 'STR_QS_Notif_068']] remoteExec ['QS_fnc_showNotification',-2,FALSE];
+//|	};
+// Updated Code
+	// Kavala remains active when population rises; pilot roles can be revived.
+// End Updated Code
 	uiSleep 3;
 };
 comment 'Cleanup';
+// Added Code
+// Close activity-owned inserts immediately; cleanup can wait briefly for evacuation.
+missionNamespace setVariable ['QS_customAO_GT_active',FALSE,TRUE];
+missionNamespace setVariable ['QS_mission_blockSideMissions',FALSE,FALSE];
+private _cleanupBy = diag_tickTime + 180;
+// End Updated Code
 {
 	_x call (missionNamespace getVariable 'BIS_fnc_deleteTask');
 } forEach [
@@ -1208,45 +1283,75 @@ comment 'Cleanup';
 missionNamespace setVariable ['QS_customAO_blockSideMissions',FALSE,FALSE];
 waitUntil {
 	uiSleep 10;
-	(((count (allPlayers select {(((lifeState _x) in ['HEALTHY','INJURED']) && ((getPosWorld _x) inPolygon QS_georgetown_vExclusion_polygon))})) < (round((playersNumber WEST)/2))) || (allPlayers isEqualTo []))
+/* Legacy Code as of 9.9.2026 */
+//|	(((count (allPlayers select {(((lifeState _x) in ['HEALTHY','INJURED']) && ((getPosWorld _x) inPolygon QS_georgetown_vExclusion_polygon))})) < (round((playersNumber WEST)/2))) || (allPlayers isEqualTo []))
+// Updated Code
+	// Zero/one-player servers must also be able to finish. Headless clients
+	// are not evacuees; the deadline releases the mission slot after three minutes.
+	private _players = allPlayers select {isPlayer _x && {!(_x isKindOf 'HeadlessClient_F')} && {(side (group _x)) isEqualTo WEST}};
+	diag_tickTime >= _cleanupBy || {_players isEqualTo []} ||
+	{({alive _x && {(getPosWorld _x) inPolygon QS_georgetown_vExclusion_polygon}} count _players) < (1 max ceil ((count _players) / 2))}
+// End Updated Code
 };
+// Added Code
+// Evacuees keep nearby cover until they leave. The existing collector finishes
+// these exact objects without keeping the mission script alive.
+private _cleanupObjects = [];
+// End Updated Code
 {
-	if (_x isEqualType objNull) then {
-		if (!isNull _x) then {
-			missionNamespace setVariable [
-				'QS_analytics_entities_deleted',
-				((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-				FALSE
-			];
-			deleteVehicle _x;
-		};
-	};
-	uiSleep 0.01;
-} forEach _all;
+/* Legacy Code as of 9.9.2026 */
+//|	if (_x isEqualType objNull) then {
+//|		if (!isNull _x) then {
+//|			missionNamespace setVariable [
+//|				'QS_analytics_entities_deleted',
+//|				((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
+//|				FALSE
+//|			];
+//|			deleteVehicle _x;
+//|		};
+//|	};
+//|	uiSleep 0.01;
+//|} forEach _all;
+// Updated Code
+    if (_x isEqualType objNull && {!isNull _x}) then {_cleanupObjects pushBackUnique _x;};
+} forEach (_all + _vehicles + _supplyCrates);
+// End Updated Code
 {
-	if (_x isEqualType objNull) then {
-		if (!isNull _x) then {
-			missionNamespace setVariable [
-				'QS_analytics_entities_deleted',
-				((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-				FALSE
-			];
-			deleteVehicle _x;
-		};
-	};
-	uiSleep 0.01;
-} forEach _vehicles;
-{
-	if (!isNull _x) then {
-		[0,_x] call QS_fnc_eventAttach;
-		missionNamespace setVariable [
-			'QS_analytics_entities_deleted',
-			((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-			FALSE
-		];
-		deleteVehicle _x;
-	};
-} forEach _supplyCrates;
+/* Legacy Code as of 9.9.2026 */
+//|	if (_x isEqualType objNull) then {
+//|		if (!isNull _x) then {
+//|			missionNamespace setVariable [
+//|				'QS_analytics_entities_deleted',
+//|				((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
+//|				FALSE
+//|			];
+//|			deleteVehicle _x;
+//|		};
+//|	};
+//|	uiSleep 0.01;
+//|} forEach _vehicles;
+//|{
+//|	if (!isNull _x) then {
+//|		[0,_x] call QS_fnc_eventAttach;
+//|		missionNamespace setVariable [
+//|			'QS_analytics_entities_deleted',
+//|			((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
+//|			FALSE
+//|		];
+//|		deleteVehicle _x;
+//|	};
+//|} forEach _supplyCrates;
+// Updated Code
+    private _parent = attachedTo _x;
+    if (!isPlayer _x && {!captive _x} &&
+        {((crew (vehicle _x)) findIf {isPlayer _x || {captive _x}}) < 0} &&
+        {isNull _parent || {!isPlayer _parent && {((crew _parent) findIf {isPlayer _x}) < 0}}}) then {
+        if (_x in _supplyCrates) then {[0,_x] call QS_fnc_eventAttach;};
+        (missionNamespace getVariable 'QS_garbageCollector') pushBackUnique [_x,'NOW_DISCREET',0];
+    };
+    uiSleep 0.01;
+} forEach _cleanupObjects;
+// End Updated Code
 missionNamespace setVariable ['QS_customAO_GT_active',FALSE,TRUE];
 deleteMarker _teleportMarker;
 {
@@ -1261,13 +1366,33 @@ deleteMarker _teleportMarker;
 {
 	deleteMarker _x;
 } forEach _missionObjectiveMarkers;
-[_QS_toHide,QS_georgetown_polygon] spawn {
-	scriptName 'QS Unhide Buildings';
-	waitUntil {
-		uiSleep 10;
-		((allPlayers select {((alive _x) && ((getPosWorld _x) inPolygon (_this # 1)))}) isEqualTo [])
-	};
-	{
-		((_x # 0) nearestObject (_x # 1)) hideObjectGlobal FALSE;
-	} forEach (_this # 0);	
+/* Legacy Code as of 9.9.2026 */
+//|[_QS_toHide,QS_georgetown_polygon] spawn {
+//|	scriptName 'QS Unhide Buildings';
+//|	waitUntil {
+//|		uiSleep 10;
+//|		((allPlayers select {((alive _x) && ((getPosWorld _x) inPolygon (_this # 1)))}) isEqualTo [])
+//|	};
+//|	{
+//|		((_x # 0) nearestObject (_x # 1)) hideObjectGlobal FALSE;
+//|	} forEach (_this # 0);
+//|};
+// Source has no final newline
+// Updated Code
+// Restore each terrain object when players are clear, using the existing
+// framework collector. No abandoned 'wait until everyone leaves Kavala' worker.
+{
+    private _object = (_x # 0) nearestObject (_x # 1);
+    if (!isNull _object) then {
+        (missionNamespace getVariable 'QS_garbageCollector') pushBackUnique [_object,'UNHIDE_DISCREET',0];
+    };
+} forEach _QS_toHide;
+// KAVALA_REVIVE_END_BEGIN
+// An older mission cannot clear a newer mission's override. Existing casualties
+// finish their normal revive window; subsequent casualties use normal role rules.
+if ((missionNamespace getVariable ['QS_kavalaRevive_script',scriptNull]) isEqualTo _kavalaReviveScript) then {
+	missionNamespace setVariable ['QS_kavalaRevive_active',FALSE,TRUE];
+	missionNamespace setVariable ['QS_kavalaRevive_script',scriptNull,FALSE];
 };
+// KAVALA_REVIVE_END_END
+// End Updated Code

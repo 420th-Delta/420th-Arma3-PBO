@@ -15,6 +15,10 @@ ___________________________________________________________________/*/
 
 params ['_unit','','_damage','_source','_projectile','_hitPartIndex','_instigator','','_directHit'];
 private _return = 0.925;
+// Added Code
+// Damage scaling must use the same firing side as the friendly-fire warning.
+private _combatAttacker = ['ATTACKER',_source,_instigator,_unit] call TGC_fnc_isFriendlyFire;
+// End Updated Code
 _objectParent = objectParent _unit;
 private _unitSide = side (group _unit);
 if (_unitSide isEqualTo sideUnknown) then {
@@ -29,8 +33,12 @@ if (isNull _objectParent) then {
 	if (_source isEqualType objNull) then {
 		if (!isNull _source) then {
 			if (
-				((side (group _instigator)) in [_unitSide,sideEnemy]) ||
-				{((side (group _source)) in [_unitSide,sideEnemy])}
+/* Legacy Code as of 9.9.2026 */
+//|				((side (group _instigator)) in [_unitSide,sideEnemy]) ||
+//|				{((side (group _source)) in [_unitSide,sideEnemy])}
+// Updated Code
+				((side (group _combatAttacker)) in [_unitSide,sideEnemy])
+// End Updated Code
 			) then {
 				_return = [0.05,0] select isNil 'TGC_allowFF';
 				if (_inSafezone && _safezoneActive) then {
@@ -75,7 +83,11 @@ if (isNull _objectParent) then {
 	} else {
 		if (
 			(!isNull _instigator) &&
-			{((side (group _instigator)) in [_unitSide,sideEnemy])}
+/* Legacy Code as of 9.9.2026 */
+//|			{((side (group _instigator)) in [_unitSide,sideEnemy])}
+// Updated Code
+			{((side (group _combatAttacker)) in [_unitSide,sideEnemy])}
+// End Updated Code
 		) then {
 			_return = [0.05,0] select isNil 'TGC_allowFF';
 			if (_inSafezone && _safezoneActive) then {
@@ -102,7 +114,11 @@ if (isNull _objectParent) then {
 				(_unit isEqualTo (driver _objectParent)) &&
 				{(!isNull _instigator)} &&
 				{(!(_unit in [_source,_instigator]))} &&
-				{((side (group _instigator)) in [_unitSide,sideEnemy])}
+/* Legacy Code as of 9.9.2026 */
+//|				{((side (group _instigator)) in [_unitSide,sideEnemy])}
+// Updated Code
+				{((side (group _combatAttacker)) in [_unitSide,sideEnemy])}
+// End Updated Code
 			) then {
 				_return = 0;
 			};

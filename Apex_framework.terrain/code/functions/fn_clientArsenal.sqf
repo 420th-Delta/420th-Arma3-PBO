@@ -391,6 +391,10 @@ if (_arsenalPreloadFailed) exitWith {};
 
 // Get blacklist/whitelist from arsenal.sqf
 private _unitRole = _unit getVariable ['QS_unit_role','rifleman'];
+// Added Code
+// The new role uses the configured JTAC gear list; no new @Apex_cfg entry is required.
+if (_unitRole isEqualTo 'forward_observer') then {_unitRole = 'jtac';};
+// End Updated Code
 [_unitSide,_unitRole] call QS_data_arsenal params ['_arsenalBlacklist','_arsenalWhitelist'];
 (
 	[_arsenalWhitelist,_arsenalBlacklist]
