@@ -1,13 +1,28 @@
 # JollyRogerEXP performance and gameplay update review
 
-**Status: two review and remediation passes plus controlled native verification are complete; human/deployment acceptance remains.** Start with the [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md), [local test report](LOCAL_TEST_REPORT.md), [static result](second-pass-static-validation.json) and [remediation ledger](REMEDIATION_LEDGER.md) for current decisions, fixes and evidence. The original review below describes the imported contribution before corrective work. Reviewed on 2026-09-10 against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`; the independent second pass was adjudicated on 2026-09-11. Contributor: [JollyRogerEXP](https://github.com/JollyRogerEXP). The initial code commits preserve the supplied changes with documented integration repairs and whitespace cleanup; subsequent corrections remain separately reviewable.
+**Status: two review/remediation passes and the contributor-feedback remediation are complete with controlled native verification; human/deployment acceptance remains.** Start with the [contributor-feedback resolution](#contributor-feedback-resolution), [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md), [local test report](LOCAL_TEST_REPORT.md), [feedback validation](contributor-feedback-validation.json), [second-pass static result](second-pass-static-validation.json) and [remediation ledger](REMEDIATION_LEDGER.md). The original review below describes the imported contribution before corrective work. Reviewed on 2026-09-10 against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`; the independent second pass and contributor feedback were adjudicated on 2026-09-11. Contributor: [JollyRogerEXP](https://github.com/JollyRogerEXP). The initial code commits preserve the supplied changes with documented integration repairs and whitespace cleanup; subsequent corrections remain separately reviewable.
 
 ## Reading order
 
 1. Read the [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md) for every independent-review finding and the retained decisions.
 2. Read the findings and commit table below.
 3. Read the affected subsystem report: [AI and insertion](review-ai.md), [player support and damage](review-support.md), or [systems](review-systems.md).
-4. Use the contributor's [release notes](RELEASE_NOTES.md) and [technical reference](TECHNICAL_NOTES.md) for intended behavior and acceptance scenarios. These two files are supplied documentation; only one trailing space in the technical reference was removed for Git whitespace validation. Their test counts are contributor claims: the referenced 15 verifiers, 58,320 assertions, SQF-VM adapters and detailed logs were not included or independently rerun.
+4. Use the contributor's [release notes](RELEASE_NOTES.md) and [technical reference](TECHNICAL_NOTES.md) for intended behavior and acceptance scenarios. Their original versions remain preserved in the import commit; the current copies carry clearly marked contributor-feedback corrections. Their original test counts remain contributor claims: the referenced 15 verifiers, 58,320 assertions, SQF-VM adapters and detailed logs were not included or independently rerun.
+
+## Contributor-feedback resolution
+
+Jolly and Seathre resolved the remaining gameplay questions after the independent review. These decisions supersede the provisional policy wording elsewhere in the historical review record.
+
+| Item | Resolution | Current implementation state |
+| --- | --- | --- |
+| Normal bleed-out | Use **300 seconds (five minutes)**. The initially submitted and second-pass-reviewed value was 240 seconds; references to four minutes are historical unless explicitly labelled current. Transport and requested-medevac extensions remain. | CfgConvert and 0/1/2-HC mission initialization resolve 300. No automated cell waits out the full timer. |
+| Kavala and population behavior | Kavala may run at the higher population thresholds introduced by the contribution. While its revive activity is active, pilots use normal incapacitation instead of the pilot-specific forced-death branch. The support-role and staff exceptions are also intended; other death conditions remain. | Retained as intended. |
+| Mega Defense | Keep the server-triggered script for Seathre's pre-restart event. It is a finite 30-minute Defense, subject to early failure and administrator cancellation, and does not start automatically. | Retained as intended. |
+| Shared radio design | Keep the reviewed implementation available for redesign, but do not deploy its channel policy yet. `QS_missionConfig_sharedRadioChannels` is a startup-only opt-in that defaults to `FALSE`; while disabled, no extra Side channel is allocated and the served native Side/optional General policy applies. | Default-off and explicit-on native fixture paths pass; enabled logic remains dormant. |
+| Low-population Taru delivery | Keep the covered Taru preference for the intended low-population experience and visible reinforcement cue. Blocked-flight and latency observations remain acceptance/performance work rather than a reason to remove the policy. | Retained as intended. |
+| Support while incapacitated | The normal lifecycle already removes the support menus while the player is down and restores eligible menus after recovery. The UI reset path is therefore unavailable while down. The authenticated server `RESET` endpoint now also requires a live eligible role holder, closing the modified-client/direct-RPC path. | Native three-mortar incapacitation, forged request, recovery and authorized reset sequence passes. |
+| Mega request handoff | A queued Mega Defense request stays tied to the **same Primary** while that Primary's AI shuts down, then is consumed when that Defense starts. It cannot carry into a new AO. This is separate from `QS_forceDefend`: `1` forces one eligible ordinary Defense and resets to `0`; `2` remains enabled for later eligible AOs. | Existing behavior retained; no mode change required. |
+| Rappel | Keep the reviewed rappel method. Its server-bound sessions, sender/object checks and bounded cleanup address the known security/lifecycle defects; no safer replacement with equivalent behavior has been established. | Retained as the working reviewed implementation. |
 
 ## Findings recorded at import
 
@@ -20,16 +35,16 @@ Line references in the subsystem reports identify the incoming package, before u
 | SUP-3 | P2, confirmed missing server resource check | Mortar deployment accepts the client's success acknowledgment without verifying that the required tube was spent. Track the reservation and server-observed inventory state. |
 | AI-01 | P2, confirmed cleanup ownership gap | Register final-reserve rotary aircraft and crew with an AO teardown owner. Census tracking alone does not retire surviving helicopters at AO end. |
 | SYS-02 | P2, confirmed placement-boundary gap | Revalidate each caller's player/base exclusions at the actual displaced slots. A valid FOB anchor can produce a unit about 296 m from a player despite its 350 m admission rule. |
-| SYS-01 | Compatibility prerequisite, resolved | The eleventh custom radio channel needs Arma 3 2.22. Local validation used 2.22, and Seathre confirmed the deployed server is on 2.22 or later. Client-version and channel-capacity checks remain deployment concerns. |
+| SYS-01 | Compatibility prerequisite, resolved | The eleventh custom radio channel needs Arma 3 2.22. Local validation used 2.22, and Seathre confirmed the deployed server is on 2.22 or later. Client-version and channel-capacity checks remain future explicit-opt-in/design concerns; the default-off deployment does not allocate the channel. |
 
 Additional acceptance concerns are documented in the subsystem reports: remote-control locality, scheduled RPC interleaving, failed spawn propagation, terrain-search frame cost, city cleanup overlap and radio policy. No FPS gain is established by this review.
 
 ## Gameplay policy disclosures
 
-- Normal unattended incapacitation now uses a **240-second** bleed-out window instead of 600 seconds. Existing transport and medevac rules can extend it.
-- The pilot/fighter-pilot forced-death branch is skipped for `forward_observer`, `jtac`, `jtac_WL`, `mortar_gunner`, the existing staff exception, and the active Kavala revive case. Other incapacitation death conditions still apply.
+- Normal unattended incapacitation uses a **300-second (five-minute)** bleed-out window instead of 600 seconds. The imported contribution initially proposed 240 seconds. Existing transport and medevac rules can extend the final five-minute window.
+- The pilot/fighter-pilot forced-death branch is skipped for `forward_observer`, `jtac`, `jtac_WL`, `mortar_gunner`, the existing staff exception, and the active Kavala revive case. Kavala's higher-population eligibility and these incapacitation exceptions are intended. Other incapacitation death conditions still apply.
 - Mega Defense uses a finite 30-minute timer and bypasses the optional `QS_defend_blockTimeout` overtime extension. Early HQ loss/failure and administrator cancellation still end it. Ordinary Defense gains 600–1200 seconds only when that optional flag is enabled; no production automatic TRUE setter was found.
-- The custom Side channel grants all-player Side voice. If custom allocation fails, the native team-local Side fallback intentionally grants the same all-player voice policy; it does not make Side cross-team.
+- The shared Side/staff General design is shelved behind the startup-only, default-off `QS_missionConfig_sharedRadioChannels` gate. Disabled is the deployment default and preserves the served native Side/optional General policy without allocating another custom channel. The reviewed all-player custom Side behavior remains available only when explicitly enabled for future redesign/testing.
 
 These are deliberate retained gameplay and communication policies. The second review's alternatives and the evidence supporting each decision are in the [adjudication](REVIEW_PASS_2_ADJUDICATION.md).
 
@@ -43,7 +58,7 @@ These are deliberate retained gameplay and communication policies. The second re
 | 4 | `fix(vehicles): reuse damage handlers after locality returns` | 1 | Retain valid HandleDamage registration across ownership handoffs. |
 | 5 | `fix(ai): resolve suppression callback group and locality` | 1 | Resolve FiredMan callback group locally; managed-cover flag defaults false. |
 | 6 | `feat(ai): suppress automatic friendly AI radio speech` | 2 | Speech policy with JIP, respawn and locality hooks. |
-| 7 | `feat(radio): add shared Side and staff General broadcasts` | 7 | Seven-file radio policy; preserve upstream body identity and donor revocation; requires Arma 3 2.22. |
+| 7 | `feat(radio): add shared Side and staff General broadcasts` | 7 | Historical contribution commit for the seven-file policy. A later feedback delta keeps it behind a default-off startup gate while preserving upstream body identity and donor revocation. |
 | 8 | `feat(gameplay): integrate community combat and support overhaul` | 45 | Coupled Primary/Defense, air/Taru/rappel, spawn placement, artillery/mortar roles, revive/Kavala, housekeeping and manual Mega Defense. Open review findings; apply as a unit. |
 
 The first seven groups are independent from the large gameplay activation. Group 5's managed-cover exclusion is inert until the gameplay controller sets it. Group 7 keeps the unrelated newer upstream UAV/recycler configuration values. Group 8 contains 45 files because Primary, Taru, combat-air, role services, core cleanup and registration form dependency cycles across shared files. Arbitrary file splitting would produce calls to absent functions or incompatible state. A finer split requires semantic hunk extraction and validation of every intermediate revision; the subfeature split proposals are retained in the reviewer reports. Group 8 must not be cherry-picked by individual files.
@@ -69,6 +84,8 @@ The original nine commits remain intact. The first remediation pass added nine c
 The [exact corrective path groups](remediation-commit-plan.json) map all 35 modified production files once: support 4, AI/spawn 17, rappel 1, radio 5, cleanup 3, baseline client audio 2 and baseline mapper/snapshot synchronization 3. Apply AI/spawn before cleanup because Kavala also adopts its final-position validator. Test tooling and verification documents follow as separate groups.
 
 The second pass uses six semantic groups plus a final path-accounting correction, adding seven commits and bringing the stack to 25: AI creation/artillery/cutoff ordering; bound rappel RPC and active-descent cleanup; radio retirement/mapping cleanup; support cooldown and role policy; portable focused fixtures; adjudication/evidence documentation; and the accounting correction. Its ten production paths are grouped separately in the same commit plan. New commits carry explanatory bodies; the earlier nine follow-up commits remain unchanged as historical review artifacts.
+
+The contributor-feedback pass adds five commits and brings the prepared stack to 30: five-minute revive configuration; incapacitated support RESET authorization; startup-gated shared channels; native policy regression coverage; and updated review/evidence documentation. Its ten production paths, four executable fixture paths and documentation set are recorded under `contributor_feedback` in the same commit plan.
 
 The pinned MFD control is a local test option, not a mission content change or repair to the stock game asset. No game binaries, private configuration or raw operational logs belong in these commits.
 

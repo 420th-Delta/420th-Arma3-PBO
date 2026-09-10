@@ -1,6 +1,6 @@
 # Second-pass review adjudication
 
-Disposition of every finding in the standalone `IA-PerformanceGameplayUpdate-review-20260910/REVIEW-PASS-2.md`. That report reviewed `4b466b352ef30cf9eb77faf4623b5fbd015a60b2` against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`. This document records the subsequent source verification, corrective working tree and native results for the frozen inputs identified below. Commit and handoff finalization remain separate from those test results. The original contribution remains attributed to JollyRogerEXP.
+Disposition of every finding in the standalone `IA-PerformanceGameplayUpdate-review-20260910/REVIEW-PASS-2.md`. That report reviewed `4b466b352ef30cf9eb77faf4623b5fbd015a60b2` against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`. This document records the subsequent source verification, corrective tree and native results. Later contributor feedback supersedes the provisional policy decisions for bleed-out, incapacitated support reset and live radio channels; each affected finding carries a follow-up disposition, and the [ledger](REMEDIATION_LEDGER.md#contributor-feedback-resolution) gives the unified list. The original contribution remains attributed to JollyRogerEXP.
 
 There are **36 R2 findings**: five AI, six Defense/rappel, four spawn, seven support, six systems and eight hygiene items. The original report abbreviates `R2-SUP-06/07`; both are adjudicated separately here. Its T-0 lint observations are also covered. Duplicate findings retain both identifiers without counting the same defect twice in a remediation total.
 
@@ -8,7 +8,7 @@ There are **36 R2 findings**: five AI, six Defense/rappel, four spawn, seven sup
 
 Unless a different directory is specified, SQF filenames below are under `Apex_framework.terrain/code/functions/`. Function names and code anchors identify the behavior; line numbers in the original review refer to its frozen revision and can move in the corrective tree. Each validation paragraph distinguishes the new focused results, earlier evidence and remaining coverage gaps. The final [test report](LOCAL_TEST_REPORT.md), [ledger](REMEDIATION_LEDGER.md) and [campaign index](native-campaign.json) have been refreshed with the second-pass cells.
 
-Seathre has confirmed that the deployed engine meets the **Arma 3 2.22+** requirement. This resolves that version prerequisite; it does not establish deployment parity, available custom-channel capacity, an FPS gain or human acceptance of the changed gameplay.
+Seathre confirmed that the deployed engine meets Arma 3 2.22+, resolving the version question. The proposed extra-channel policy is now default-off, so that version/capacity requirement is dormant unless a redesigned policy explicitly enables it. This does not establish deployment parity, an FPS gain or human acceptance of the changed gameplay.
 
 ## AI controller
 
@@ -82,11 +82,11 @@ Seathre has confirmed that the deployed engine meets the **Arma 3 2.22+** requir
 
 ### R2-DEF-04 — Confirmed: revive policies need explicit disclosure
 
-**Evidence.** `description.ext` changes `ReviveBleedOutDelay` from 600 to 240 seconds. `fn_incapacitated.sqf` skips the pilot/fighter-pilot forced-death branch for `forward_observer`, `jtac`, `jtac_WL`, `mortar_gunner` and the existing staff exception, or when the captured Kavala revive flag is active. Other death conditions remain. Transport and medevac rules can extend the normal timer.
+**Evidence at the reviewed snapshot.** `description.ext` changed `ReviveBleedOutDelay` from 600 to 240 seconds. `fn_incapacitated.sqf` skips the pilot/fighter-pilot forced-death branch for `forward_observer`, `jtac`, `jtac_WL`, `mortar_gunner` and the existing staff exception, or when the captured Kavala revive flag is active. Other death conditions remain. Transport and medevac rules can extend the normal timer.
 
-**Decision.** Retain the contribution's gameplay policies and state them explicitly in the current review overview and PR body. They must not be represented as consequences of the damage-attribution repair. A history rewrite is unnecessary to achieve disclosure; the earlier recommendation to separate the timer remains a reviewability alternative.
+**Follow-up decision.** Jolly corrected the intended normal value to **300 seconds (five minutes)**, so current source and current-facing documentation use 300 while the reviewed 240-second snapshot remains historical evidence. Jolly and Seathre confirmed the Kavala and higher-population behavior as intended. These policies must not be represented as consequences of the damage-attribution repair.
 
-**Validation.** Configuration and branch conditions were verified, and the current overview and prepared PR body now carry the disclosure. Actual unattended expiry, transport/medevac extensions, role changes and Kavala revive acceptance remain separate from the native damage matrix.
+**Validation.** Configuration and branch conditions were verified. The feedback delta adds an engine-resolved mission-config assertion for 300 seconds; CfgConvert passes. Actual unattended expiry, transport/medevac extensions, role changes and Kavala revive acceptance remain separate from the native damage matrix.
 
 ### R2-DEF-05 — Qualified: Mega Defense bypasses optional overtime
 
@@ -96,13 +96,13 @@ Seathre has confirmed that the deployed engine meets the **Arma 3 2.22+** requir
 
 **Validation.** All flag references and the timer branch were inspected, and the current overview and prepared PR body now carry the disclosure. Full-duration native/gameplay acceptance remains pending; a forced-cancellation cycle does not prove a 30-minute victory.
 
-### R2-DEF-06 — Qualified: pending request survives a missed Primary handoff
+### R2-DEF-06 — Clarified: pending request belongs to the same Primary handoff
 
-**Evidence.** A START accepted during Primary can remain pending if the core reaches natural completion before consuming that request. A later Defense can consume the pending request; status can temporarily report FORCE_REQUESTED while the core is idle. The report records this as consistent with the request's intent, not a demonstrated duplicate controller.
+**Evidence.** START stores the current core epoch and HQ with the request. The same Primary deliberately preserves that pending flag while shutting down; its Defense consumes the request on entry. New-AO setup clears the flag, so it cannot carry to a later AO. Status can report FORCE_REQUESTED during the owned handoff; that state does not mean Defense has already started.
 
-**Decision.** Retain pending-request semantics rather than silently discarding an accepted request on that transition. Do not infer that an accepted START has already entered Defense. Existing activity ownership and deinitialization gates remain authoritative.
+**Decision.** Retain the same-Primary handoff. `QS_forceDefend = 1` forces one eligible ordinary Defense and resets to `0`; mode `2` stays enabled. Mega Defense uses its separate pending flag and does not modify either mode, so Jolly's one-event use of `1` is correct.
 
-**Validation.** State transitions were inspected. Deliberately racing START with natural objective completion remains an acceptance case; the historical forced/cancelled cycle did not establish this exact timing.
+**Validation.** State transitions and reset points were inspected. The forced/cancelled cycle proves the ordinary request-to-Defense handoff; a natural-completion race remains a robustness check. All current Altis AOs permit Defense, so the broader-map Defense-disabled edge does not affect this deployment.
 
 ## Spawn placement
 
@@ -180,13 +180,13 @@ Seathre has confirmed that the deployed engine meets the **Arma 3 2.22+** requir
 
 **Validation.** Source contracts reviewed; full dependency/placement/independent-account validation remains pending. Existing fixture assertions remain valid within their stated scope.
 
-### R2-SUP-06 — Confirmed: incapacitated caller may reset their own section
+### R2-SUP-06 — Corrected after feedback: incapacitated callers lose RESET access
 
-**Evidence.** RESET accepts an incapacitated requester but resolves only that authenticated caller's server row. It does not grant equipment or reset another player's section.
+**Evidence.** The ordinary client lifecycle already removes all three mortar-support menus while incapacitated, and `REQUEST_RESET` rejects locally. The reviewed server `RESET` path used the role-holder check's `FALSE` override, however, so a modified client could directly reset its own server row while down. It could not affect another player's section or grant equipment.
 
-**Decision.** Retain this intentional cleanup permission. It lets the owner release equipment while incapacitated without relaxing admission or resource authorization. The successful-placement cooldown and new attempt throttle remain server-owned.
+**Action.** Jolly confirmed that a downed player should lose support access. Apply the default conscious role-holder check to direct `RESET`, while retaining the sweep's revive-aware `[_unit,FALSE]` equipment preservation. Recovery restores eligible menus; reset still preserves cooldowns.
 
-**Validation.** Authorization scope was checked by source. Do not claim a new incapacitated-RESET native test unless its recorded fixture actually exercises that state.
+**Validation.** Final support cell `797261a69cf2-support` passes 229/229, including a real three-mortar section, incapacitation, menu removal, ordinary callback denial, forged raw server RESET denial, recovery/menu restoration and authorized reset. It has zero assertion, script, cleanup, malformed-record or integrity failures.
 
 ### R2-SUP-07 — Qualified: boarding handler is not the only ejection path
 
@@ -210,13 +210,13 @@ This is the same comment-only issue as R2-HYG-01. Four separators in `TGC/Functi
 
 **Validation.** `d151a4aeab19-radio-cleanup` passed 73/73 assertions. The delayed-membership case atomically invokes the actual add path and withdraws replacement membership, asserts setup, deliberately holds it beyond the old three-second bound, then verifies replacement presence and old-body retirement. It demonstrates the extended retry rather than measuring ordinary replication latency. Real death/respawn and delivered voice remain acceptance checks.
 
-### R2-SYS-03 — Qualified: fallback voice is an intentional new policy
+### R2-SYS-03 — Superseded: shared-channel policy is tabled by default
 
-**Evidence.** Upstream native Side permitted staff voice only; allocation failure now enables team-local text and voice for everyone. This is explicitly the fallback described in `radio-cleanup-remediation.md` and matches the new custom Side's general voice permission. Seathre's engine confirmation resolves the old-version concern; slot exhaustion remains possible.
+**Evidence at the reviewed snapshot.** Upstream native Side permitted staff voice only; allocation failure in the proposed design enabled team-local text and voice for everyone to match the new custom Side permission. Seathre's engine confirmation resolves the server-version concern, but Jolly later tabled the channel policy while retaining its logic for redesign.
 
-**Decision.** Retain the all-player native Side fallback, explicitly disclose its team-local scope, and update stale version-prerequisite wording. A staff-only fallback would be a separate policy choice, not a necessary compatibility fix.
+**Action.** Put the proposed policy behind one startup-only, server-published gate that defaults off. Disabled mode allocates no extra channel, restores native Side text for all/staff-only voice, keeps private Staff membership, leaves General optional, and avoids the added periodic reconciliation. Explicit opt-in retains the reviewed behavior. Runtime toggling is unsupported; a future redesign should use a new preference key if semantics change.
 
-**Validation.** Historical 2.22 native zero-allocation permissions were exercised, and the new 73-check radio/cleanup cell passes its allocation-failure and permission cases. Actual delivered voice and deployment channel capacity remain acceptance checks.
+**Validation.** The feedback radio cell exercises both default-off and explicit-on fixture paths. It verifies that slot 11 is free before fixture allocation, then checks native Side/staff permissions, optional General, staff GUI masks and retained opt-in authorization/body-retirement behavior. Source inspection establishes that the false branch in production `fn_config.sqf` skips `radioChannelCreate`; the fixture does not execute that initializer. Player menu/selector behavior, High Command, real respawn, JIP, disk persistence, delivered voice and the final channel choice remain integration or acceptance checks.
 
 ### R2-SYS-04 — Rejected: `jip=0` does not block the server publisher
 
@@ -266,7 +266,7 @@ This is the same comment-only issue as R2-HYG-01. Four separators in `TGC/Functi
 
 **Action.** Qualify the index/report/ledger as covering the indexed suite types and explicitly identify auxiliary evidence outside it. Extending the filename regex alone would not correctly parse either auxiliary record. Preserve the original evidence and avoid counting staging checks as native passes.
 
-**Validation.** Artifact schemas and the original 40 indexed entries were inspected. The new suite is recognized by the exporter, and the refreshed index preserves 58 attempts, including failed and incomplete cells. Neither auxiliary evidence record is relabeled as a normal suite result.
+**Validation.** Artifact schemas and the original 40 indexed entries were inspected. The new suite is recognized by the exporter, and the feedback-refreshed index preserves 70 attempts: 66 recorded results, 30 passing cells (25 native), 36 failed cells and four attempts without a recorded pass status. Neither auxiliary evidence record is relabeled as a normal suite result.
 
 ### R2-HYG-04 — Rejected: diagnostics are not unused everywhere
 
@@ -302,9 +302,9 @@ This is the same comment-only issue as R2-HYG-01. Four separators in `TGC/Functi
 
 ### R2-HYG-08 — Confirmed: PR summary omitted concrete gameplay policies
 
-**Evidence.** The standalone PR body named revive/Defense work broadly, while the contributor notes carried the timer and exemption details. It did not explicitly state the four-minute normal bleed-out window, support-role/Kavala pilot-branch exemptions, or Mega Defense's optional-overtime bypass.
+**Evidence.** The standalone PR body named revive/Defense work broadly, while the contributor notes carried the then-current 240-second timer and exemption details. It did not explicitly state the normal bleed-out window, support-role/Kavala pilot-branch exemptions, or Mega Defense's optional-overtime bypass.
 
-**Action.** Add these disclosures to the PR body and current overview, with the qualifications in R2-DEF-04 and R2-DEF-05. Retain early failure/cancellation and transport/medevac behavior in that explanation. Do not present attribution fixes as authorization for unrelated balance changes.
+**Action.** Add these disclosures to the PR body and current overview, then apply Jolly's final five-minute correction and channel-policy shelving. Retain early failure/cancellation, transport/medevac behavior and the same-Primary Mega handoff explanation. Do not present attribution fixes as authorization for unrelated balance changes.
 
 **Validation.** Source-to-description comparison completed. The current overview and prepared PR body contain the explicit policies; gameplay acceptance remains separate.
 
@@ -338,6 +338,19 @@ The test harness also required corrections. RPT timestamps can have leading whit
 
 Preserve the earlier failed iterations, including `4756821c0e46-support` and the rappel cells `c647f1280078`, `3931b983794f`, `7c86e8b9ff96`, `6f2c75abd98a` and `5bd7ddec8231`, alongside the later passing runs. A zero-check cell is not a pass. Intermediate `afd70f250ef9-support` (220/220) and `953abd770815-rappel-security` (28/28) retain their recorded outcomes for the earlier fixtures; the final cells correct the cooldown-clock evidence and strengthen the cleanup/relay evidence without rewriting those records.
 
-The changed-path and fixture inventory, refreshed 72-callsite spawn audit and 58-attempt campaign export are complete. Commit/patch/hash handoff metadata is refreshed after the final commits. Original import provenance, historical native manifests/results and contributor attribution remain preserved. Confirmed fixes, rejected findings, retained policies and pending human checks remain distinguishable.
+### Contributor-feedback validation
+
+The feedback delta was rerun on one common 916-file source snapshot, manifest SHA-256 `8330fc18f0b7e8ff594187ed92c6e4ce2861ad9ec9ef10ea5a538220fac09745`.
+
+| Final feedback cell | Result | Coverage and limit |
+| --- | --- | --- |
+| `797261a69cf2-support` | 229/229 | Three-mortar incapacitation, menu removal, ordinary and forged RESET denial, recovery/menu restoration and authorized reset; no complete interactive placement UI. |
+| `b521c68495e5-radio-cleanup` | 86/86 | Focused default-off and explicit-on helper paths with actual channel permissions/membership, staff masks and exact-body cases; production initialization and wider lifecycle remain outside this cell. |
+| `5f6467570bb5-config` | Three conversions passed | `description.ext`, `mission.sqm` and `code/config/security.hpp`. |
+| `24b88b35d2ec-integration` | 23/23 | Zero-HC mission startup and engine-resolved 300-second configuration. |
+| `08bb81557d38-integration` | 29/29 | One-HC mission startup, object/registry agreement and engine-resolved configuration. |
+| `29200aabcb98-integration` | 35/35 | Two-HC ordinary observation and engine-resolved configuration; the unchanged earlier lifecycle cell remains the forced-Defense evidence. |
+
+Every native feedback cell completed with zero assertion, script, malformed-record, cleanup or source/fixture/runtime integrity errors. The integration cells do not wait for actual five-minute bleed-out expiry. The changed-path and fixture inventory, refreshed 72-callsite spawn audit and 70-attempt campaign export are complete. Commit/patch/hash handoff metadata will be refreshed after the final commits. Original import provenance, historical native manifests/results and contributor attribution remain preserved. Confirmed fixes, rejected findings, retained policies and pending human checks remain distinguishable.
 
 The external stock Scout MFD problem remains EXT-1. A controlled test using the private reviewed display-condition addon is not a stock-content pass or a shipped game-asset fix. Independent Steam identities, voice audibility, full interactive placement and revive, interrupted real insertion, natural objective victory, full-duration Defense, deployment mods/database/Linux parity and comparative population-matched performance remain acceptance limits unless new evidence explicitly addresses them.

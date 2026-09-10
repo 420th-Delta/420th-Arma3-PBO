@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "upstream_base": "a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7",
+  "scope": "Contributor-feedback working tree before the five final commits; static checks and native cells are distinguished.",
+  "changed_paths": {
+    "production_total": 10,
+    "production_sqf": 9,
+    "production_config": 1,
+    "test_sqf": 4,
+    "test_documentation": 1
+  },
+  "static_checks": {
+    "production_sqf_lexical_balance": {
+      "result": "pass",
+      "files": 9
+    },
+    "changed_test_sqf_lexical_balance": {
+      "result": "pass",
+      "files": 4
+    },
+    "git_diff_check": "pass",
+    "python_compileall_tests_ia_update": "pass",
+    "json_parse_including_this_record": {
+      "result": "pass",
+      "files": 8
+    },
+    "conflict_marker_and_suspicious_text_review": "pass",
+    "limitations": [
+      "Lexical balance, Python byte-compilation and JSON parsing are syntax checks, not SQF engine execution.",
+      "The no-allocation default follows directly from the guarded radioChannelCreate source branch; the focused radio fixture does not execute production fn_config.sqf."
+    ]
+  },
+  "native_environment": {
+    "arma_version": "2.22.0.154045",
+    "production_source_files": 916,
+    "common_source_manifest_sha256": "8330fc18f0b7e8ff594187ed92c6e4ce2861ad9ec9ef10ea5a538220fac09745"
+  },
+  "native_cells": [
+    {
+      "cell_id": "797261a69cf2-support",
+      "kind": "native",
+      "checks": 229,
+      "failed_checks": 0,
+      "result": "pass",
+      "scope": "Three-mortar incapacitation, menu removal, ordinary and forged RESET denial, recovery/menu restoration, authorized reset, and the existing support regression set."
+    },
+    {
+      "cell_id": "b521c68495e5-radio-cleanup",
+      "kind": "native",
+      "checks": 86,
+      "failed_checks": 0,
+      "result": "pass",
+      "scope": "Focused default-off and explicit-on channel helpers, permissions, membership, staff masks, exact-body lifecycle, and deferred cleanup."
+    },
+    {
+      "cell_id": "24b88b35d2ec-integration",
+      "kind": "native",
+      "headless_clients": 0,
+      "checks": 23,
+      "failed_checks": 0,
+      "result": "pass",
+      "scope": "Ordinary full-mission observation and engine-resolved ReviveBleedOutDelay of 300."
+    },
+    {
+      "cell_id": "08bb81557d38-integration",
+      "kind": "native",
+      "headless_clients": 1,
+      "checks": 29,
+      "failed_checks": 0,
+      "result": "pass",
+      "scope": "Ordinary full-mission observation, real HC object/registry agreement, and engine-resolved ReviveBleedOutDelay of 300."
+    },
+    {
+      "cell_id": "29200aabcb98-integration",
+      "kind": "native",
+      "headless_clients": 2,
+      "checks": 35,
+      "failed_checks": 0,
+      "result": "pass",
+      "scope": "Ordinary full-mission observation, two real HC object/registry matches, and engine-resolved ReviveBleedOutDelay of 300."
+    },
+    {
+      "cell_id": "5f6467570bb5-config",
+      "kind": "configuration_only",
+      "checks": 3,
+      "failed_checks": 0,
+      "result": "pass",
+      "scope": "CfgConvert accepts description.ext, mission.sqm, and code/config/security.hpp."
+    }
+  ],
+  "native_result_gates": {
+    "failed_assertions": 0,
+    "script_errors": 0,
+    "malformed_records": 0,
+    "cleanup_errors": 0,
+    "source_fixture_runtime_integrity_changes": 0
+  },
+  "campaign_index": {
+    "attempts": 70,
+    "recorded_results": 66,
+    "passed_cells": 30,
+    "passed_native_cells": 25,
+    "configuration_only_attempts": 5,
+    "failed_cells": 36,
+    "unrecorded_pass_status": 4,
+    "statuses": {
+      "native_execution_without_result": 1,
+      "recorded_result": 66,
+      "staging_without_result": 3
+    }
+  },
+  "still_applicable_prior_results": [
+    {
+      "cell_id": "fc9bd9ec0020-ai-spawn",
+      "checks": 23,
+      "reason": "The feedback delta does not alter AI/spawn production code."
+    },
+    {
+      "cell_id": "921c1eee1e0c-rappel-security",
+      "checks": 41,
+      "reason": "The feedback delta does not alter rappel production code."
+    },
+    {
+      "cell_id": "b51da40818f8-integration",
+      "checks": 45,
+      "reason": "The feedback delta does not alter Defense, Taru, rappel, or HC ownership code; this remains the latest forced-Defense lifecycle execution."
+    }
+  ],
+  "acceptance_limits": [
+    "No automated cell waits for actual five-minute bleed-out expiry.",
+    "The focused radio cell does not execute production startup/publication, player menu/selector, High Command, real respawn, JIP, profile reload, cross-team reception, or delivered voice.",
+    "Integration uses the private reviewed-scout-v1 stock-MFD control and is not an unmodified-stock-content pass.",
+    "Interactive placement, independent-account permissions, live mods/database/Linux parity, natural victory, uninterrupted full-duration Defense, interrupted insertion/rappel, and comparative performance remain acceptance work."
+  ]
+}

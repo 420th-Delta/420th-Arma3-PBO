@@ -1,6 +1,20 @@
 # Local remediation verification
 
-The focused remediation suites pass on Windows Arma 3 **2.22.0.154045**. The controlled full-mission second-pass matrix also passes with zero and one HC plus a final two-HC lifecycle cycle on the complete corrected source. Stock-content integration retains the external Scout MFD failure described below. The [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md) and [issue ledger](REMEDIATION_LEDGER.md) record mission defects, retained policies, rejected findings, test-fixture defects and historical failures. These are locally executed results; the supplied contributor verifiers were not available.
+The feedback-corrected mission passes focused support/radio tests and an ordinary full-mission matrix with zero, one and two HCs on Windows Arma 3 **2.22.0.154045**. The earlier two-HC lifecycle cycle remains applicable because the feedback delta does not alter Defense, Taru, rappel or HC ownership code. Stock-content integration retains the external Scout MFD failure described below. The [second-pass adjudication](REVIEW_PASS_2_ADJUDICATION.md) and [issue ledger](REMEDIATION_LEDGER.md) record mission defects, retained policies, contributor decisions, test-fixture defects and historical failures. These are locally executed results; the supplied contributor verifiers were not available.
+
+## Contributor-feedback final results
+
+All five native cells below froze the same 916-file production tree, source-manifest SHA-256 `8330fc18f0b7e8ff594187ed92c6e4ce2861ad9ec9ef10ea5a538220fac09745`.
+
+| Suite / roles | Frozen cell | Assertions | Result and scope |
+| --- | --- | ---: | --- |
+| Support | `797261a69cf2-support` | 229 | Pass. Adds downed-state menu removal, ordinary reset denial, forged raw server RESET denial, recovery/menu restoration and authorized post-recovery reset on a real three-mortar section. |
+| Radio and deferred cleanup | `b521c68495e5-radio-cleanup` | 86 | Pass. Verifies the default-off gate and a free eleventh slot before fixture allocation, then checks native Side/private Staff/optional General behavior and staff masks. It explicitly enables and reruns the retained shared-channel authorization and delayed body-retirement cases. Source review establishes that disabled production startup skips `radioChannelCreate`. |
+| Full mission, 0 HC | `24b88b35d2ec-integration` | 23 | Pass. One graphical player, engine-resolved 300-second mission configuration, active Primary controller and 120-second observation. |
+| Full mission, 1 HC | `08bb81557d38-integration` | 29 | Pass. One graphical player, one real HC object/registry match, engine-resolved timer and active controller. |
+| Full mission, 2 HCs | `29200aabcb98-integration` | 35 | Pass. One graphical player, two real HC object/registry matches, engine-resolved timer and active controller. This is an ordinary observation, not a repeated lifecycle cycle. |
+
+Every cell completed with zero failed assertions, script errors, malformed records, cleanup errors, or frozen source/fixture/runtime differences. `5f6467570bb5-config` converts `description.ext`, `mission.sqm` and `code/config/security.hpp` successfully. The focused radio fixture uses one player identity and checks engine permissions/membership, not production startup, the player menu, High Command, real respawn, JIP or audible speech. The integration cells use the existing private `reviewed-scout-v1` display-condition control described below.
 
 ## Second-pass focused results
 
@@ -36,7 +50,7 @@ Stock-content cell `a599b201e269-integration` admitted its player, passed all ni
 
 The following runs use `reviewed-scout-v1`, the lab's pinned private addon that disables only the Scout READY TO/FIRE display condition. They are altered-content controls, with strict error rejection retained, and cannot establish a stock-content pass or a repaired stock asset.
 
-The current second-pass source produced these final cells:
+The frozen second-pass source produced these cells before the contributor-feedback delta:
 
 | Headless clients | Frozen cell | Assertions | Result |
 | ---: | --- | ---: | --- |
@@ -44,7 +58,7 @@ The current second-pass source produced these final cells:
 | 1 | `36e972349cea-integration` | 28 | Pass. Ordinary 120-second observation with actual HC object/registry agreement, retained player/controller and all strict gates clean. |
 | 2 | `b51da40818f8-integration` | 45 | Pass. Primary, forced Mega Defense, cancellation and next Primary complete with the player and both HCs retained; deferred HQ retirement and all strict gates pass. |
 
-All three current cells froze the same 916-file production tree (source-manifest SHA-256 `38557738334ee2d028da20d837f8f43b110c52bb47e333caa1945c2517967a07`). The cycle establishes the forced transition and cancellation path, not natural victory, uninterrupted 30-minute completion or an interrupted Taru rappel.
+All three cells froze the same 916-file production tree (source-manifest SHA-256 `38557738334ee2d028da20d837f8f43b110c52bb47e333caa1945c2517967a07`). The cycle establishes the forced transition and cancellation path, not natural victory, uninterrupted 30-minute completion or an interrupted Taru rappel.
 
 The earlier matrix below remains preserved as first-pass and diagnostic history.
 
@@ -57,7 +71,7 @@ The earlier matrix below remains preserved as first-pass and diagnostic history.
 | 2 | `4f1ab1639be5-integration` | 45 | Pass. Primary, forced Defense, cancellation and next Primary complete with both HCs and the player retained. All 45 HQ objects retire: 39 become null; six retained House references have observed deletion events and no network lookup, world/nearest membership or saved collision geometry. All strict error, cleanup and integrity gates pass. This precedes the separate SYS-09 mapper correction. |
 | 2 | `7a98937cbfa8-integration` | 45 | Final source pass. Primary, forced Defense, cancellation and next Primary complete with the player and both HCs retained. All 56 HQ objects retire: 53 become null; three House handles satisfy every physical/network deletion criterion. Zero assertion, script, malformed-record, cleanup or integrity errors. |
 
-The earlier zero/one-HC cells and `4f1ab1639be5` precede SYS-09. The 282-check mapper comparison verifies all three corrected files, and `7a98937cbfa8` ran the complete first-pass production source. The current second-pass cells above supersede it as final-source execution evidence.
+The earlier zero/one-HC cells and `4f1ab1639be5` precede SYS-09. The 282-check mapper comparison verifies all three corrected files, and `7a98937cbfa8` ran the complete first-pass production source. The feedback-result section now supersedes the ordinary second-pass matrix as final-source execution evidence; the two-HC lifecycle cell remains the latest execution of the unchanged forced-Defense path.
 
 The two-HC run includes the production forced-Defense control and existing cancellation control to exercise Primary -> Defense -> next Primary. That route is distinct from natural objective victory and a full-duration Defense. Population and AO content vary between these cells, so their FPS values are not a comparative performance result.
 
@@ -69,8 +83,8 @@ An independent final source audit confirms unchanged diagnostic/performance help
 
 ## Evidence and reproduction
 
-Run commands and containment are in the [test README](../../../tests/ia-update/README.md). Cell IDs resolve under the sibling Server Lab's ignored `artifacts/ia-update/` directory. Each completed cell retains source/fixture manifests, runner identities, result JSON, native records, RPTs and owned-process cleanup evidence. The refreshed campaign index preserves all **58 attempts**: 54 recorded results, 23 passing cells (20 native), 31 failed cells and four attempts without a recorded pass status. It contains allowlisted metadata and manifest/result hashes, with failed and incomplete attempts retained; raw logs, private configuration and game binaries stay outside the commits.
+Run commands and containment are in the [test README](../../../tests/ia-update/README.md). Cell IDs resolve under the sibling Server Lab's ignored `artifacts/ia-update/` directory. Each completed cell retains source/fixture manifests, runner identities, result JSON, native records, RPTs and owned-process cleanup evidence. The refreshed campaign index preserves all **70 attempts**: 66 recorded results, 30 passing cells (25 native), 36 failed cells and four attempts without a recorded pass status. It contains allowlisted metadata and manifest/result hashes, with failed and incomplete attempts retained; raw logs, private configuration and game binaries stay outside the commits.
 
 ## Remaining acceptance scope
 
-Human testing is still required for interactive placement, actual respawn/revive and remote-control transitions, voice delivery and player-facing accountability. Independent Steam accounts are needed to establish independent-UID permission behavior. Live mod/database deployment, Linux hosting, moving guided targets, interrupted real insertion/rappelling, natural mission victory, full-duration Defense and matched-population performance comparisons remain separate acceptance work. These local results establish no FPS gain or live-server deployment acceptance.
+Human testing is still required for interactive placement, actual respawn/revive and remote-control transitions, player-facing accountability, and the eventual redesigned radio policy's delivered voice. Independent Steam accounts are needed to establish independent-UID permission behavior. Live mod/database deployment, Linux hosting, moving guided targets, interrupted real insertion/rappelling, natural mission victory, full-duration Defense and matched-population performance comparisons remain separate acceptance work. These local results establish no FPS gain or live-server deployment acceptance.

@@ -152,5 +152,45 @@
       "docs/community-updates/ia-performance-gameplay-20260910/spawn-callsite-audit.json",
       "docs/community-updates/ia-performance-gameplay-20260910/support-remediation.md"
     ]
+  },
+  "contributor_feedback": {
+    "revive": [
+      "Apex_framework.terrain/description.ext"
+    ],
+    "support": [
+      "Apex_framework.terrain/code/functions/fn_mortarSupport.sqf"
+    ],
+    "radio": [
+      "Apex_framework.terrain/TGC/Functions/Channels/fn_refreshStaffChannelAccess.sqf",
+      "Apex_framework.terrain/TGC/Functions/Staff/fn_staffChannelsGUI.sqf",
+      "Apex_framework.terrain/code/functions/fn_clientEventRespawn.sqf",
+      "Apex_framework.terrain/code/functions/fn_clientMenuRadio.sqf",
+      "Apex_framework.terrain/code/functions/fn_clientRadio.sqf",
+      "Apex_framework.terrain/code/functions/fn_config.sqf",
+      "Apex_framework.terrain/code/functions/fn_highCommand.sqf",
+      "Apex_framework.terrain/code/functions/fn_initPlayerLocal.sqf"
+    ],
+    "native_test_tooling": [
+      "tests/ia-update/README.md",
+      "tests/ia-update/integration-init.sqf",
+      "tests/ia-update/radio-cleanup-client.sqf",
+      "tests/ia-update/radio-cleanup-server.sqf",
+      "tests/ia-update/support-client.sqf"
+    ],
+    "verification_docs": [
+      "docs/community-updates/ia-performance-gameplay-20260910/LOCAL_TEST_REPORT.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/PR_BODY.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/README.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/RELEASE_NOTES.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/REMEDIATION_LEDGER.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/REVIEW_PASS_2_ADJUDICATION.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/TECHNICAL_NOTES.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/contributor-feedback-validation.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/merge-systems.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/native-campaign.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/radio-cleanup-remediation.md",
+      "docs/community-updates/ia-performance-gameplay-20260910/remediation-commit-plan.json",
+      "docs/community-updates/ia-performance-gameplay-20260910/support-remediation.md"
+    ]
   }
 }

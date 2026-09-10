@@ -2,9 +2,11 @@
 
 **Full release for testing · 10 September 2026**
 
-This is the complete set of changes from the initially supplied live mission, `Apex_framework_420th_A.Altis(1).zip`, to this release. It covers **55 modified files and four additions**. All performance, gameplay, role, radio and maintenance changes are included.
+**Contributor-feedback update · 11 September 2026:** the final normal bleed-out is five minutes. The proposed shared Side/staff General channel policy is retained behind a startup-only gate that defaults off while a different channel layout is considered. Disabled mode uses the served native Side, private Staff and optional General behavior and allocates no extra channel. The original import commit preserves the supplied four-minute and enabled-radio proposal for provenance.
 
-The original mission contains 2,506 files; the completed updated mission contains 2,510. The update ZIP carries the 59 changed runtime files. Original code remains commented beside its replacement in modified scripts. No external ApexCfg changes are required.
+This is the complete set of changes from the initially supplied live mission, `Apex_framework_420th_A.Altis(1).zip`, to this release. It covers **55 modified files and four additions** in the supplied package. All performance, gameplay, role, radio and maintenance work is included; later review fixes and the feedback gate are recorded in the repository review documents.
+
+The original mission contains 2,506 files; the completed updated mission contains 2,510. The update ZIP carries the 59 changed runtime files. Original code remains commented beside its replacement in modified scripts. No external ApexCfg changes are required for the default-off release. A future explicit radio opt-in sets `QS_missionConfig_sharedRadioChannels = TRUE` before mission configuration runs.
 
 These Release Notes include the complete edited-file inventory and grouped testing scenarios. `TECHNICAL_NOTES.md` inside the ZIP contains implementation details and exact limits. **All 15 offline verifiers passed**, with 58,320 executed policy assertions, all 56 complete SQFs parsed and all 55 original files reconstructed exactly. Verification scope is recorded below; live multiplayer and performance testing remain pending.
 
@@ -261,7 +263,7 @@ Role loss, death, incapacitation, remote control, activity end or timeout cancel
 
 The Support menu adds **Request Mk6 Mortar**, **Request Mortar Resupply** and **Reset Mortar Section**. Up to three owned Mk6 mortars are allowed per gunner, each starting with eight HE rounds and no smoke/illumination. The lightweight Deploy Mortar action shares that ownership and inventory limit.
 
-Mortar requests and resupply have separate ten-minute cooldowns. Inventory-based lightweight Deploy Mortar consumes a tube and neither request cooldown. A resupply crate parachutes to a valid location within 500 m with five tube backpacks. It does not supply general vehicle ammunition. Reset removes owned mortars/crates without resetting either cooldown.
+Mortar requests and resupply have separate ten-minute cooldowns. Inventory-based lightweight Deploy Mortar consumes a tube and neither request cooldown. A resupply crate parachutes to a valid location within 500 m with five tube backpacks. It does not supply general vehicle ammunition. Reset removes owned mortars/crates without resetting either cooldown. An incapacitated gunner loses the support menus and cannot reset through either the ordinary callback or a direct server request; nearby valid equipment remains for recovery.
 
 Only Mortar Gunner roles can occupy these Support mortars. Native rearm/disassembly actions are disabled on them. Role departure, death/respawn, disconnect, destruction or exceeding 500 m retires owned equipment. Nearby incapacitation preserves equipment for a possible revive, and equipment that remains valid may persist between activities. Occupants are ejected before deletion; placement, descent and late acknowledgments are bounded.
 
@@ -269,7 +271,7 @@ The original two-backpack Assemble path and Zeus-placed mortars remain separate.
 
 ### 14. Revive, Kavala and damage attribution
 
-- Normal unattended bleed-out changes from **ten minutes to four minutes**. Existing vehicle/extraction extensions and requested medevac timing remain.
+- Normal unattended bleed-out changes from **ten minutes to five minutes**. Existing vehicle/extraction extensions and requested medevac timing remain.
 - Altis custom-mission selection permits Kavala above 36 players, and Kavala no longer exits above 45. Its existing frequency/minimum/random gates remain; Georgetown's population gate is unchanged.
 - During Kavala setup, activity and evacuation, pilots use normal incapacitation. The state covers new joins, respawns and role changes, and clears when its owning mission ends or is interrupted. Already downed players are not killed when that override ends.
 - Kavala evacuation has a 180-second bound and handles empty/single-player cases. Owned mission objects return through discreet cleanup; protected/occupied objects remain. Hidden-building restoration is handled per object when clear, replacing an indefinite whole-area wait. Tablet progress, troop ratios and the existing intel mission design are not new changes in this release.
@@ -277,9 +279,11 @@ The original two-backpack Assemble path and Zeus-placed mortars remain separate.
 - Commander death completion works once on the server for the current Commander despite Zeus ownership changes.
 - Friendly-fire warnings, Robocop, damage scaling and casualty messages share a tighter physical-attacker resolver. Existing Zeus/remote-control attribution is checked against the actual firing unit and controller relationship. Friendly AI still identifies its controller for penalties; unrelated passengers and environmental damage do not gain a blanket Zeus exemption.
 
-### 15. Radio and BLUFOR AI speech
+### 15. Tabled radio design and BLUFOR AI speech
 
-| Channel/system | Complete released behavior |
+The channel rows below describe the reviewed **explicit opt-in** design. The release default leaves that design disabled: no extra Side channel is allocated, native Side keeps its served text/staff-voice policy, the private Staff channel stays private, and General remains optional. Friendly-AI speech suppression is independent and remains active.
+
+| Channel/system | Retained opt-in behavior |
 |---|---|
 | Side | A custom channel in native blue, shared across teams, subscribed by default. Players can opt out. The saved choice survives respawns, reconnects and normal server resets with the same local profile. |
 | General | Mandatory membership. Public text; voice restricted to authorized admin/Zeus users, subject to existing masks. Death retains membership and respawn transfers it to the new body. |
@@ -288,22 +292,22 @@ The original two-backpack Assemble path and Zeus-placed mortars remain separate.
 | Radio lifecycle | Initialization, late whitelist changes, team/group changes, respawn and High Command use one reconciler. Stable checks avoid repeated membership/permission writes. |
 | BLUFOR AI speech | Automatic voice, radio text/reports and conversations are silenced for non-player BLUFOR AI, including Zeus/JIP units. Movement, orders, player VOIP and mission announcements remain available. Locality reapplication and player takeover use the existing lifecycle hooks. |
 
-The Side channel needs the extended custom-channel capacity used by Arma 3 2.22+. Real channel selection, cross-team VOIP, JIP and saved preferences remain multiplayer test cases.
+The optional Side channel needs the extended custom-channel capacity used by Arma 3 2.22+. Seathre confirmed the server meets that version, but the requirement is dormant while the gate is off. Real channel selection, cross-team VOIP, JIP and saved preferences remain tests for whichever redesign is eventually selected.
 
 ## Files and testing
 
-Every runtime path below is relative to the mission root. The inventory covers all 55 modified files and four additions.
+Every runtime path below is relative to the mission root. The supplied inventory covers all 55 modified files and four additions; review-added corrective companions are labelled separately.
 
 ### Complete-file testing bundles
 
 | Bundle | Files | What belongs together |
 |---|---:|---|
 | Gameplay | 46 | Controllers, spawners, fire missions, insertion, Supports, revive and shared core cleanup. The complete delivered files are a combined Gameplay candidate. |
-| Radio | 7 | Allocation, subscription UI, membership, authorization and lifecycle changes. Test all seven together. |
+| Radio (supplied payload) | 7 | Allocation, subscription UI, membership, authorization and lifecycle changes. Current testing also includes the corrective staff-mask GUI companion, for an eight-file radio boundary. |
 | BLUFOR AI speech | 2 | Speech application and its existing registration/JIP/respawn coverage. Test the pair together. |
 | Spawn Menu vehicle handlers | 1 | Standalone duplicate-damage-handler/locality fix. |
 | Shared performance | 3 | Area detector, HC deadline and laser-owner display cache; each is independently testable. |
-| **Combined release** | **59** | All runtime files for the complete activity and multiplayer test. |
+| **Combined supplied release** | **59** | All supplied runtime files for the complete activity and multiplayer test; corrective review paths join the final candidate. |
 
 Independence describes source dependencies against the supplied original mission and existing configuration. It does not mean those isolated combinations have been tested on a live server. Radio remains separate: its `fn_config.sqf` and respawn changes do not add new Support/Kavala dependencies.
 
@@ -417,7 +421,7 @@ Bare `fn_*.sqf` names in scenario lists are under `code/functions/`; paths with 
 
 **Related edited files:** `description.ext`, `fn_incapacitated.sqf`, `fn_missionKavala.sqf`, `fn_core.sqf`, `fn_aoEnemy.sqf`, `TGC/Functions/Damage/fn_isFriendlyFire.sqf`, `fn_clientEventHit.sqf`, `fn_clientDamageModifier.sqf`.
 
-1. Check four-minute unattended bleed-out against the original ten-minute setting. Exercise vehicle attachments, requested medevac and near-expiry extensions; extraction rules can extend the normal window.
+1. Check five-minute unattended bleed-out against the original ten-minute setting. Exercise vehicle attachments, requested medevac and near-expiry extensions; extraction rules can extend the normal window.
 2. Run Kavala above 36 players and continue above 45. Check pilot/fighter-pilot incapacitation from setup through evacuation, including JIP, respawn and role changes. Normal later pilot rules return afterward without killing an existing casualty.
 3. Interrupt or end Kavala, including zero/one-player evacuation, and start another instance. The original script must not clear a newer revive state. Check bounded searches/180-second evacuation and safe per-object hidden-building restoration.
 4. Kill/control the current Commander through Zeus and verify completion happens once. Compare hostile physical fire, friendly AI under control, actual gunners, unrelated passengers, unknown collisions and explicit self-damage. Warning, Robocop, damage scaling and casualty side attribution must agree.
@@ -438,7 +442,7 @@ Bare `fn_*.sqf` names in scenario lists are under `code/functions/`; paths with 
 
 | Group | Files to test together | Expected checks |
 |---|---|---|
-| R — Radio | All seven Radio files below | Two-client Side text/VOIP across teams; default-on and saved opt-out; General mandatory/public text/authorized voice; private Staff; late authorization, death/respawn, JIP, High Command and team/group changes. Confirm one usable Side entry, actual allocated channel capacity and stable no-change membership passes. |
+| R — Radio | The Radio files below plus the reviewed staff-mask correction | Default-off must allocate no extra channel and preserve native Side/private Staff/optional General behavior. Explicit opt-in must retain cross-team Side subscription, mandatory General, authorization, respawn, JIP, High Command and team/group behavior. Delivered voice remains a future-policy acceptance test. |
 | S — BLUFOR AI speech | Both Speech files below | Recruitment/mission/Zeus creation, JIP, respawn and server/client/HC locality. Automatic AI voice/reports stay quiet; orders, player VOIP and scripted messages remain. Player takeover restores appropriate speech state; existing damage/collision behavior is preserved. |
 | V — Vehicle handlers | `TGC/Functions/Damage/fn_addSpawnMenuVehicleHandlers.sqf` | Repeated entry/exit and owner handoffs in both callback orders, reconnect/JIP and missing-handler repair. One mission damage handler remains; native empty-vehicle protection remains last. Locks, ownership access and damage results are unchanged. Measure any entry stall separately from the existing 1.5-second quick-entry bar. |
 | P1 — Area detector | `code/functions/fn_serverDetector.sqf` | Compare original/current list and count modes with identical pools: empty/full areas, radius boundaries, mixed sides, duplicates and mode -1. Matching results and order; measure script work separately from overall FPS. |
@@ -454,7 +458,7 @@ Bare `fn_*.sqf` names in scenario lists are under `code/functions/`; paths with 
 | `fn_spawnGroup.sqf` and updated callers | Callers use new infantry/vehicle placement modes; the helper and its callers must agree. |
 | `fn_core.sqf` | Includes general cleanup, Kavala state recovery and Support-owned mortar maintenance. A cleanup-only copy still carries those calls. |
 | `fn_incapacitated.sqf` | Combines attribution, Kavala pilots and Support role/menu lifecycle. |
-| `description.ext` | Includes the 240-second timer plus both new Support registrations and communication-menu entries. The full file is not a timer-only edit. |
+| `description.ext` | Includes the final 300-second timer plus both new Support registrations and communication-menu entries. The full file is not a timer-only edit. |
 | Role files, `security.hpp`, two new Support functions and role image | Registration, remote-call permission, role access, gear alias, menus, stock and equipment ownership are connected. |
 | Rappel/landing/insertion helpers | Share activity ownership, dismount, late-callback, rope/device and departure cleanup. |
 | Friendly-fire helper and damage callers | Must resolve firing side consistently for Robocop, scaling, warnings and casualty messages. |
@@ -536,7 +540,7 @@ Each runtime path appears once below. Scenario references indicate related check
 
 | Mission-relative file | Status | Related checks | Net change |
 |---|---|---|---|
-| `description.ext` | Modified | G9, G10 | Four-minute bleed-out; register two Support functions and five communication-menu entries. |
+| `description.ext` | Modified | G9, G10 | Final five-minute bleed-out; register two Support functions and five communication-menu entries. |
 | `code/config/security.hpp` | Modified | G9 | Whitelist only the two Support functions; each validates caller ownership and mode. |
 | `code/functions/fn_roles.sqf` | Modified | G9 | Add one Forward Observer slot, descriptions, configured JTAC gear alias and immediate Support-menu reconciliation. |
 | `code/functions/fn_clientArsenal.sqf` | Modified | G9 | Forward Observer uses the configured JTAC Arsenal list. |
@@ -546,17 +550,18 @@ Each runtime path appears once below. Scenario references indicate related check
 | `code/functions/fn_mortarSupport.sqf` | Added | G9, G11 | Three owned Mk6 mortars, separate resupply/reset actions, cooldowns and equipment cleanup. |
 | `media/images/roles/arid/forward_observer.jpg` | Added | G9 | Supplied role image, 365 × 399 to match Mortar Gunner. |
 
-#### Radio — seven files
+#### Radio — seven supplied files plus one corrective companion
 
 | Mission-relative file | Status | Related checks | Net change |
 |---|---|---|---|
-| `TGC/Functions/Channels/fn_refreshStaffChannelAccess.sqf` | Modified | R | Reconcile cross-team Side, admin/Zeus General voice and unchanged private Staff access. |
-| `code/functions/fn_clientEventRespawn.sqf` | Modified | R | Remove old-body memberships and restore Side preference and General authorization on the new body. |
-| `code/functions/fn_clientMenuRadio.sqf` | Modified | R | Optional cross-team Side checkbox; mandatory General; separate the original Staff binding. |
-| `code/functions/fn_clientRadio.sqf` | Modified | R | Reject General opt-out; retain General while awaiting respawn; explicitly remove old-body memberships on respawn. |
-| `code/functions/fn_config.sqf` | Modified | R | Allocate optional Side in native blue; preserve Staff; initialize public General text with voice restricted. |
-| `code/functions/fn_highCommand.sqf` | Modified | R | Use shared radio authorization on entry/exit; do not reopen native Side transmission. |
-| `code/functions/fn_initPlayerLocal.sqf` | Modified | R | Restore saved Side preference, force General membership, and refresh authorization through the existing radio loop. |
+| `TGC/Functions/Channels/fn_refreshStaffChannelAccess.sqf` | Modified | R | Preserve native Side/private Staff behavior by default; explicit opt-in reconciles cross-team Side and admin/Zeus General voice. |
+| `TGC/Functions/Staff/fn_staffChannelsGUI.sqf` | Corrective companion | R | Keep the original four staff masks by default; show the mapped optional Side only in the retained opt-in design. |
+| `code/functions/fn_clientEventRespawn.sqf` | Modified | R | Use served respawn membership behavior by default; explicit opt-in removes old-body memberships and restores Side preference and General authorization. |
+| `code/functions/fn_clientMenuRadio.sqf` | Modified | R | Default-off legacy controls; explicit opt-in exposes the optional cross-team Side checkbox and mandatory General while keeping Staff separate. |
+| `code/functions/fn_clientRadio.sqf` | Modified | R | Preserve exact-body operations in both modes; reject General opt-out and run bounded old-body retirement only when explicitly opted in. |
+| `code/functions/fn_config.sqf` | Modified | R | Resolve and publish the startup gate. Allocate optional Side and initialize public General only when explicitly opted in. |
+| `code/functions/fn_highCommand.sqf` | Modified | R | Restore native Side transitions by default; use shared radio authorization only when explicitly opted in. |
+| `code/functions/fn_initPlayerLocal.sqf` | Modified | R | Restore the served profile/channel flow by default; restore custom Side, force General and run added reconciliation only when opted in. |
 
 #### BLUFOR AI speech — two files
 
@@ -597,9 +602,9 @@ SQF-VM executes production decision logic with controlled engine facts and docum
 
 Performance fixtures confirm equivalent area-query results with fewer scripted side checks, cached cosmetic laser attribution, completion-based HC deadlines, bounded cleanup batches, deferred reinforcement censuses and correct recovery states. Actual gains require equivalent-load server/client measurements. No specific FPS improvement is claimed.
 
-Staging produced exactly 2,510 files from the 2,506-file initial baseline. Git patch application and reversal, both at repository root and within a nested mission folder, reproduced the exact updated/original bytes. Restoration recovered every baseline hash. Unexpected modified input was rejected without mutation. Archive validation checks the exact delivery members, hashes and CRCs, including the matching copy of these Release Notes.
+The original staging pass produced exactly 2,510 files from the 2,506-file initial baseline. Git patch application and reversal, both at repository root and within a nested mission folder, reproduced the exact updated/original bytes. Restoration recovered every baseline hash. Unexpected modified input was rejected without mutation. That pass validated the delivery archive's original release-note copy; this contributor-feedback revision was added later and was not used to restage the supplied archive.
 
-Live Arma acceptance remains pending for AI navigation and flight, parachutes/rappel, Support menus and projectile guidance, radio/VOIP, revive event ordering, server/HC locality, database whitelist integration, cleanup side effects and production performance. The grouped scenarios above cover these remaining checks. Test fixtures and detailed logs are retained with the development work.
+Live Arma acceptance remains pending for AI navigation and flight, parachutes/rappel, Support menus and projectile guidance, delivered radio voice, production radio startup/menu/respawn/HC/JIP/profile-reload integration, revive event ordering, server/HC locality, database whitelist integration, cleanup side effects and production performance. Focused native radio tests already cover engine permissions, membership, staff masks and exact-body cases. The grouped scenarios above cover the remaining checks. Test fixtures and detailed logs are retained with the development work.
 
 ## Bonus: manual 30-minute Defense
 
@@ -611,7 +616,7 @@ After installing the release and restarting the mission, Zeus/Admin can run this
 [] execVM "code\scripts\IA_MegaDefense.sqf";
 ```
 
-During a Classic Primary AO, this forces the current HQ into a 30-minute Defense without waiting for objectives to be completed. The controller retires the unfinished Primary activity, preserves the HQ and starts Defense after its AI shutdown finishes. Unfinished objectives are not credited as completed. During an already running Defense, it gives that event **at least 30 minutes remaining** and refreshes the task timer. Repeating the trigger while the special mode is active does not stack time or repeat announcements.
+During a Classic Primary AO, this forces the current HQ into a 30-minute Defense without waiting for objectives to be completed. The queued request stays attached to that same Primary while its AI shuts down, then is consumed when that AO's Defense starts; it cannot carry into a new AO. This request flag is separate from `QS_forceDefend`: mode `1` forces one eligible ordinary Defense and resets to `0`, while mode `2` stays enabled for later eligible AOs. The controller preserves the HQ, and unfinished objectives are not credited as completed. During an already running Defense, Mega Defense gives that event **at least 30 minutes remaining** and refreshes the task timer. Repeating the trigger while the special mode is active does not stack time or repeat announcements.
 
 Players receive a **Crossroads side-chat message and hint** once the forced Defense starts or the active timer is extended. Normal troop limits, wave timing, aircraft/artillery, Support stock, HQ capture/failure and administrator cancellation remain. A loss can end the event early. The 30-minute target is checked by the existing scheduled loop; server load can delay the final check.
 
@@ -631,4 +636,4 @@ The server owner can connect a separate scheduler to this same entry point when 
 | `TECHNICAL_NOTES.md` | Full implementation reference and exact mechanics for the complete release. |
 | `README.md` | Short package contents reference. |
 
-Original code remains commented beside replacements. Separate original-source copies and a full mission archive are excluded. No external ApexCfg changes are required.
+Original code remains commented beside replacements. Separate original-source copies and a full mission archive are excluded. No external ApexCfg changes are required for the default-off radio policy.
