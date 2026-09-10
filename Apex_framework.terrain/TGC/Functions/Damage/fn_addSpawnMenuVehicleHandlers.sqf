@@ -35,7 +35,12 @@ if (isNil {_vehicle getVariable "TGC_spawnMenuVehicle_localEH"}) then {
             _vehicle setVariable ["TGC_spawnMenuVehicle_damageEH", nil];
         };
 
-        _vehicle setVariable ["TGC_spawnMenuVehicle_damageEH", nil];
+/* Legacy Code as of 9.9.2026 */
+//|        _vehicle setVariable ["TGC_spawnMenuVehicle_damageEH", nil];
+// Updated Code
+        // Another Local handler may already have restored the damage handler.
+        // Keep its ID so the validity check below reuses it instead of adding a duplicate.
+// End Updated Code
         [_vehicle] call TGC_fnc_addSpawnMenuVehicleHandlers;
     }];
     _vehicle setVariable ["TGC_spawnMenuVehicle_localEH", _localEH];
