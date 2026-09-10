@@ -2005,10 +2005,29 @@ if (_mode isEqualTo 'WORK') exitWith {
 		{({side _x isEqualTo EAST} count allGroups) < 220}
 	};
 	private _fn_charge = {
-		params ['_unit'];
-		[_unit] call _fn_register;
 		_state set ['used',1 + (_state get 'used')];
 		_state set ['reserved',0 max ((_state get 'reserved') - 1)];
+	};
+	// STOP can terminate this scheduled worker at any suspension boundary. Keep
+	// object creation and cleanup registration in one unscheduled transaction so
+	// every successfully created entity is owned before cancellation can run.
+	private _fn_createRegisteredVehicle = {
+		params ['_args'];
+		private _vehicle = objNull;
+		isNil {
+			_vehicle = createVehicle _args;
+			if (!isNull _vehicle) then {[_vehicle] call _fn_register;};
+		};
+		_vehicle
+	};
+	private _fn_createRegisteredUnit = {
+		params ['_group','_args'];
+		private _unit = objNull;
+		isNil {
+			_unit = _group createUnit _args;
+			if (!isNull _unit) then {[_unit] call _fn_register;};
+		};
+		_unit
 	};
 	private _fn_concealed = {
 		params ['_point','_players'];
@@ -2103,10 +2122,13 @@ if (_mode isEqualTo 'WORK') exitWith {
 		}] call QS_fnc_spawnGroup;
 		private _empty = _slots param [0,[]];
 		if (_empty isNotEqualTo [] && {!surfaceIsWater _empty} && {(allPlayers inAreaArray [_empty,400,400,0,FALSE]) isEqualTo []} && {[_empty,allPlayers] call _fn_concealed} && {isClass (configFile >> 'CfgVehicles' >> _class)} && {call _fn_admit}) then {
-			private _vehicle = createVehicle [_class,_empty,[],0,'NONE'];
+			private _vehicle = [[_class,_empty,[],0,'NONE']] call _fn_createRegisteredVehicle;
 			if (!isNull _vehicle) then {
-				[_vehicle] call _fn_register;
-				private _crew = createVehicleCrew _vehicle;
+				private _crew = grpNull;
+				isNil {
+					_crew = createVehicleCrew _vehicle;
+					{[_x] call _fn_register;} forEach (units _crew);
+				};
 				private _members = units _crew;
 				if (isNull _crew || {(count _members) > 4} || {_members isEqualTo []} || {(WEST getFriend (side _crew)) >= 0.6}) then {
 					deleteVehicleCrew _vehicle; deleteVehicle _vehicle;
@@ -2153,11 +2175,10 @@ if (_mode isEqualTo 'WORK') exitWith {
 			_pilots = createGroup [EAST,TRUE];
 			_cargo = createGroup [EAST,TRUE];
 			if (!isNull _pilots && {!isNull _cargo}) then {
-				_heli = createVehicle [_class,_entry,[],0,'FLY'];
-				[_heli] call _fn_register;
+				_heli = [[_class,_entry,[],0,'FLY']] call _fn_createRegisteredVehicle;
 				_heli setPosATL _entry;
 				_heli setDir (_entry getDir _landing);
-				private _pilot = _pilots createUnit [QS_core_units_map getOrDefault ['o_helipilot_f','O_helipilot_F'],_entry,[],0,'NONE'];
+				private _pilot = [_pilots,[QS_core_units_map getOrDefault ['o_helipilot_f','O_helipilot_F'],_entry,[],0,'NONE']] call _fn_createRegisteredUnit;
 				if (!isNull _pilot) then {
 					[_pilot] call _fn_charge;
 					_pilot moveInDriver _heli;
@@ -2235,7 +2256,7 @@ if (_mode isEqualTo 'WORK') exitWith {
 			_empty = ['DROP_SPAWN',_empty,150,_group] call QS_fnc_aoPressure;
 			if ((_empty distance2D (markerPos 'QS_marker_base_marker')) < 1200) then {_empty = _spawn vectorAdd [0,0,150 + 3 * _index];};
 		};
-		private _unit = _group createUnit [_type,_empty,[],0,'CAN_COLLIDE'];
+		private _unit = [_group,[_type,_empty,[],0,'CAN_COLLIDE']] call _fn_createRegisteredUnit;
 		if (isNull _unit) exitWith {};
 		[_unit] call _fn_charge;
 		_unit call QS_fnc_unitSetup;
@@ -2259,9 +2280,8 @@ if (_mode isEqualTo 'WORK') exitWith {
 			if ((objectParent _unit) isNotEqualTo _heli) then {_failed = TRUE;};
 		};
 		if (_delivery isEqualTo 'PARA') then {
-			private _chute = createVehicle ['Steerable_Parachute_F',_empty,[],0,'FLY'];
+			private _chute = [['Steerable_Parachute_F',_empty,[],0,'FLY']] call _fn_createRegisteredVehicle;
 			if (!isNull _chute) then {
-				[_chute] call _fn_register;
 				_chute setPosATL _empty;
 				_unit moveInDriver _chute;
 				_chute setVelocity [0,0,-5];

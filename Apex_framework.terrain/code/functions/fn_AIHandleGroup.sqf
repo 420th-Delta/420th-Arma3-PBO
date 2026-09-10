@@ -906,21 +906,31 @@ if (
 						_firePosition = [missionNamespace getVariable ['QS_AI_targetsKnowledge_EAST',[]],(_currentConfig # 2),((magazines (_currentConfig # 2)) # 0),time] call _fn_groundCommanderPick;
 // End Updated Code
 						if (_firePosition isNotEqualTo [0,0,0]) then {
-							(_currentConfig # 2) setVehicleAmmo 1;
-							_smokePos = _firePosition getPos [(random 15),(random 360)];
-							_smokePos set [2,0.25];
-							_smokeShell = createVehicle ['SmokeShellRed',_smokePos,[],0,'NONE'];
-							_smokeShell setVehiclePosition [(getPosWorld _smokeShell),[],0,'NONE'];
-							_smokeShell setPosATL [((getPosWorld _smokeShell) # 0),((getPosWorld _smokeShell) # 1),50];
-							(missionNamespace getVariable 'QS_garbageCollector') pushBack [_smokeShell,'DELAYED_FORCED',(time + 60)];
-							missionNamespace setVariable ['QS_AI_fireMissions',((missionNamespace getVariable 'QS_AI_fireMissions') + [[_firePosition,50,(serverTime + 45)]]),QS_system_AI_owners];
+							private _fireArgs = [0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))];
+							private _accepted = TRUE;
 /* Legacy Code as of 9.9.2026 */
 //|							[0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
 // Updated Code
-							if (_primaryAO) then {
-								['ARTY_START',[0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))]] call QS_fnc_aoPressure;
-							} else {
-								[0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
+							// Keep admission and its visible bookkeeping ahead of the spawned firing
+							// worker. The outer unscheduled block prevents scheduler preemption after
+							// ARTY_START accepts but before smoke/exclusion publication completes.
+							isNil {
+								if (_primaryAO) then {
+									_accepted = ['ARTY_START',_fireArgs] call QS_fnc_aoPressure;
+								};
+								// Do not advertise, reserve or replenish a Primary shot that the
+								// pressure controller rejected during its atomic admission recheck.
+								if (_accepted) then {
+									(_currentConfig # 2) setVehicleAmmo 1;
+									_smokePos = _firePosition getPos [(random 15),(random 360)];
+									_smokePos set [2,0.25];
+									_smokeShell = createVehicle ['SmokeShellRed',_smokePos,[],0,'NONE'];
+									_smokeShell setVehiclePosition [(getPosWorld _smokeShell),[],0,'NONE'];
+									_smokeShell setPosATL [((getPosWorld _smokeShell) # 0),((getPosWorld _smokeShell) # 1),50];
+									(missionNamespace getVariable 'QS_garbageCollector') pushBack [_smokeShell,'DELAYED_FORCED',(time + 60)];
+									missionNamespace setVariable ['QS_AI_fireMissions',((missionNamespace getVariable 'QS_AI_fireMissions') + [[_firePosition,50,(serverTime + 45)]]),QS_system_AI_owners];
+									if (!_primaryAO) then {_fireArgs spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');};
+								};
 							};
 // End Updated Code
 						};

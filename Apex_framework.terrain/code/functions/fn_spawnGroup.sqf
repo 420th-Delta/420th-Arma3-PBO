@@ -96,11 +96,14 @@ if ((_this param [0,[]]) in ['SLOTS','VEHICLE_SLOTS']) exitWith {
 		// caller's accepted anchor, heading, footprint or terrain/player rules.
 		private _patterns = [[0,0]];
 		if (_infantry) then {_patterns append [[0.5,0],[0,0.5],[0.5,0.5]];};
+		private _timedOut = FALSE;
 		{
+			if (_timedOut) exitWith {};
 			_x params ['_offsetColumn','_offsetRow'];
 			for '_row' from -2 to 2 do {
+				if (_timedOut) exitWith {};
 				for '_column' from -2 to 2 do {
-					if (!canSuspend && {(diag_tickTime - _started) > 0.004}) exitWith {};
+					if (!canSuspend && {(diag_tickTime - _started) > 0.004}) exitWith {_timedOut = TRUE;};
 					private _columnAt = _column + _offsetColumn;
 					private _rowAt = _row + _offsetRow;
 					// Skip nominal cells beyond the admitted square before asking
@@ -129,7 +132,7 @@ if ((_this param [0,[]]) in ['SLOTS','VEHICLE_SLOTS']) exitWith {
 			};
 			_result = [_points,_occupied,_count,_anchor] call _fn_groundPick;
 			if (_result isNotEqualTo []) exitWith {};
-			if (!canSuspend && {(diag_tickTime - _started) > 0.004}) exitWith {};
+			if (_timedOut || {!canSuspend && {(diag_tickTime - _started) > 0.004}}) exitWith {};
 		} forEach _patterns;
 	};
 	if (_result isNotEqualTo []) then {
