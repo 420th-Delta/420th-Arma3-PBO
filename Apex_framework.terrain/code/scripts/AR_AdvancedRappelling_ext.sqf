@@ -14,7 +14,9 @@ AR_Has_Addon_Sounds_Installed = compileFinal " 	private [""_config"",""_configMi
 /* Legacy Code as of 9.9.2026 */
 //|AR_Rappel_All_Cargo = compileFinal " 	params [""_vehicle"",[""_rappelHeight"",25],[""_positionASL"",[]]]; 	if(isPlayer (driver _vehicle)) exitWith {}; 	if(local _vehicle) then { 		_this spawn { 			params [""_vehicle"",[""_rappelHeight"",25],[""_positionASL"",[]]]; 	 			_heliGroup = group driver _vehicle; 			_vehicle setVariable [""AR_Units_Rappelling"",true];  			_heliGroupOriginalBehaviour = behaviour (leader _heliGroup); 			_heliGroupOriginalCombatMode = combatMode (leader _heliGroup); 			_heliGroupOriginalFormation = formation _heliGroup;  			if (_positionASL isEqualTo []) then { 				_positionASL = AGLtoASL [(getPos _vehicle) # 0, (getPos _vehicle) # 1, 0]; 			}; 			_positionASL = _positionASL vectorAdd [0, 0, _rappelHeight]; 			 			_gameLogicLeader = _heliGroup createUnit [""LOGIC"", ASLToAGL _positionASL, [], 0, """"]; 			_heliGroup selectLeader _gameLogicLeader;  			_heliGroup setBehaviour ""Careless""; 			_heliGroup setCombatMode ""Blue""; 			_heliGroup setFormation ""File""; 			 			waitUntil { (vectorMagnitude (velocity _vehicle)) < 10 && _vehicle distance2d _gameLogicLeader < 50  }; 			 			[_vehicle, _positionASL] spawn { 				params [""_vehicle"",""_positionASL""]; 				 				while { _vehicle getVariable [""AR_Units_Rappelling"",false] && alive _vehicle } do {  					_velocityMagatude = 5; 					_distanceToPosition = ((getPosASL _vehicle) distance _positionASL); 					if( _distanceToPosition <= 10 ) then { 						_velocityMagatude = (_distanceToPosition / 10) * _velocityMagatude; 					}; 					 					_currentVelocity = velocity _vehicle; 					_currentVelocity = _currentVelocity vectorAdd (( (getPosASL _vehicle) vectorFromTo _positionASL ) vectorMultiply _velocityMagatude); 					_currentVelocity = (vectorNormalized _currentVelocity) vectorMultiply ( (vectorMagnitude _currentVelocity) min _velocityMagatude ); 					_vehicle setVelocity _currentVelocity; 					 					sleep 0.05; 				}; 			};  			_rappelUnits = []; 			_rappelledGroups = []; 			{ 				if( group _x != _heliGroup && alive _x ) then { 					_rappelUnits pushBack _x; 					_rappelledGroups = _rappelledGroups + [group _x]; 				}; 			} forEach crew _vehicle; 	 			_unitsOutsideVehicle = []; 			while { count _unitsOutsideVehicle != count _rappelUnits } do { 	 				_distanceToPosition = ((getPosASL _vehicle) distance _positionASL); 				if(_distanceToPosition < 3) then { 					{ 						[_x, _vehicle] call AR_Rappel_From_Heli;					 						sleep 1; 					} forEach (_rappelUnits-_unitsOutsideVehicle); 					{ 						if!(_x in _vehicle) then { 							_unitsOutsideVehicle pushBack _x; 						}; 					} forEach (_rappelUnits-_unitsOutsideVehicle); 				}; 				sleep 2; 			}; 			 			_unitsRappelling = true; 			while { _unitsRappelling } do { 				_unitsRappelling = false; 				{ 					if( _x getVariable [""AR_Is_Rappelling"",false] ) then { 						_unitsRappelling = true; 					}; 				} forEach _rappelUnits; 				sleep 3; 			}; 			 			deleteVehicle _gameLogicLeader; 			 			_heliGroup setBehaviour _heliGroupOriginalBehaviour; 			_heliGroup setCombatMode _heliGroupOriginalCombatMode; 			_heliGroup setFormation _heliGroupOriginalFormation;  			_vehicle setVariable [""AR_Units_Rappelling"",nil]; 	 		}; 	} else { 		[_this,""AR_Rappel_All_Cargo"",_vehicle] call AR_RemoteExec; 	}; ";
 // Updated Code
-AR_QS_AI_Rappel_Clear = compileFinal "
+// Keep annotated function bodies as Code so normal file preprocessing handles
+// their comments before compileFinal makes them immutable (Arma 3 2.14+).
+AR_QS_AI_Rappel_Clear = compileFinal {
 // AI_RAPPEL_CLEARANCE_BEGIN
 // One local pass per available anchor, at most six per release attempt.
 // The worker spaces attempts by 0.6 s; there are no per-frame world scans.
@@ -51,8 +53,8 @@ if (!_clear) exitWith {FALSE};
 private _bottom = [_ground # 0,_ground # 1,(getTerrainHeightASL _ground) + 0.2];
 (lineIntersectsSurfaces [_anchor,_bottom,_heli,objNull,TRUE,1,'GEOM','ROADWAY',TRUE]) isEqualTo []
 // AI_RAPPEL_CLEARANCE_END
-";
-AR_QS_AI_Rappel_Egress = compileFinal "
+};
+AR_QS_AI_Rappel_Egress = compileFinal {
 // AI_RAPPEL_EGRESS_BEGIN
 // A landed AI gets one bounded search and one movement order, not a new worker.
 params ['_unit','_heli','_bearing'];
@@ -77,8 +79,8 @@ if (_point isEqualTo []) exitWith {FALSE};
 _unit doMove _point;
 TRUE
 // AI_RAPPEL_EGRESS_END
-";
-AR_Rappel_All_Cargo = compileFinal "
+};
+AR_Rappel_All_Cargo = compileFinal {
 // One bounded worker controls the existing pilot; no Game Logic is created.
 // Player rappelling keeps its existing controls and descent speed.
 params ['_vehicle',['_rappelHeight',25],['_positionASL',[]],['_budget',45]];
@@ -208,7 +210,7 @@ private _handle = [_vehicle,_rappelHeight,_positionASL,_pilot,_heliGroup,_fn_act
 };
 _vehicle setVariable ['QS_AR_bulkHandle',_handle];
 _handle
-";
+};
 // End Updated Code
 AR_Get_Heli_Rappel_Points = compileFinal " 	params [""_vehicle""]; 	 	 	private [""_preDefinedRappelPoints"",""_className"",""_rappelPoints"",""_preDefinedRappelPointsConverted""]; 	_preDefinedRappelPoints = []; 	{ 		_className = _x # 0; 		_rappelPoints = _x # 1; 		if( _vehicle isKindOf _className ) then { 			_preDefinedRappelPoints = _rappelPoints; 		}; 	} forEach (AP_RAPPEL_POINTS + (missionNamespace getVariable [""AP_CUSTOM_RAPPEL_POINTS"",[]])); 	if(count _preDefinedRappelPoints > 0) exitWith { 		_preDefinedRappelPointsConverted = []; 		{ 			if (_x isEqualType '') then { 				_modelPosition = _vehicle selectionPosition _x; 				if( [0,0,0] distance _modelPosition > 0 ) then { 					_preDefinedRappelPointsConverted pushBack _modelPosition; 				}; 			} else { 				_preDefinedRappelPointsConverted pushBack _x; 			}; 		} forEach _preDefinedRappelPoints; 		_preDefinedRappelPointsConverted; 	};  	private [ 		""_rappelPointsArray"",""_cornerPoints"",""_frontLeftPoint"",""_frontRightPoint"",""_rearLeftPoint"",""_rearRightPoint"",""_rearLeftPointFinal"", 		""_rearRightPointFinal"",""_frontLeftPointFinal"",""_frontRightPointFinal"",""_middleLeftPointFinal"",""_middleRightPointFinal"",""_vehicleUnitVectorUp"", 		""_rappelPoints"",""_modelPoint"",""_modelPointASL"",""_surfaceIntersectStartASL"",""_surfaceIntersectEndASL"",""_surfaces"",""_intersectionASL"",""_intersectionObject"", 		""_la"",""_lb"",""_n"",""_p0"",""_l"",""_d"",""_validRappelPoints"" 	]; 	 	_rappelPointsArray = []; 	_cornerPoints = [_vehicle] call AR_Get_Corner_Points; 	 	_frontLeftPoint = (((_cornerPoints # 2) vectorDiff (_cornerPoints # 3)) vectorMultiply 0.2) vectorAdd (_cornerPoints # 3); 	_frontRightPoint = (((_cornerPoints # 2) vectorDiff (_cornerPoints # 3)) vectorMultiply 0.8) vectorAdd (_cornerPoints # 3); 	_rearLeftPoint = (((_cornerPoints # 0) vectorDiff (_cornerPoints # 1)) vectorMultiply 0.2) vectorAdd (_cornerPoints # 1); 	_rearRightPoint = (((_cornerPoints # 0) vectorDiff (_cornerPoints # 1)) vectorMultiply 0.8) vectorAdd (_cornerPoints # 1); 	 	_rearLeftPointFinal = ((_frontLeftPoint vectorDiff _rearLeftPoint) vectorMultiply 0.2) vectorAdd _rearLeftPoint; 	_rearRightPointFinal = ((_frontRightPoint vectorDiff _rearRightPoint) vectorMultiply 0.2) vectorAdd _rearRightPoint; 	_frontLeftPointFinal = ((_rearLeftPoint vectorDiff _frontLeftPoint) vectorMultiply 0.2) vectorAdd _frontLeftPoint; 	_frontRightPointFinal = ((_rearRightPoint vectorDiff _frontRightPoint) vectorMultiply 0.2) vectorAdd _frontRightPoint; 	_middleLeftPointFinal = ((_frontLeftPointFinal vectorDiff _rearLeftPointFinal) vectorMultiply 0.5) vectorAdd _rearLeftPointFinal; 	_middleRightPointFinal = ((_frontRightPointFinal vectorDiff _rearRightPointFinal) vectorMultiply 0.5) vectorAdd _rearRightPointFinal;  	_vehicleUnitVectorUp = vectorNormalized (vectorUp _vehicle); 	 	_rappelPointHeightOffset = 0; 	{ 		if(_vehicle isKindOf (_x # 0)) then { 			_rappelPointHeightOffset = (_x # 1); 		}; 	} forEach AR_RAPPEL_POINT_CLASS_HEIGHT_OFFSET; 	 	_rappelPoints = []; 	{ 		_modelPoint = _x; 		_modelPointASL = _vehicle modelToWorldVisualWorld _modelPoint; 		_surfaceIntersectStartASL = _modelPointASL vectorAdd ( _vehicleUnitVectorUp vectorMultiply -5 ); 		_surfaceIntersectEndASL = _modelPointASL vectorAdd ( _vehicleUnitVectorUp vectorMultiply 5 );  		_la = ASLToAGL _surfaceIntersectStartASL; 		_lb = ASLToAGL _surfaceIntersectEndASL; 		 		if(_la # 2 < 0 && _lb # 2 > 0) then { 			_n = [0,0,1]; 			_p0 = [0,0,0.1]; 			_l = (_la vectorFromTo _lb); 			if((_l vectorDotProduct _n) != 0) then { 				_d = ( ( _p0 vectorAdd ( _la vectorMultiply -1 ) ) vectorDotProduct _n ) / (_l vectorDotProduct _n); 				_surfaceIntersectStartASL = AGLToASL ((_l vectorMultiply _d) vectorAdd _la); 			}; 		}; 		 		_surfaces = lineIntersectsSurfaces [_surfaceIntersectStartASL, _surfaceIntersectEndASL, objNull, objNull, true, 100]; 		_intersectionASL = []; 		{ 			_intersectionObject = _x # 2; 			if (_intersectionObject isEqualTo _vehicle) exitWith { 				_intersectionASL = _x # 0; 			}; 		} forEach _surfaces; 		if (_intersectionASL isNotEqualTo []) then { 			_intersectionASL = _intersectionASL vectorAdd (( _surfaceIntersectStartASL vectorFromTo _surfaceIntersectEndASL ) vectorMultiply (_rappelPointHeightOffset select (count _rappelPoints))); 			_rappelPoints pushBack (_vehicle worldToModelVisual (ASLToAGL _intersectionASL)); 		} else { 			_rappelPoints pushBack []; 		}; 	} forEach [_middleLeftPointFinal, _middleRightPointFinal, _frontLeftPointFinal, _frontRightPointFinal, _rearLeftPointFinal, _rearRightPointFinal];  	_validRappelPoints = []; 	{ 		if(count _x > 0 && count _validRappelPoints < missionNamespace getVariable [""AR_MAX_RAPPEL_POINTS_OVERRIDE"",6]) then { 			_validRappelPoints pushBack _x; 		}; 	} forEach _rappelPoints; 	 	_validRappelPoints; ";
 /* Legacy Code as of 9.9.2026 */
@@ -216,7 +218,7 @@ AR_Get_Heli_Rappel_Points = compileFinal " 	params [""_vehicle""]; 	 	 	private 
 //|AR_Client_Rappel_From_Heli = compileFinal "
 //|	params [""_player"",""_heli"",""_rappelPoint""];
 // Updated Code
-AR_Rappel_From_Heli = compileFinal "
+AR_Rappel_From_Heli = compileFinal {
 params ['_player','_heli'];
 if (isServer) then {
     if (!alive _player || {!alive _heli} || {!(_player in _heli)}) exitWith {};
@@ -240,18 +242,18 @@ if (isServer) then {
         if (_bulkAI && {_freeAnchors > 0} && {(_heli getVariable ['QS_AR_releaseState','']) isEqualTo 'WAITING'}) then {
             _heli setVariable ['QS_AR_releaseState','BLOCKED'];
         };
-        if (isPlayer _player) then {[[""All rappel anchors in use. Please try again."",FALSE],'AR_Hint',_player] call AR_RemoteExec;};
+        if (isPlayer _player) then {[["All rappel anchors in use. Please try again.",FALSE],'AR_Hint',_player] call AR_RemoteExec;};
     };
     if (_bulkAI) then {_heli setVariable ['QS_AR_releaseState','RELEASED'];};
     // AI_RAPPEL_RELEASE_GATE_END
-		_heli setVariable [""AR_Rappelling_Player_"" + str _rappelPointIndex,_player];  		_player setVariable [""AR_Is_Rappelling"",true,true];
+		_heli setVariable ["AR_Rappelling_Player_" + str _rappelPointIndex,_player];  		_player setVariable ["AR_Is_Rappelling",true,true];
         _player setVariable ['AR_Rappelling_Vehicle',_heli,true];
         private _serial = 1 + (_player getVariable ['QS_AR_serial',0]);
         _player setVariable ['QS_AR_serial',_serial,true];
-        _heli setVariable ['QS_AR_anchorSerial_' + str _rappelPointIndex,_serial];  		[_player,_heli,_rappelPoints # _rappelPointIndex,_serial] spawn AR_Client_Rappel_From_Heli;  		[_player, _heli, _rappelPointIndex,_serial] spawn { 			params [""_player"",""_heli"", ""_rappelPointIndex"",'_serial'];
+        _heli setVariable ['QS_AR_anchorSerial_' + str _rappelPointIndex,_serial];  		[_player,_heli,_rappelPoints # _rappelPointIndex,_serial] spawn AR_Client_Rappel_From_Heli;  		[_player, _heli, _rappelPointIndex,_serial] spawn { 			params ["_player","_heli", "_rappelPointIndex",'_serial'];
             private _expires = diag_tickTime + 180; 			for '_x' from 0 to 1 step 0 do { 				if (!alive _player || {!alive _heli} ||
                     {(_player getVariable ['QS_AR_serial',-1]) isNotEqualTo _serial} ||
-                    {!isPlayer _player && {diag_tickTime >= _expires}}) exitWith {}; 				if!(_player getVariable [""AR_Is_Rappelling"", false]) exitWith {}; 				sleep 2; 			}; 			// RAPPEL_ANCHOR_RELEASE_BEGIN
+                    {!isPlayer _player && {diag_tickTime >= _expires}}) exitWith {}; 				if!(_player getVariable ["AR_Is_Rappelling", false]) exitWith {}; 				sleep 2; 			}; 			// RAPPEL_ANCHOR_RELEASE_BEGIN
             // A late old monitor must not release a reused anchor or a new rappel.
             if ((_player getVariable ['QS_AR_serial',-1]) isEqualTo _serial) then {
                 _player setVariable ['AR_Is_Rappelling',false,true];
@@ -263,10 +265,10 @@ if (isServer) then {
                 _heli setVariable ['QS_AR_anchorSerial_' + str _rappelPointIndex,nil];
             };
             // RAPPEL_ANCHOR_RELEASE_END
-                    };  	} else { 		[_this,""AR_Rappel_From_Heli"",true] call AR_RemoteExecServer; 	};
-";
-AR_Client_Rappel_From_Heli = compileFinal "
-params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
+                    };  	} else { 		[_this,"AR_Rappel_From_Heli",true] call AR_RemoteExecServer; 	};
+};
+AR_Client_Rappel_From_Heli = compileFinal {
+params ["_player","_heli","_rappelPoint",['_serial',-1]];
     if (_serial < 0) then {_serial = _player getVariable ['QS_AR_serial',0];};
     // A server request can precede public-variable replication on the owner.
     // Wait briefly for its serial, then reject a cancelled or superseded request.
@@ -372,21 +374,21 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 		_ropeKeyDownHandler = -1;
 		_ropeKeyUpHandler = -1;
 		if (_player isEqualTo player) then {
-			_player setVariable [""AR_DECEND_PRESSED"",false];
-			_player setVariable [""AR_FAST_DECEND_PRESSED"",false];
-			_player setVariable [""AR_RANDOM_DECEND_SPEED_ADJUSTMENT"",0];
+			_player setVariable ["AR_DECEND_PRESSED",false];
+			_player setVariable ["AR_FAST_DECEND_PRESSED",false];
+			_player setVariable ["AR_RANDOM_DECEND_SPEED_ADJUSTMENT",0];
 /* Legacy Code as of 9.9.2026 */
 //|			_ropeKeyDownHandler = (findDisplay 46) displayAddEventHandler [
 // Updated Code
 			_ropeKeyDownHandler = _ropeDisplay displayAddEventHandler [
 // End Updated Code
-				""KeyDown"",
+				"KeyDown",
 				{
-					if(_this # 1 in (actionKeys ""MoveBack"")) then {
-						player setVariable [""AR_DECEND_PRESSED"",true];
+					if(_this # 1 in (actionKeys "MoveBack")) then {
+						player setVariable ["AR_DECEND_PRESSED",true];
 					};
-					if(_this # 1 in (actionKeys ""Turbo"")) then {
-						player setVariable [""AR_FAST_DECEND_PRESSED"",true];
+					if(_this # 1 in (actionKeys "Turbo")) then {
+						player setVariable ["AR_FAST_DECEND_PRESSED",true];
 					};
 				}
 			];
@@ -395,48 +397,48 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 // Updated Code
 			_ropeKeyUpHandler = _ropeDisplay displayAddEventHandler [
 // End Updated Code
-				""KeyUp"",
+				"KeyUp",
 				{
-					if(_this # 1 in (actionKeys ""MoveBack"")) then {
-						player setVariable [""AR_DECEND_PRESSED"",false];
+					if(_this # 1 in (actionKeys "MoveBack")) then {
+						player setVariable ["AR_DECEND_PRESSED",false];
 					};
-					if(_this # 1 in (actionKeys ""Turbo"")) then {
-						player setVariable [""AR_FAST_DECEND_PRESSED"",false];
+					if(_this # 1 in (actionKeys "Turbo")) then {
+						player setVariable ["AR_FAST_DECEND_PRESSED",false];
 					};
 				}
 			];
 		} else {
-			_player setVariable [""AR_DECEND_PRESSED"",false];
-			_player setVariable [""AR_FAST_DECEND_PRESSED"",false];
+			_player setVariable ["AR_DECEND_PRESSED",false];
+			_player setVariable ["AR_FAST_DECEND_PRESSED",false];
 /* Legacy Code as of 9.9.2026 */
-//|			_player setVariable [""AR_RANDOM_DECEND_SPEED_ADJUSTMENT"",(random 2) - 1];
+//|			_player setVariable ["AR_RANDOM_DECEND_SPEED_ADJUSTMENT",(random 2) - 1];
 //|			[_player] spawn {
-//|				params [""_player""];
+//|				params ["_player"];
 //|				uiSleep 2;
-//|				_player setVariable [""AR_DECEND_PRESSED"",true];
+//|				_player setVariable ["AR_DECEND_PRESSED",true];
 // Updated Code
-			_player setVariable [""AR_RANDOM_DECEND_SPEED_ADJUSTMENT"",0];
+			_player setVariable ["AR_RANDOM_DECEND_SPEED_ADJUSTMENT",0];
 			[_player,_serial] spawn {
-                params [""_player"",'_serial'];
+                params ["_player",'_serial'];
                 uiSleep 2;
                 if ((_player getVariable ['QS_AR_serial',-1]) isEqualTo _serial && {_player getVariable ['AR_Is_Rappelling',false]}) then {
-                    _player setVariable [""AR_DECEND_PRESSED"",true];
+                    _player setVariable ["AR_DECEND_PRESSED",true];
                 };
 // End Updated Code
 			};
 		};
 /* Legacy Code as of 9.9.2026 */
 //|		_this spawn {
-//|			params [""_player"",""_heli""];
-//|			while {_player getVariable [""AR_Is_Rappelling"", false]} do {
+//|			params ["_player","_heli"];
+//|			while {_player getVariable ["AR_Is_Rappelling", false]} do {
 // Updated Code
 		[_player,_heli,_serial] spawn {
-			params [""_player"",""_heli"",""_serial""];
+			params ["_player","_heli","_serial"];
 			while {alive _player && {alive _heli} && {_player getVariable ['AR_Is_Rappelling',false]} && {(_player getVariable ['QS_AR_serial',-1]) isEqualTo _serial}} do {
 // End Updated Code
 				if(speed _heli > 150) then {
 					if(isPlayer _player) then {
-						[""Moving too fast! You've lost grip of the rope."", false] call AR_Hint;
+						["Moving too fast! You've lost grip of the rope.", false] call AR_Hint;
 					};
 					[_player] call AR_Rappel_Detach_Action;
 				};
@@ -471,17 +473,17 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 			_rappelDevice setVectorDir (vectorDir _player);
 			_player setPosWorld (_newPosition vectorAdd [0,0,-0.6]);
 			_player setVelocity [0,0,0];
-			if(_player getVariable [""AR_DECEND_PRESSED"",false]) then {
+			if(_player getVariable ["AR_DECEND_PRESSED",false]) then {
 /* Legacy Code as of 9.9.2026 */
 //|				_decendSpeedMetersPerSecond = 3.5;
 // Updated Code
 				// AI use the existing fast descent rate; player input remains unchanged.
 				_decendSpeedMetersPerSecond = [5,3.5] select (isPlayer _player);
 // End Updated Code
-				if(_player getVariable [""AR_FAST_DECEND_PRESSED"",false]) then {
+				if(_player getVariable ["AR_FAST_DECEND_PRESSED",false]) then {
 					_decendSpeedMetersPerSecond = 5;
 				};
-				_decendSpeedMetersPerSecond = _decendSpeedMetersPerSecond + (_player getVariable [""AR_RANDOM_DECEND_SPEED_ADJUSTMENT"",0]);
+				_decendSpeedMetersPerSecond = _decendSpeedMetersPerSecond + (_player getVariable ["AR_RANDOM_DECEND_SPEED_ADJUSTMENT",0]);
 				_bottomRopeLength = _bottomRopeLength - (_timeSinceLastUpdate * _decendSpeedMetersPerSecond);
 				_topRopeLength = _topRopeLength + (_timeSinceLastUpdate * _decendSpeedMetersPerSecond);
 				ropeUnwind [_topRope, _decendSpeedMetersPerSecond, _topRopeLength - 0.5];
@@ -518,7 +520,7 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 				_player setDir _dir;
 			};
 			_lastPosition = _newPosition;
-			if ( (((getPos _player) # 2) < 1) || (!((lifeState _player) in ['HEALTHY','INJURED'])) || ((vehicle _player) isNotEqualTo _player) || (_bottomRopeLength <= 1) || (_player getVariable [""AR_Detach_Rope"",false]) ) exitWith {};
+			if ( (((getPos _player) # 2) < 1) || (!((lifeState _player) in ['HEALTHY','INJURED'])) || ((vehicle _player) isNotEqualTo _player) || (_bottomRopeLength <= 1) || (_player getVariable ["AR_Detach_Rope",false]) ) exitWith {};
 			uiSleep 0.01;
 		};
 /* Legacy Code as of 9.9.2026 */
@@ -531,19 +533,19 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 			_surfaces = lineIntersectsSurfaces [_playerStartASLIntersect, _playerEndASLIntersect, _player, objNull, true, 10];
 			_intersectionASL = [];
 			{
-				scopeName ""surfaceLoop"";
+				scopeName "surfaceLoop";
 				_intersectionObject = _x # 2;
 				_objectFileName = str _intersectionObject;
-				if((_objectFileName find "" t_"") isEqualTo -1 && (_objectFileName find "" b_"") isEqualTo -1) then {
+				if((_objectFileName find " t_") isEqualTo -1 && (_objectFileName find " b_") isEqualTo -1) then {
 					_intersectionASL = _x # 0;
-					breakOut ""surfaceLoop"";
+					breakOut "surfaceLoop";
 				};
 			} forEach _surfaces;
 			if (_intersectionASL isNotEqualTo []) then {
 				_player allowDamage false;
 				_player setPosASL _intersectionASL;
 			};
-			if(_player getVariable [""AR_Detach_Rope"",false]) then {
+			if(_player getVariable ["AR_Detach_Rope",false]) then {
 				if (_intersectionASL isEqualTo []) then {
 					_player allowDamage true;
 				};
@@ -565,28 +567,28 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 		deleteVehicle _anchor;
 		deleteVehicle _rappelDevice;
 /* Legacy Code as of 9.9.2026 */
-//|		_player setVariable [""AR_Is_Rappelling"",nil,true];
+//|		_player setVariable ["AR_Is_Rappelling",nil,true];
 // Updated Code
 		if ((_player getVariable ['QS_AR_serial',0]) isEqualTo _serial) then {
-        _player setVariable [""AR_Is_Rappelling"",nil,true];
+        _player setVariable ["AR_Is_Rappelling",nil,true];
 // End Updated Code
-		_player setVariable [""AR_Rappelling_Vehicle"", nil, true];
-		_player setVariable [""AR_Detach_Rope"",nil];
+		_player setVariable ["AR_Rappelling_Vehicle", nil, true];
+		_player setVariable ["AR_Detach_Rope",nil];
 // Added Code
         };
 // End Updated Code
 		if (_ropeKeyDownHandler isNotEqualTo -1) then {
 /* Legacy Code as of 9.9.2026 */
-//|			(findDisplay 46) displayRemoveEventHandler [""KeyDown"", _ropeKeyDownHandler];
+//|			(findDisplay 46) displayRemoveEventHandler ["KeyDown", _ropeKeyDownHandler];
 // Updated Code
-			_ropeDisplay displayRemoveEventHandler [""KeyDown"", _ropeKeyDownHandler];
+			_ropeDisplay displayRemoveEventHandler ["KeyDown", _ropeKeyDownHandler];
 // End Updated Code
 		};
 		if (_ropeKeyUpHandler isNotEqualTo -1) then {
 /* Legacy Code as of 9.9.2026 */
-//|			(findDisplay 46) displayRemoveEventHandler [""KeyUp"", _ropeKeyUpHandler];
+//|			(findDisplay 46) displayRemoveEventHandler ["KeyUp", _ropeKeyUpHandler];
 // Updated Code
-			_ropeDisplay displayRemoveEventHandler [""KeyUp"", _ropeKeyUpHandler];
+			_ropeDisplay displayRemoveEventHandler ["KeyUp", _ropeKeyUpHandler];
 // End Updated Code
 		};
 		uiSleep 2;
@@ -596,9 +598,9 @@ params [""_player"",""_heli"",""_rappelPoint"",['_serial',-1]];
 		if ((_player getVariable ['QS_AR_serial',0]) isEqualTo _serial) then {_player allowDamage true;};
 // End Updated Code
 	} else {
-		[_this,""AR_Client_Rappel_From_Heli"",_player] call AR_RemoteExec;
+		[_this,"AR_Client_Rappel_From_Heli",_player] call AR_RemoteExec;
 	};
-";
+};
 AR_Enable_Rappelling_Animation = compileFinal " 	params [""_player""]; 	[75,[_player,TRUE],'AR_Enable_Rappelling_Animation_Client',FALSE] remoteExec ['QS_fnc_remoteExec',0,FALSE]; ";
 AR_Current_Weapon_Type_Selected = compileFinal " 	params [""_player""]; 	if(currentWeapon _player isEqualTo handgunWeapon _player) exitWith {""HANDGUN""}; 	if(currentWeapon _player isEqualTo primaryWeapon _player) exitWith {""PRIMARY""}; 	if(currentWeapon _player isEqualTo secondaryWeapon _player) exitWith {""SECONDARY""}; 	""OTHER""; ";
 /* Legacy Code as of 9.9.2026 */
