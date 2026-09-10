@@ -40,9 +40,18 @@ private _createdEH = addMissionEventHandler ["EntityCreated", {
     [
         _entity,
         _entity getVariable ["TGC_friendlyAI_collisionEH", -1],
-        _entity getVariable ["TGC_friendlyAI_damageEH", -1]
+/* Legacy Code as of 9.9.2026 */
+//|        _entity getVariable ["TGC_friendlyAI_damageEH", -1]
+// Updated Code
+        _entity getVariable ["TGC_friendlyAI_damageEH", -1],
+        _entity getVariable ["TGC_bluforSpeech_localEH", -1]
+// End Updated Code
     ] spawn {
-        params ["_entity", "_createdCollisionEH", "_createdDamageEH"];
+/* Legacy Code as of 9.9.2026 */
+//|        params ["_entity", "_createdCollisionEH", "_createdDamageEH"];
+// Updated Code
+        params ["_entity", "_createdCollisionEH", "_createdDamageEH", "_createdSpeechEH"];
+// End Updated Code
         uiSleep 0;
         if (isNull _entity) exitWith {};
 
@@ -62,6 +71,19 @@ private _createdEH = addMissionEventHandler ["EntityCreated", {
             {(_entity getEventHandlerInfo ["HandleDamage", _createdDamageEH]) param [0, false]}
         ) then {
             _entity removeEventHandler ["HandleDamage", _createdDamageEH];
+// Added Code
+        };
+
+        // Match the existing respawn cleanup for the new locality handler.
+        // EntityCreated can run before Arma copies the old body's namespace.
+        private _trackedSpeechEH = _entity getVariable ["TGC_bluforSpeech_localEH", -1];
+        if (
+            (_createdSpeechEH >= 0) &&
+            {_createdSpeechEH isNotEqualTo _trackedSpeechEH} &&
+            {(_entity getEventHandlerInfo ["Local", _createdSpeechEH]) param [0, false]}
+        ) then {
+            _entity removeEventHandler ["Local", _createdSpeechEH];
+// End Updated Code
         };
 
         [_entity] call TGC_fnc_addFriendlyAIHandlers;

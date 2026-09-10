@@ -14,7 +14,11 @@ Author:
     thegamecracks
 
 */
-params [["_unit", objNull, [objNull]]];
+/* Legacy Code as of 9.9.2026 */
+//|params [["_unit", objNull, [objNull]]];
+// Updated Code
+params [["_unit", objNull, [objNull]], ["_speechOnly", false, [false]]];
+// End Updated Code
 
 if (
     (isNull _unit) ||
@@ -26,6 +30,51 @@ if (
         {!(_unit isKindOf "C_UAV_AI_F")}
     }
 ) exitWith {};
+// Added Code
+
+// BLUFOR_SPEECH_BEGIN
+// The existing global creation/JIP hook calls this on every machine because
+// setSpeaker has a local effect. RADIOPROTOCOL also stops automatic text
+// reports; movement, targeting and orders remain enabled.
+private _silent = !isPlayer _unit && {_unit isKindOf "CAManBase"} && {side (group _unit) isEqualTo WEST};
+private _savedSpeaker = _unit getVariable ["TGC_bluforSpeech_speaker", []];
+if (_silent) then {
+    if (_savedSpeaker isEqualTo [] || {(_savedSpeaker # 0) isNotEqualTo _unit}) then {
+        _unit setVariable ["TGC_bluforSpeech_speaker", [_unit, speaker _unit]];
+    };
+    _unit setSpeaker "NoVoice";
+    _unit disableConversation true;
+    if (local _unit) then {
+        if (isNil {_unit getVariable "TGC_bluforSpeech_radio"}) then {
+            _unit setVariable ["TGC_bluforSpeech_radio", _unit checkAIFeature "RADIOPROTOCOL"];
+        };
+        _unit enableAIFeature ["RADIOPROTOCOL", false];
+    };
+} else {
+    // If an AI becomes a player, restore only the speaker/radio state we
+    // changed. Player VOIP and scripted Crossroads announcements are separate.
+    if (_savedSpeaker isNotEqualTo []) then {
+        if (speaker _unit isEqualTo "NoVoice") then {_unit setSpeaker (_savedSpeaker # 1);};
+        _unit setVariable ["TGC_bluforSpeech_speaker", nil];
+    };
+    if (local _unit && {!isNil {_unit getVariable "TGC_bluforSpeech_radio"}}) then {
+        _unit enableAIFeature ["RADIOPROTOCOL", _unit getVariable "TGC_bluforSpeech_radio"];
+        _unit setVariable ["TGC_bluforSpeech_radio", nil];
+    };
+};
+// Locality transfers reapply owner-only AI settings without moving the
+// damage handler or installing another mission loop.
+private _speechEH = _unit getVariable ["TGC_bluforSpeech_localEH", -1];
+if !(_speechEH >= 0 && {(_unit getEventHandlerInfo ["Local", _speechEH]) param [0, false]}) then {
+    _speechEH = _unit addEventHandler ["Local", {
+        params ["_unit"];
+        [_unit, true] call TGC_fnc_addFriendlyAIHandlers;
+    }];
+    _unit setVariable ["TGC_bluforSpeech_localEH", _speechEH];
+};
+if (_speechOnly) exitWith {};
+// BLUFOR_SPEECH_END
+// End Updated Code
 
 private _existingCollisionEH = _unit getVariable ["TGC_friendlyAI_collisionEH", -1];
 if !(
