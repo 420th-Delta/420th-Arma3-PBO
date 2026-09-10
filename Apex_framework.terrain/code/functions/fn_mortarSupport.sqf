@@ -430,7 +430,9 @@ private _uid = getPlayerUID _caller;
 if (_uid isEqualTo '') exitWith {};
 private _row = _rows getOrDefault [_uid,createHashMap];
 if (_mode isEqualTo 'RESET') exitWith {
-    if (count _this isNotEqualTo 2 || {!([_caller,FALSE] call _fn_roleHolder)}) exitWith {};
+    // Incapacitation keeps nearby equipment for recovery but suspends every
+    // support action, including an authenticated direct RESET request.
+    if (count _this isNotEqualTo 2 || {!([_caller] call _fn_roleHolder)}) exitWith {};
     if (count _row > 0) then {[_row] call _fn_clearSection;};
     [_caller,'Mortar section reset.'] call _fn_private;
 };
