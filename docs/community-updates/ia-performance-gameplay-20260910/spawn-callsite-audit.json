@@ -1,0 +1,506 @@
+[
+  {
+    "file": "fn_AI.sqf",
+    "line": 2099,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_landing,1,(_landing getDir _goal),_class,TRUE,TRUE,400,{\n\t\t\tparams ['_point'];\n\t\t\t(_point distance2D (markerPos 'QS_marker_base_marker')) > 1200 &&\n\t\t\t{(_point distance2D _pos) < (_radius + 500)} && {!([_point,_goal,25] call QS_fnc_waterIntersect)}\n\t\t}]"
+  },
+  {
+    "file": "fn_AI.sqf",
+    "line": 2203,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_landing,_quantity,_heading,'O_Soldier_F',TRUE,TRUE,180,{\n\t\t\tparams ['_point'];\n\t\t\t(_point distance2D (markerPos 'QS_marker_base_marker')) > 1200 &&\n\t\t\t{(_point distance2D _pos) < (_radius + 500)} && {!([_point,_goal,25] call QS_fnc_waterIntersect)}\n\t\t}]"
+  },
+  {
+    "file": "fn_ambientHostility.sqf",
+    "line": 105,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_spawnPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,TRUE,300,_fn_groundPosition]"
+  },
+  {
+    "file": "fn_ambientHostility.sqf",
+    "line": 172,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPosition,_grpSize,random 360,'O_Soldier_F',TRUE,FALSE,300,_fn_groundPosition]"
+  },
+  {
+    "file": "fn_aoDefend.sqf",
+    "line": 931,
+    "kind": "expanded-group",
+    "arguments": 10,
+    "call": "[[_spawn,[-1015,-1015,0]] select _lift,_direction,EAST,_infType,FALSE,grpNull,!_lift,TRUE,_fn_infantryPosition,_infantrySpawnDistanceFromPlayer]"
+  },
+  {
+    "file": "fn_aoDefend.sqf",
+    "line": 1102,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],TRUE,FALSE,400,{\n\t\t\t\t\tparams ['_point'];\n\t\t\t\t\t(_point distance2D _centerPos) < 1201 && {_point call _fn_blacklist} && {!([_point,_centerPos,25] call _fn_waterIntersect)}\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_aoDefend.sqf",
+    "line": 1229,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _groundTransportType,_groundTransportType],TRUE,FALSE,400,{\n\t\t\t\t\t\t\tparams ['_point'];\n\t\t\t\t\t\t\t(_point distance2D _centerPos) < 1201 && {_point call _fn_blacklist} && {!([_point,_centerPos,25] call _fn_waterIntersect)}\n\t\t\t\t\t\t}]"
+  },
+  {
+    "file": "fn_aoEnemy.sqf",
+    "line": 156,
+    "kind": "expanded-group",
+    "arguments": 9,
+    "call": "[_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE,{\n\t\t\tparams ['_point']; (_point distance2D _centerPos) < (_aoSize * 1.5) && {['BLACKLIST',_point] call QS_fnc_findRandomPos}\n\t\t}]"
+  },
+  {
+    "file": "fn_aoEnemy.sqf",
+    "line": 454,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,_infUrbanType,FALSE]"
+  },
+  {
+    "file": "fn_aoEnemy.sqf",
+    "line": 528,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_randomPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _AOvehType,_AOvehType],TRUE,FALSE,-1,{\n\t\tparams ['_point']; (_point distance2D _centerPos) <= _centerRadius\n\t}]"
+  },
+  {
+    "file": "fn_aoEnemy.sqf",
+    "line": 639,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,'OI_SniperTeam_2',FALSE]"
+  },
+  {
+    "file": "fn_aoEnemy.sqf",
+    "line": 769,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,_infUrbanType,FALSE]"
+  },
+  {
+    "file": "fn_aoEnemy.sqf",
+    "line": 789,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,_infUrbanType,FALSE]"
+  },
+  {
+    "file": "fn_aoEnemyReinforce.sqf",
+    "line": 166,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[_spawnPosDefault,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_aoEnemyReinforceVehicles.sqf",
+    "line": 90,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_roadRoadValid,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vType,_vType],TRUE,FALSE,250,{\n\tparams ['_point']; _point call _fn_blacklist && {(_point distance2D _baseMarker) > 500} && {!([_point,_pos,25] call QS_fnc_waterIntersect)}\n}]"
+  },
+  {
+    "file": "fn_aoForestCamp.sqf",
+    "line": 52,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_position,(random 360),RESISTANCE,selectRandomWeighted _sentryTypes,FALSE]"
+  },
+  {
+    "file": "fn_aoForestCamp.sqf",
+    "line": 65,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_position,(random 360),RESISTANCE,selectRandomWeighted _sentryTypes,FALSE]"
+  },
+  {
+    "file": "fn_aoMortarPit.sqf",
+    "line": 66,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_position,(random 360),RESISTANCE,_sentryType,FALSE]"
+  },
+  {
+    "file": "fn_aoMortarSite.sqf",
+    "line": 123,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPos,(random 360),EAST,(selectRandom ['OG_ReconSentry','OG_SniperTeam_M']),FALSE]"
+  },
+  {
+    "file": "fn_aoTaskIDAP.sqf",
+    "line": 439,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_reinforceSpawnPos,(_reinforceSpawnPos getDir _connectedRoadPos),EAST,'OG_InfSquad_Weapons',FALSE]"
+  },
+  {
+    "file": "fn_fobEnemyAssault.sqf",
+    "line": 48,
+    "kind": "expanded-group",
+    "arguments": 10,
+    "call": "[_spawnPosDefault,(random 360),EAST,_infType,FALSE,grpNull,FALSE,TRUE,_fn_position,350]"
+  },
+  {
+    "file": "fn_gridEnemy.sqf",
+    "line": 208,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPosition,_enemyTeamSize,random 360,'O_Soldier_F',TRUE,FALSE,-1,{\n\t\t\tparams ['_point']; (!(_spawnPosition inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})\n\t\t}]"
+  },
+  {
+    "file": "fn_gridEnemy.sqf",
+    "line": 285,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',(_patrolRoute # 0),_enemyTeamSize,random 360,'O_Soldier_F',TRUE,FALSE,-1,{\n\t\t\tparams ['_point']; (!((_patrolRoute # 0) inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})\n\t\t}]"
+  },
+  {
+    "file": "fn_gridEnemy.sqf",
+    "line": 388,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_spawnPos,1,_spawnDirection,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (!(_spawnPos inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_gridSpawnAttack.sqf",
+    "line": 95,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,_teamSize,random 360,'O_Soldier_F',TRUE,FALSE,300,{\n\t\t\tparams ['_point']; (_point distance2D _igPos) < 1001 && {_point call _fn_blacklist} && {!([_point,_igPos,25] call QS_fnc_waterIntersect)}\n\t\t}]"
+  },
+  {
+    "file": "fn_gridSpawnPatrol.sqf",
+    "line": 96,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPosition,_teamSize,random 360,'O_Soldier_F',TRUE,FALSE,300,{\n\t\t\tparams ['_point']; (!(_spawnPosition inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})\n\t\t}]"
+  },
+  {
+    "file": "fn_gridSpawnPatrol.sqf",
+    "line": 186,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',(_patrolRoute # 0),_teamSize,random 360,'O_Soldier_F',TRUE,FALSE,300,{\n\t\t\tparams ['_point']; (!((_patrolRoute # 0) inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})\n\t\t}]"
+  },
+  {
+    "file": "fn_missionGeorgetown.sqf",
+    "line": 1273,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (_point distance2D _aaPatrolCenter) <= _aaPatrolRadius\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_missionGeorgetown.sqf",
+    "line": 1306,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (_point distance2D _sniperPatrolCenter) <= _sniperPatrolRadius\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_missionGeorgetown.sqf",
+    "line": 1339,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (_point distance2D _atPatrolCenter) <= _atPatrolRadius\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_missionKavala.sqf",
+    "line": 1100,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (_point distance2D _aaPatrolCenter) <= _aaPatrolRadius\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_missionKavala.sqf",
+    "line": 1133,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (_point distance2D _sniperPatrolCenter) <= _sniperPatrolRadius\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_missionKavala.sqf",
+    "line": 1166,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{\n\t\t\t\t\tparams ['_point']; (_point distance2D _atPatrolCenter) <= _atPatrolRadius\n\t\t\t\t}]"
+  },
+  {
+    "file": "fn_scEnemy.sqf",
+    "line": 253,
+    "kind": "expanded-group",
+    "arguments": 9,
+    "call": "[_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE,{\n\t\tparams ['_point']; (_point distance2D _centerPos) <= _centerRadius && {['BLACKLIST',_point] call QS_fnc_findRandomPos}\n\t}]"
+  },
+  {
+    "file": "fn_scEnemy.sqf",
+    "line": 634,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),_side,'OI_SniperTeam',FALSE]"
+  },
+  {
+    "file": "fn_scSpawnGroup.sqf",
+    "line": 94,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[_position,(random 360),EAST,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_scSpawnGroup.sqf",
+    "line": 143,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[_position,_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_scSpawnGroup.sqf",
+    "line": 242,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[_position,_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_scSpawnGroup.sqf",
+    "line": 340,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_scSpawnGroup.sqf",
+    "line": 453,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[[(_worldSize + (random 1000)),(_worldSize + (random 1000)),(50 + (random 50))],_direction,_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_scSpawnLandVehicle.sqf",
+    "line": 90,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_randomRoadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,500,{\n\tparams ['_point']; _point call _fn_blacklist && {!([_point,_centerPos,25] call QS_fnc_waterIntersect)}\n}]"
+  },
+  {
+    "file": "fn_scSubObjective.sqf",
+    "line": 220,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_position,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_scSubObjective.sqf",
+    "line": 238,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[(_position getPos [(random 30),(random 360)]),(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_scSubObjective.sqf",
+    "line": 376,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_position,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_scSubObjective.sqf",
+    "line": 392,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[(_position getPos [(random 30),(random 360)]),(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_scSubObjective.sqf",
+    "line": 520,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_position,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_scSubObjective.sqf",
+    "line": 534,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[(_position getPos [(random 30),(random 360)]),(random 360),EAST,(selectRandom ['OIA_InfSentry','OIA_InfSentry']),FALSE]"
+  },
+  {
+    "file": "fn_smEnemyDivers.sqf",
+    "line": 173,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_relPos,(random 360),RESISTANCE,'HAF_DiverSentry',FALSE]"
+  },
+  {
+    "file": "fn_smEnemyEast.sqf",
+    "line": 43,
+    "kind": "legacy-compact",
+    "arguments": 8,
+    "call": "[_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE]"
+  },
+  {
+    "file": "fn_smEnemyEast.sqf",
+    "line": 61,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,'OI_SniperTeam_2',FALSE]"
+  },
+  {
+    "file": "fn_smEnemyEastIntel.sqf",
+    "line": 31,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,_infType,FALSE]"
+  },
+  {
+    "file": "fn_smEnemyGuer.sqf",
+    "line": 34,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,_infTeam,FALSE]"
+  },
+  {
+    "file": "fn_smEnemyGuer.sqf",
+    "line": 52,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),EAST,'OG_SniperTeam_M',FALSE]"
+  },
+  {
+    "file": "fn_smEnemyInd.sqf",
+    "line": 35,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),RESISTANCE,_infTeam,FALSE]"
+  },
+  {
+    "file": "fn_smEnemyInd.sqf",
+    "line": 53,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_randomPos,(random 360),RESISTANCE,'HAF_SniperTeam',FALSE]"
+  },
+  {
+    "file": "fn_SMEscortVehicle.sqf",
+    "line": 541,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPos,(_spawnPos getDir _vehiclePos),_groupSide,_enemyGroupType,TRUE]"
+  },
+  {
+    "file": "fn_SMEscortVehicle.sqf",
+    "line": 569,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPos,(_spawnPos getDir _vehiclePos),_groupSide,_enemyGroupType,TRUE]"
+  },
+  {
+    "file": "fn_SMEscortVehicle.sqf",
+    "line": 602,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPos,(_spawnPos getDir _vehiclePos),_groupSide,_enemyGroupType,TRUE]"
+  },
+  {
+    "file": "fn_SMEscortVehicle.sqf",
+    "line": 675,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPos,(_spawnPos getDir _vehiclePos),_groupSide,_enemyGroupType,TRUE]"
+  },
+  {
+    "file": "fn_smIDAP.sqf",
+    "line": 34,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPosition,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_smIDAP.sqf",
+    "line": 82,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPosition,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_smIDAP.sqf",
+    "line": 177,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPosition,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_smIDAP.sqf",
+    "line": 196,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_spawnPosition,(random 360),EAST,(selectRandom _grpTypes),FALSE]"
+  },
+  {
+    "file": "fn_SMrescuePOW.sqf",
+    "line": 1287,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_QS_clearPos,(random 360),EAST,'OI_reconTeam',FALSE]"
+  },
+  {
+    "file": "fn_SMsecureUrban.sqf",
+    "line": 531,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_safePos,(random 360),EAST,'OIA_GuardSentry',FALSE]"
+  },
+  {
+    "file": "fn_SMsecureUrban.sqf",
+    "line": 576,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_safePos,(random 360),EAST,'OIA_GuardSentry',FALSE]"
+  },
+  {
+    "file": "fn_SMsecureUrban.sqf",
+    "line": 623,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_safePos,(random 360),EAST,'OIA_GuardSentry',FALSE]"
+  },
+  {
+    "file": "fn_SMsecureUrban.sqf",
+    "line": 942,
+    "kind": "legacy-compact",
+    "arguments": 5,
+    "call": "[_QS_clearPos,(random 360),EAST,'OI_reconTeam',FALSE]"
+  },
+  {
+    "file": "fn_spawnGroup.sqf",
+    "line": 192,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_pos,count _groupComposition,_dir,'O_Soldier_F',TRUE,FALSE,_groundExclusion,_groundValid]"
+  },
+  {
+    "file": "fn_spawnSupport.sqf",
+    "line": 37,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_roadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,-1,_groundValid]"
+  },
+  {
+    "file": "fn_spawnSupport.sqf",
+    "line": 91,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['VEHICLE_SLOTS',_roadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vTypes,_vTypes],TRUE,FALSE,-1,_groundValid]"
+  },
+  {
+    "file": "fn_spawnViperTeam.sqf",
+    "line": 61,
+    "kind": "expanded-slots",
+    "arguments": 9,
+    "call": "['SLOTS',_position1,_total - _quantity,random 360,'O_Soldier_F',TRUE,FALSE,250,{\n\t\tparams ['_point'];\n\t\t(_point distance2D _centerPos) < 1500 &&\n\t\t{['BLACKLIST',_point] call QS_fnc_findRandomPos} &&\n\t\t{((_point nearRoads 25) select {roadsConnectedTo _x isNotEqualTo []}) isEqualTo []} &&\n\t\t{([AGLToASL _point,_checkVisibleDistance,_playersOnGround,[WEST,CIVILIAN,SIDEFRIENDLY],0,0] call QS_fnc_isPosVisible) <= 0.1}\n\t}]"
+  }
+]

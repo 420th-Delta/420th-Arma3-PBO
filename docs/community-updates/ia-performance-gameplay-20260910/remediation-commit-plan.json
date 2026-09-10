@@ -1,0 +1,104 @@
+{
+  "support": [
+    "Apex_framework.terrain/code/functions/fn_artillerySupport.sqf",
+    "Apex_framework.terrain/code/functions/fn_clientDamageModifier.sqf",
+    "Apex_framework.terrain/code/functions/fn_clientEventHit.sqf",
+    "Apex_framework.terrain/code/functions/fn_mortarSupport.sqf"
+  ],
+  "ai_spawn": [
+    "Apex_framework.terrain/code/functions/fn_AI.sqf",
+    "Apex_framework.terrain/code/functions/fn_ambientHostility.sqf",
+    "Apex_framework.terrain/code/functions/fn_aoDefend.sqf",
+    "Apex_framework.terrain/code/functions/fn_aoEnemy.sqf",
+    "Apex_framework.terrain/code/functions/fn_aoEnemyReinforceVehicles.sqf",
+    "Apex_framework.terrain/code/functions/fn_findRandomPos.sqf",
+    "Apex_framework.terrain/code/functions/fn_fobEnemyAssault.sqf",
+    "Apex_framework.terrain/code/functions/fn_gridEnemy.sqf",
+    "Apex_framework.terrain/code/functions/fn_gridSpawnAttack.sqf",
+    "Apex_framework.terrain/code/functions/fn_gridSpawnPatrol.sqf",
+    "Apex_framework.terrain/code/functions/fn_missionGeorgetown.sqf",
+    "Apex_framework.terrain/code/functions/fn_scEnemy.sqf",
+    "Apex_framework.terrain/code/functions/fn_scSpawnHeli.sqf",
+    "Apex_framework.terrain/code/functions/fn_scSpawnLandVehicle.sqf",
+    "Apex_framework.terrain/code/functions/fn_spawnGroup.sqf",
+    "Apex_framework.terrain/code/functions/fn_spawnSupport.sqf",
+    "Apex_framework.terrain/code/functions/fn_spawnViperTeam.sqf"
+  ],
+  "rappel": [
+    "Apex_framework.terrain/code/scripts/AR_AdvancedRappelling_ext.sqf"
+  ],
+  "radio": [
+    "Apex_framework.terrain/TGC/Functions/Channels/fn_refreshStaffChannelAccess.sqf",
+    "Apex_framework.terrain/TGC/Functions/Staff/fn_staffChannelsGUI.sqf",
+    "Apex_framework.terrain/code/functions/fn_clientMenuRadio.sqf",
+    "Apex_framework.terrain/code/functions/fn_clientRadio.sqf",
+    "Apex_framework.terrain/code/functions/fn_config.sqf"
+  ],
+  "cleanup": [
+    "Apex_framework.terrain/code/functions/fn_clientEventPut.sqf",
+    "Apex_framework.terrain/code/functions/fn_core.sqf",
+    "Apex_framework.terrain/code/functions/fn_missionKavala.sqf"
+  ],
+  "baseline_client_audio": [
+    "Apex_framework.terrain/code/functions/fn_clientCore.sqf",
+    "Apex_framework.terrain/code/functions/fn_initPlayerLocal.sqf"
+  ],
+  "baseline_mapper": [
+    "Apex_framework.terrain/code/functions/fn_serverObjectsMapper.sqf",
+    "Apex_framework.terrain/code/functions/fn_serverPublishEntityState.sqf",
+    "Apex_framework.terrain/code/functions/fn_clientApplyEntityState.sqf"
+  ],
+  "native_test_tooling": [
+    "tests/ia-update/.gitignore",
+    "tests/ia-update/README.md",
+    "tests/ia-update/ai-spawn-client.sqf",
+    "tests/ia-update/ai-spawn-dependencies.sqf",
+    "tests/ia-update/ai-spawn-server.sqf",
+    "tests/ia-update/ai_spawn_extract.py",
+    "tests/ia-update/campaign.py",
+    "tests/ia-update/damage-client.sqf",
+    "tests/ia-update/damage-server.sqf",
+    "tests/ia-update/damage_extract.py",
+    "tests/ia-update/guided-client.sqf",
+    "tests/ia-update/guided-server.sqf",
+    "tests/ia-update/harness-init.sqf",
+    "tests/ia-update/hq-delete-client.sqf",
+    "tests/ia-update/hq-delete-dependencies.sqf",
+    "tests/ia-update/hq-delete-entity-state-observer.sqf",
+    "tests/ia-update/hq-delete-server.sqf",
+    "tests/ia-update/hq_delete_extract.py",
+    "tests/ia-update/integration-cycle.sqf",
+    "tests/ia-update/integration-init.sqf",
+    "tests/ia-update/integration.py",
+    "tests/ia-update/mfd_control.py",
+    "tests/ia-update/radio-cleanup-client.sqf",
+    "tests/ia-update/radio-cleanup-server-body.sqf",
+    "tests/ia-update/radio-cleanup-server.sqf",
+    "tests/ia-update/radio_cleanup_extract.py",
+    "tests/ia-update/run.py",
+    "tests/ia-update/summarize.py",
+    "tests/ia-update/support-artillery-client.sqf",
+    "tests/ia-update/support-artillery-server.sqf",
+    "tests/ia-update/support-client.sqf",
+    "tests/ia-update/support-dependencies.sqf",
+    "tests/ia-update/support-rpc.sqf",
+    "tests/ia-update/support-server.sqf",
+    "tests/ia-update/validate_config.py"
+  ],
+  "verification_docs": [
+    "docs/community-updates/ia-performance-gameplay-20260910/LOCAL_TEST_REPORT.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/README.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/REMEDIATION_LEDGER.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/ai-spawn-remediation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/client-audio-remediation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/damage-remediation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/guided-native-investigation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/hq-native-investigation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/native-campaign.json",
+    "docs/community-updates/ia-performance-gameplay-20260910/radio-cleanup-remediation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/remediation-commit-plan.json",
+    "docs/community-updates/ia-performance-gameplay-20260910/spawn-callsite-audit.json",
+    "docs/community-updates/ia-performance-gameplay-20260910/stock-mfd-investigation.md",
+    "docs/community-updates/ia-performance-gameplay-20260910/support-remediation.md"
+  ]
+}

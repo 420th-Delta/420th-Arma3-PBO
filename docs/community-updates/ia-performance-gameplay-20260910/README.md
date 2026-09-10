@@ -1,6 +1,6 @@
 # JollyRogerEXP performance and gameplay update review
 
-**Status: draft review; gameplay has unresolved findings.** Reviewed on 2026-09-10 against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`. Contributor: [JollyRogerEXP](https://github.com/JollyRogerEXP). The code commits preserve the supplied changes, with documented integration repairs and whitespace cleanup. Review findings have not been silently fixed or omitted.
+**Status: local remediation and controlled native verification complete; human/deployment acceptance remains.** Start with the [local test report](LOCAL_TEST_REPORT.md) and [remediation ledger](REMEDIATION_LEDGER.md) for current fixes and evidence. The original review below describes the imported contribution before corrective work. Reviewed on 2026-09-10 against upstream `a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7`. Contributor: [JollyRogerEXP](https://github.com/JollyRogerEXP). The initial code commits preserve the supplied changes with documented integration repairs and whitespace cleanup; subsequent corrections remain separately reviewable.
 
 ## Reading order
 
@@ -8,7 +8,7 @@
 2. Read the affected subsystem report: [AI and insertion](review-ai.md), [player support and damage](review-support.md), or [systems](review-systems.md).
 3. Use the contributor's [release notes](RELEASE_NOTES.md) and [technical reference](TECHNICAL_NOTES.md) for intended behavior and acceptance scenarios. These two files are supplied documentation; only one trailing space in the technical reference was removed for Git whitespace validation. Their test counts are contributor claims: the referenced 15 verifiers, 58,320 assertions, SQF-VM adapters and detailed logs were not included or independently rerun.
 
-## Findings that need resolution
+## Findings recorded at import
 
 Line references in the subsystem reports identify the incoming package, before upstream merge shifts. Severity describes code impact; conditional issues remain explicitly conditional.
 
@@ -40,6 +40,26 @@ The first seven groups are independent from the large gameplay activation. Group
 
 A final documentation commit records this review and the contributor's reference material. Existing PR #55 is separate from this branch; its pending air-defense additions were not used as the base.
 
+### Corrective commit classification
+
+The original nine commits remain intact. Nine follow-up commits bring the local stack to 18, separated by the behavior they repair:
+
+| Group | Scope |
+| --- | --- |
+| Role support and virtual fire | Atomic authenticated service transitions; menus, resource accounting, mortar transfer and debit; status publication; guided release and damage attribution. |
+| AI ownership and placement | Rotary cleanup ownership/exemptions; server-only GRID dispatch; audited final-position rules and bounded searches. |
+| Rappel initialization | Compile the five deferred helper bodies as preprocessed code. |
+| Radio lifecycle and access | Side fallback, staff masks and asynchronous old-body retirement. |
+| Deferred cleanup | Activity generations, current object protection and inventory-based holder deadlines; Kavala final spawn exclusions use the preceding AI placement correction. |
+| Baseline client audio | Avoid vehicle-only sound queries on on-foot players; separate from the supplied contribution. |
+| Baseline mapper synchronization | Final birth position for fresh land Houses; post-callback orientation in the existing authenticated JIP snapshot; atomic snapshot publication. Separate from the supplied contribution. |
+| Native regression tooling | Frozen focused/integrated fixtures, owned-process containment, strict result gates and optional pinned stock-MFD test control. |
+| Verification documentation | Issue ledger, preserved failure history, sanitized campaign results and remaining human/deployment acceptance. |
+
+The [exact corrective path groups](remediation-commit-plan.json) map all 35 modified production files once: support 4, AI/spawn 17, rappel 1, radio 5, cleanup 3, baseline client audio 2 and baseline mapper/snapshot synchronization 3. Apply AI/spawn before cleanup because Kavala also adopts its final-position validator. Test tooling and verification documents follow as separate groups.
+
+The pinned MFD control is a local test option, not a mission content change or repair to the stock game asset. No game binaries, private configuration or raw operational logs belong in these commits.
+
 ## Baseline and integration
 
 - Verified all 59 delivered payload hashes (55 modified runtime files and four additions).
@@ -49,7 +69,7 @@ A final documentation commit records this review and the contributor's reference
 - The radio old-body parameter moved to fourth position so upstream's existing third target-body parameter remains valid. Donor entitlement is included in the radio cache key. Spawn/cleanup instrumentation follows the changed admission/deletion paths. See [merge details](merge-systems.md) and the AI report.
 - Normalized 50 changed lines with whitespace errors, including embedded SQF code literals. Nested string contents were preserved; the non-whitespace character stream is unchanged. Original patch/payload hashes remain available in [provenance](provenance.json).
 
-## Validation actually performed
+## Validation recorded at import
 
 | Check | Result and scope |
 | --- | --- |
@@ -68,9 +88,9 @@ Local raw evidence is held in the sibling `IA-PerformanceGameplayUpdate-review-2
 
 ## Next acceptance steps
 
-Resolve the findings in separate corrective commits so the contributor's original behavior and subsequent corrections remain reviewable. Obtain the referenced offline fixtures. Then run Primary to Defense to next Primary with real players and the intended HC/mod configuration; exercise role lifecycle, released-shot attribution, mortar cancellation/resource accounting, final-reserve cleanup, spawn exclusions, interrupted insertion/rappel and city cleanup. Compare performance with matched populations, AI/vehicle counts and activity stages before making performance claims.
+The corrective changes and local native evidence are recorded above and in the linked ledger. Human and deployment acceptance should exercise the complete interactive placement UI, actual respawn/revive, independent-account permissions, voice delivery, player-facing accountability, moving guided targets, interrupted insertion/rappel, restarted city activities, natural victory and full-duration Defense with the intended mods/database. Obtain the contributor's referenced offline fixtures if that claimed coverage is needed. Compare performance with matched populations, AI/vehicle counts and activity stages before making performance claims. The stock Scout MFD limitation remains open as external content issue EXT-1.
 
-## Complete runtime inventory
+## Original imported runtime inventory
 
 | Mission-relative path | Commit group | Status |
 | --- | ---: | --- |
@@ -133,3 +153,5 @@ Resolve the findings in separate corrective commits so the contributor's origina
 | `code/scripts/IA_MegaDefense.sqf` | 8 | Added |
 | `description.ext` | 8 | Modified |
 | `media/images/roles/arid/forward_observer.jpg` | 8 | Added |
+
+The final branch changes 64 runtime paths against the recorded upstream base. Beyond the 59 imported paths above, corrections add `TGC/Functions/Staff/fn_staffChannelsGUI.sqf`, `code/functions/fn_findRandomPos.sqf`, `code/functions/fn_serverObjectsMapper.sqf`, `code/functions/fn_serverPublishEntityState.sqf` and `code/functions/fn_clientApplyEntityState.sqf`. These are corrections to existing repository files, not five new runtime files.
