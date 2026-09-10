@@ -35,6 +35,8 @@
     "production_paths_match_commit_plan": 10,
     "test_paths_match_commit_plan": 15,
     "documentation_paths_match_commit_plan": 13,
+    "total_runtime_paths_vs_upstream": 65,
+    "second_pass_commits": 7,
     "pr_55_overlap_paths": 1,
     "pr_55_merged_dispatcher_blob": "509b1a8d91261ecdba960a39754a4795ae6e406a",
     "pr_55_merge_tree_both_orders_match": true,

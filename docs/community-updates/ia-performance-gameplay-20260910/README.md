@@ -68,7 +68,7 @@ The original nine commits remain intact. The first remediation pass added nine c
 
 The [exact corrective path groups](remediation-commit-plan.json) map all 35 modified production files once: support 4, AI/spawn 17, rappel 1, radio 5, cleanup 3, baseline client audio 2 and baseline mapper/snapshot synchronization 3. Apply AI/spawn before cleanup because Kavala also adopts its final-position validator. Test tooling and verification documents follow as separate groups.
 
-The second pass adds six commits, bringing the prepared stack to 24: AI creation/artillery/cutoff ordering; bound rappel RPC and active-descent cleanup; radio retirement/mapping cleanup; support cooldown and role policy; portable focused fixtures; and final adjudication/evidence documentation. Its ten production paths are grouped separately in the same commit plan. New commits carry explanatory bodies; the earlier nine follow-up commits remain unchanged as historical review artifacts.
+The second pass uses six semantic groups plus a final path-accounting correction, adding seven commits and bringing the stack to 25: AI creation/artillery/cutoff ordering; bound rappel RPC and active-descent cleanup; radio retirement/mapping cleanup; support cooldown and role policy; portable focused fixtures; adjudication/evidence documentation; and the accounting correction. Its ten production paths are grouped separately in the same commit plan. New commits carry explanatory bodies; the earlier nine follow-up commits remain unchanged as historical review artifacts.
 
 The pinned MFD control is a local test option, not a mission content change or repair to the stock game asset. No game binaries, private configuration or raw operational logs belong in these commits.
 
@@ -166,4 +166,4 @@ The corrective changes and local native evidence are recorded above and in the l
 | `description.ext` | 8 | Modified |
 | `media/images/roles/arid/forward_observer.jpg` | 8 | Added |
 
-The final branch changes 64 runtime paths against the recorded upstream base. Beyond the 59 imported paths above, corrections add `TGC/Functions/Staff/fn_staffChannelsGUI.sqf`, `code/functions/fn_findRandomPos.sqf`, `code/functions/fn_serverObjectsMapper.sqf`, `code/functions/fn_serverPublishEntityState.sqf` and `code/functions/fn_clientApplyEntityState.sqf`. These are corrections to existing repository files, not five new runtime files.
+The final branch changes 65 runtime paths against the recorded upstream base. Beyond the 59 imported paths above, corrections add `TGC/Functions/Staff/fn_staffChannelsGUI.sqf`, `code/functions/fn_findRandomPos.sqf`, `code/functions/fn_remoteExec.sqf`, `code/functions/fn_serverObjectsMapper.sqf`, `code/functions/fn_serverPublishEntityState.sqf` and `code/functions/fn_clientApplyEntityState.sqf`. These are corrections to existing repository files, not six new runtime files.
