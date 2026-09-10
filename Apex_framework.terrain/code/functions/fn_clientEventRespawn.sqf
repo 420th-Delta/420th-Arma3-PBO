@@ -80,11 +80,20 @@ enableRadio TRUE;
 	_x call TGC_fnc_enableChannel;
 } count [
 	[0,[FALSE,FALSE]],
-	[1,[TRUE,_isAdmin]],
+/* Legacy Code as of 9.9.2026 */
+//|	[1,[TRUE,_isAdmin]],
+// Updated Code
+	[1,[FALSE,FALSE]],
+// End Updated Code
 	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
-	[5,[TRUE,TRUE]]
+/* Legacy Code as of 9.9.2026 */
+//|	[5,[TRUE,TRUE]]
+// Updated Code
+	[5,[TRUE,TRUE]],
+	[13,[TRUE,FALSE]]
+// End Updated Code
 ];
 [] call TGC_fnc_refreshChannels;
 for '_i' from 0 to 499 step 1 do {
@@ -244,7 +253,8 @@ if (_deploymentData isEqualTo []) then {
 ['SET_SAVED_LOADOUT',(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_fnc_roles');
 // Channel membership belongs to the unit object. Restore the captured respawn
 // unit synchronously so delayed killed-event work cannot act on a new `player`.
-[2,-1,_newUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+[2,-1,_newUnit,_oldUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+[TRUE] call TGC_fnc_refreshStaffChannelAccess;
 _newUnit spawn {
 	private _respawnUnit = _this;
 	uiSleep 1;

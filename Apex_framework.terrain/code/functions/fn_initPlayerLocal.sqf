@@ -919,11 +919,20 @@ enableRadio TRUE;
 	_x call TGC_fnc_enableChannel;
 } count [
 	[0,[FALSE,FALSE]],
-	[1,[TRUE,_isAdmin]],
+/* Legacy Code as of 9.9.2026 */
+//|	[1,[TRUE,_isAdmin]],
+// Updated Code
+	[1,[FALSE,FALSE]],
+// End Updated Code
 	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
-	[5,[TRUE,TRUE]]
+/* Legacy Code as of 9.9.2026 */
+//|	[5,[TRUE,TRUE]]
+// Updated Code
+	[5,[TRUE,TRUE]],
+	[13,[TRUE,FALSE]]
+// End Updated Code
 ];
 [] call TGC_fnc_refreshChannels;
 if (currentChannel isEqualTo 4) then {
@@ -990,11 +999,15 @@ if (isNil {missionProfileNamespace getVariable 'QS_client_radioChannels_profile'
 				[1,7] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 			};
 		};
-		if ((_QS_radioChannels_profile # 7) isEqualType TRUE) then {
-			if (_QS_radioChannels_profile # 7) then {
-				[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-			};
-		};
+/* Legacy Code as of 9.9.2026 */
+//|		if ((_QS_radioChannels_profile # 7) isEqualType TRUE) then {
+//|			if (_QS_radioChannels_profile # 7) then {
+//|				[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+//|			};
+//|		};
+// Updated Code
+		// General is mandatory; ignore the old optional General preference.
+// End Updated Code
 		if ((_QS_radioChannels_profile # 8) isEqualType TRUE) then {
 			if ((_QS_radioChannels_profile # 8) && {_isDonator}) then {
 				[1,9] call (missionNamespace getVariable 'QS_fnc_clientRadio');
@@ -1009,6 +1022,9 @@ missionNamespace setVariable ['QS_client_channelAccessInitialized',TRUE,FALSE];
 	while {TRUE} do {
 		uiSleep 1;
 		[4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+// Added Code
+		[] call TGC_fnc_refreshStaffChannelAccess;
+// End Updated Code
 	};
 };
 if (missionNamespace getVariable ['QS_missionConfig_introMusic',TRUE]) then {

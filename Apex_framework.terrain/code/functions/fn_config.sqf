@@ -394,6 +394,17 @@ private _weaponsList = configFile >> 'CfgWeapons';
 		],
 		TRUE
 	],
+// Added Code
+	// Optional player Side channel. Separate from the existing ten channels;
+	// never rename or expose the private Staff/Admin channel.
+	// Match native Side directly from the game chat configuration.
+	['QS_radioChannel_side',(radioChannelCreate [(call {
+		private _colour = getArray (configFile >> 'CfgInGameUI' >> 'Chat' >> 'colorSideChannel');
+		// Keep allocation valid if a mod omits or replaces the native setting.
+		if (count _colour isNotEqualTo 4 || {(_colour findIf {!(_x isEqualType 0)}) >= 0}) then {_colour = [0,0.8,1,1];};
+		_colour
+	}),'Side channel','%UNIT_GRP_NAME (%UNIT_NAME)',[],TRUE]),TRUE],
+// End Updated Code
 	['QS_enemyGroundReinforceArray',[],TRUE],
 	['QS_enemyVehicleReinforcementsArray',[],TRUE],
 	['QS_enemyVehicleReinforcements_crew',[],TRUE],
@@ -851,11 +862,20 @@ _markers = nil;
 	_x call TGC_fnc_enableChannel;
 } count [
 	[0,[FALSE,FALSE]],
-	[1,[TRUE,FALSE]],
+/* Legacy Code as of 9.9.2026 */
+//|	[1,[TRUE,FALSE]],
+// Updated Code
+	[1,[FALSE,FALSE]],
+// End Updated Code
 	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
 	[4,[TRUE,TRUE]],
-	[5,[TRUE,TRUE]]
+/* Legacy Code as of 9.9.2026 */
+//|	[5,[TRUE,TRUE]]
+// Updated Code
+	[5,[TRUE,TRUE]],
+	[13,[TRUE,FALSE]] // General text open; voice remains closed until client authorization.
+// End Updated Code
 ];
 [] call TGC_fnc_refreshChannels;
 ['Initialize',[FALSE,50,FALSE,'']] call (missionNamespace getVariable 'BIS_fnc_dynamicGroups');

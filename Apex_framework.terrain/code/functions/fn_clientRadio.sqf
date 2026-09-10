@@ -17,7 +17,11 @@ Example:
 	[0,((missionNamespace getVariable 'QS_radioChannels') # 2)] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 __________________________________________________________*/
 
-params ['_type','_channel',['_unit',player]];
+params ['_type','_channel',['_unit',player],['_oldUnit',objNull]];
+// Added Code
+// General is a required broadcast subscription, including while awaiting respawn.
+if ((_type isEqualTo 0) && {_channel isEqualTo 8}) exitWith {};
+// End Updated Code
 if (_type isEqualTo 0) then {
 	if (_channel in (missionNamespace getVariable 'QS_client_radioChannels')) then {
 		_channel radioChannelRemove [_unit];
@@ -45,6 +49,11 @@ if (_type isEqualTo 0) then {
 	} else {
 		if (_type isEqualTo 2) then {
 			/*/Respawn Event/*/
+// Added Code
+			if (!isNull _oldUnit && {_oldUnit isNotEqualTo _unit}) then {
+				{_x radioChannelRemove [_oldUnit];} forEach (missionNamespace getVariable 'QS_client_radioChannels');
+			};
+// End Updated Code
 			if ((missionNamespace getVariable 'QS_client_radioChannels') isNotEqualTo []) then {
 				{
 					_x radioChannelAdd [_unit];
@@ -58,7 +67,11 @@ if (_type isEqualTo 0) then {
 				};
 				if ((missionNamespace getVariable 'QS_client_radioChannels') isNotEqualTo []) then {
 					{
-						_x radioChannelRemove [_unit];
+/* Legacy Code as of 9.9.2026 */
+//|						_x radioChannelRemove [player];
+// Updated Code
+						if (_x isNotEqualTo 8) then {_x radioChannelRemove [_unit];};
+// End Updated Code
 					} forEach (missionNamespace getVariable 'QS_client_radioChannels');
 				};
 			} else {
