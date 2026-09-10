@@ -190,13 +190,16 @@ private _handle = [_vehicle,_rappelHeight,_positionASL,_pilot,_heliGroup,_fn_act
 			uiSleep 0.05;
 		};
 	};
-	// Every normal/failed/expired/activity-change path reaches this same cleanup.
-	// Clearing the AI flag lets each descent release its own rope and helpers.
-	{
-		if ((_x getVariable ['AR_Rappelling_Vehicle',objNull]) isEqualTo _vehicle) then {
-			_x setVariable ['AR_Is_Rappelling',FALSE,TRUE];
-		};
-	} forEach _rappelUnits;
+	// Administrative cancellation stops new releases, but an already descending
+	// unit keeps its rope while the Taru caller holds position. Fatal aircraft
+	// failure still ends every attached descent immediately.
+	if (!alive _vehicle || {!alive _pilot} || {!canMove _vehicle}) then {
+		{
+			if ((_x getVariable ['AR_Rappelling_Vehicle',objNull]) isEqualTo _vehicle) then {
+				_x setVariable ['AR_Is_Rappelling',FALSE,TRUE];
+			};
+		} forEach _rappelUnits;
+	};
 	if (!isNull _heliGroup && {local _heliGroup}) then {
 		_heliGroup setBehaviour _behaviour; _heliGroup setCombatMode _combatMode; _heliGroup setFormation _formation;
 		_heliGroup setVariable ['QS_AI_GRP_HC_EXCLUDED',_hcExcluded,TRUE];
@@ -219,8 +222,21 @@ AR_Get_Heli_Rappel_Points = compileFinal " 	params [""_vehicle""]; 	 	 	private 
 //|	params [""_player"",""_heli"",""_rappelPoint""];
 // Updated Code
 AR_Rappel_From_Heli = compileFinal {
-params ['_player','_heli'];
+params ['_player','_heli',['_requestOwner',2,[0]]];
 if (isServer) then {
+	private _fn_authorizedRequest = {
+		if (_requestOwner <= 2) exitWith {TRUE};
+        private _sender = (allPlayers select {((owner _x) isEqualTo _requestOwner) && {!(_x isKindOf 'HeadlessClient_F')}}) param [0,objNull];
+        private _selfRequest = _player isEqualTo _sender;
+        private _groupAIRequest = !isPlayer _player && {(owner _player) isEqualTo _requestOwner} &&
+            {(group _player) isEqualTo (group _sender)} && {(leader _sender) isEqualTo _sender} &&
+            {isNull (remoteControlled _player)} &&
+            {isNull (_player getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])};
+		!isNull _sender && {_sender in _heli} &&
+            {_selfRequest || {_groupAIRequest}} &&
+			{[_player,_heli] call AR_Rappel_From_Heli_Action_Check}
+	};
+    if (!(call _fn_authorizedRequest)) exitWith {};
     if (!alive _player || {!alive _heli} || {!(_player in _heli)}) exitWith {};
     if (_player getVariable ['AR_Is_Rappelling',FALSE]) exitWith {};
     private _rappelPoints = [_heli] call AR_Get_Heli_Rappel_Points;
@@ -246,11 +262,35 @@ if (isServer) then {
     };
     if (_bulkAI) then {_heli setVariable ['QS_AR_releaseState','RELEASED'];};
     // AI_RAPPEL_RELEASE_GATE_END
-		_heli setVariable ["AR_Rappelling_Player_" + str _rappelPointIndex,_player];  		_player setVariable ["AR_Is_Rappelling",true,true];
-        _player setVariable ['AR_Rappelling_Vehicle',_heli,true];
-        private _serial = 1 + (_player getVariable ['QS_AR_serial',0]);
-        _player setVariable ['QS_AR_serial',_serial,true];
-        _heli setVariable ['QS_AR_anchorSerial_' + str _rappelPointIndex,_serial];  		[_player,_heli,_rappelPoints # _rappelPointIndex,_serial] spawn AR_Client_Rappel_From_Heli;  		[_player, _heli, _rappelPointIndex,_serial] spawn { 			params ["_player","_heli", "_rappelPointIndex",'_serial'];
+		private _sessionOwner = owner _player;
+		private _clientSessionKey = ['',netId _player] select (_sessionOwner > 2);
+		if (_sessionOwner > 2 && {_clientSessionKey in ['','0:0']}) exitWith {};
+		private _serial = -1;
+		private _claimed = FALSE;
+		// Claim the passenger, anchor and globally unique generation in one server
+		// transition. Client-published object variables never choose the serial.
+		isNil {
+			if (call _fn_authorizedRequest && {alive _player} && {alive _heli} && {_player in _heli} &&
+				{!(_player getVariable ['AR_Is_Rappelling',FALSE])} &&
+				{isNull (_heli getVariable ['AR_Rappelling_Player_' + str _rappelPointIndex,objNull])}) then {
+				private _lastSerial = serverNamespace getVariable ['QS_AR_nextSerial',0];
+				if (!(_lastSerial isEqualType 0) || {!finite _lastSerial} || {_lastSerial < 0}) then {_lastSerial = 0;};
+				_serial = _lastSerial + 1;
+				serverNamespace setVariable ['QS_AR_nextSerial',_serial];
+				_heli setVariable ['AR_Rappelling_Player_' + str _rappelPointIndex,_player];
+				_player setVariable ['AR_Is_Rappelling',TRUE,TRUE];
+				_player setVariable ['AR_Rappelling_Vehicle',_heli,TRUE];
+				_player setVariable ['QS_AR_serial',_serial,TRUE];
+				if (_sessionOwner > 2) then {
+					private _sessions = serverNamespace getVariable ['QS_AR_clientSessions',createHashMap];
+					_sessions set [_clientSessionKey,[_player,_serial,_sessionOwner,_heli,diag_tickTime + 240,objNull,objNull,FALSE]];
+					serverNamespace setVariable ['QS_AR_clientSessions',_sessions];
+				};
+				_claimed = TRUE;
+			};
+		};
+		if (!_claimed) exitWith {};
+		_heli setVariable ['QS_AR_anchorSerial_' + str _rappelPointIndex,_serial];  		[_player,_heli,_rappelPoints # _rappelPointIndex,_serial] spawn AR_Client_Rappel_From_Heli;  		[_player, _heli, _rappelPointIndex,_serial,_clientSessionKey] spawn { 			params ["_player","_heli", "_rappelPointIndex",'_serial','_clientSessionKey'];
             private _expires = diag_tickTime + 180; 			for '_x' from 0 to 1 step 0 do { 				if (!alive _player || {!alive _heli} ||
                     {(_player getVariable ['QS_AR_serial',-1]) isNotEqualTo _serial} ||
                     {!isPlayer _player && {diag_tickTime >= _expires}}) exitWith {}; 				if!(_player getVariable ["AR_Is_Rappelling", false]) exitWith {}; 				sleep 2; 			}; 			// RAPPEL_ANCHOR_RELEASE_BEGIN
@@ -263,7 +303,12 @@ if (isServer) then {
                 {(_heli getVariable ['AR_Rappelling_Player_' + str _rappelPointIndex,objNull]) isEqualTo _player}) then {
                 _heli setVariable ['AR_Rappelling_Player_' + str _rappelPointIndex,nil];
                 _heli setVariable ['QS_AR_anchorSerial_' + str _rappelPointIndex,nil];
-            };
+			};
+			private _sessions = serverNamespace getVariable ['QS_AR_clientSessions',createHashMap];
+			private _session = _sessions getOrDefault [_clientSessionKey,[]];
+			if ((count _session) >= 2 && {(_session # 0) isEqualTo _player} && {(_session # 1) isEqualTo _serial}) then {
+				_sessions deleteAt _clientSessionKey;
+			};
             // RAPPEL_ANCHOR_RELEASE_END
                     };  	} else { 		[_this,"AR_Rappel_From_Heli",true] call AR_RemoteExecServer; 	};
 };
@@ -310,12 +355,9 @@ params ["_player","_heli","_rappelPoint",['_serial',-1]];
 		_anchor = createVehicle ['Land_Can_V2_F',[(random 10),(random 10),(10 + (random 10))],[],0,'NONE'];
 		_anchor allowDamage false;
 		_anchor hideObject TRUE;
-		[[_anchor],'AR_Hide_Object_Global',TRUE] call AR_RemoteExecServer;
+		[[_anchor,_player,_serial,_heli],'AR_Hide_Object_Global',TRUE] call AR_RemoteExecServer;
 		_anchor disableCollisionWith _heli;
 		_heli disableCollisionWith _anchor;
-		if (!local _heli) then {
-			[65,_anchor,_heli,FALSE] remoteExecCall ['QS_fnc_remoteExec',_heli,FALSE];
-		};
 		[1,_anchor,[_heli,_rappelPoint]] call QS_fnc_eventAttach;
 		_deviceType = 'B_UAV_01_F';
 		_rappelDevice = createVehicle [_deviceType,[(random 10),(random 10),(10 + (random 10))],[],0,'NONE'];
@@ -324,14 +366,10 @@ params ["_player","_heli","_rappelPoint",['_serial',-1]];
 		_rappelDevice hideObject TRUE;
 		_rappelDevice hideObject TRUE;
 		for '_x' from 0 to 1 step 1 do {
-			[[_rappelDevice],'AR_Hide_Object_Global',TRUE] call AR_RemoteExecServer;
+			[[_rappelDevice,_player,_serial,_heli],'AR_Hide_Object_Global',TRUE] call AR_RemoteExecServer;
 		};
 		_rappelDevice disableCollisionWith _heli;
 		_heli disableCollisionWith _rappelDevice;
-		if (canSuspend) then {
-			uiSleep 0.01;
-		};
-		[65,_rappelDevice,_heli,FALSE,101] remoteExecCall ['QS_fnc_remoteExec',0,FALSE];
 		if (canSuspend) then {
 			uiSleep 0.01;
 		};
@@ -557,10 +595,10 @@ params ["_player","_heli","_rappelPoint",['_serial',-1]];
 /* Legacy Code as of 9.9.2026 */
 //|		ropeDestroy _topRope;
 // Updated Code
-		if ((_player getVariable ['QS_AR_serial',0]) isEqualTo _serial) then {
-            _player removeEventHandler ['Deleted',_deletedEH];
-            _player removeEventHandler ['Killed',_killedEH];
-        };
+		// These handler IDs belong to this worker. A newer serial owns shared
+		// state, but it does not own or replace these registrations.
+		_player removeEventHandler ['Deleted',_deletedEH];
+		_player removeEventHandler ['Killed',_killedEH];
         if (((_player getVariable ['QS_AR_helpers',[-1]]) # 0) isEqualTo _serial) then {_player setVariable ['QS_AR_helpers',nil];};
         ropeDestroy _topRope;
 // End Updated Code
@@ -609,7 +647,7 @@ AR_Current_Weapon_Type_Selected = compileFinal " 	params [""_player""]; 	if(curr
 AR_Enable_Rappelling_Animation_Client = compileFinal "
 params [""_player"",[""_globalExec"",false]];
         private _serial = _player getVariable ['QS_AR_serial',0];
-        if (!alive _player || {!(_player getVariable ['AR_Is_Rappelling',false])}) exitWith {}; 	 	if(local _player && _globalExec) exitWith {}; 	 	if(local _player && !_globalExec) then { 		[[_player],""AR_Enable_Rappelling_Animation""] call AR_RemoteExecServer; 	};  	if (_player isNotEqualTo player) then { 		_player enableSimulation false; 	}; 	 	if(call AR_Has_Addon_Animations_Installed) then {		 		if([_player] call AR_Current_Weapon_Type_Selected isEqualTo ""HANDGUN"") then { 			if(local _player) then { 				if(missionNamespace getVariable [""AR_DISABLE_SHOOTING_OVERRIDE"",false]) then { 					_player switchMove ""AR_01_Idle_Pistol_No_Actions""; 				} else { 					_player switchMove ""AR_01_Idle_Pistol""; 				}; 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_Pistol_No_Actions"",true]; 			} else { 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_Pistol_No_Actions""];			 			}; 		} else { 			if(local _player) then { 				if(missionNamespace getVariable [""AR_DISABLE_SHOOTING_OVERRIDE"",false]) then { 					_player switchMove ""AR_01_Idle_No_Actions""; 				} else { 					_player switchMove ""AR_01_Idle""; 				}; 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_No_Actions"",true]; 			} else { 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_No_Actions""]; 			}; 		}; 		if!(local _player) then {  			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 			sleep 1; 			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 			sleep 1; 			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 			sleep 1; 			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 		}; 	} else { 		if(local _player) then { 			_player switchMove ""HubSittingChairC_idle1""; 			_player setVariable [""AR_Animation_Move"",""HubSittingChairC_idle1"",true]; 		} else { 			_player setVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""];		 		}; 	};  	_animationEventHandler = -1; 	if(local _player) then { 		_animationEventHandler = _player addEventHandler [""AnimChanged"",{ 			params [""_player"",""_animation""]; 			if(call AR_Has_Addon_Animations_Installed) then { 				if((toLowerANSI _animation) find ""ar_"" < 0) then { 					if([_player] call AR_Current_Weapon_Type_Selected isEqualTo ""HANDGUN"") then { 						_player switchMove ""AR_01_Aim_Pistol""; 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_Pistol_No_Actions"",true]; 					} else { 						_player switchMove ""AR_01_Aim""; 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_No_Actions"",true]; 					}; 				} else { 					if(toLowerANSI _animation isEqualTo ""ar_01_aim"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_No_Actions"",true]; 					}; 					if(toLowerANSI _animation isEqualTo ""ar_01_idle"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Idle_No_Actions"",true]; 					}; 					if(toLowerANSI _animation isEqualTo ""ar_01_aim_pistol"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_Pistol_No_Actions"",true]; 					}; 					if(toLowerANSI _animation isEqualTo ""ar_01_idle_pistol"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Idle_Pistol_No_Actions"",true]; 					}; 				}; 			} else { 				_player switchMove ""HubSittingChairC_idle1""; 				_player setVariable [""AR_Animation_Move"",""HubSittingChairC_idle1"",true]; 			}; 		}]; 	}; 	 	if(!local _player) then { 		[_player,_serial] spawn { 			params [""_player"",""_serial""]; 			private [""_currentState""]; 			while {alive _player && {_player getVariable ['AR_Is_Rappelling',false]} && {(_player getVariable ['QS_AR_serial',0]) isEqualTo _serial}} do { 				_currentState = toLowerANSI animationState _player; 				_newState = toLowerANSI (_player getVariable [""AR_Animation_Move"",""""]); 				if!(call AR_Has_Addon_Animations_Installed) then { 					_newState = ""HubSittingChairC_idle1""; 				}; 				if(_currentState != _newState) then { 					_player switchMove _newState; 					_player switchGesture """"; 					sleep 1; 					_player switchMove _newState; 					_player switchGesture """"; 				}; 				sleep 0.1; 			};			 		}; 	}; 	 	waitUntil {uiSleep 0.1; !alive _player || {!(_player getVariable ['AR_Is_Rappelling',false])} || {(_player getVariable ['QS_AR_serial',0]) isNotEqualTo _serial}}; 	 	if ((_player getVariable ['QS_AR_serial',0]) isNotEqualTo _serial) exitWith {};
+        if (!alive _player || {!(_player getVariable ['AR_Is_Rappelling',false])}) exitWith {}; 	 	if(local _player && _globalExec) exitWith {}; 	 	if(local _player && !_globalExec) then { 		[[_player],""AR_Enable_Rappelling_Animation""] call AR_RemoteExecServer; 	};  	if (_player isNotEqualTo player) then { 		_player enableSimulation false; 	}; 	 	if(call AR_Has_Addon_Animations_Installed) then {		 		if([_player] call AR_Current_Weapon_Type_Selected isEqualTo ""HANDGUN"") then { 			if(local _player) then { 				if(missionNamespace getVariable [""AR_DISABLE_SHOOTING_OVERRIDE"",false]) then { 					_player switchMove ""AR_01_Idle_Pistol_No_Actions""; 				} else { 					_player switchMove ""AR_01_Idle_Pistol""; 				}; 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_Pistol_No_Actions"",true]; 			} else { 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_Pistol_No_Actions""];			 			}; 		} else { 			if(local _player) then { 				if(missionNamespace getVariable [""AR_DISABLE_SHOOTING_OVERRIDE"",false]) then { 					_player switchMove ""AR_01_Idle_No_Actions""; 				} else { 					_player switchMove ""AR_01_Idle""; 				}; 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_No_Actions"",true]; 			} else { 				_player setVariable [""AR_Animation_Move"",""AR_01_Idle_No_Actions""]; 			}; 		}; 		if!(local _player) then {  			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 			sleep 1; 			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 			sleep 1; 			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 			sleep 1; 			_player switchMove (_player getVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""]); 		}; 	} else { 		if(local _player) then { 			_player switchMove ""HubSittingChairC_idle1""; 			_player setVariable [""AR_Animation_Move"",""HubSittingChairC_idle1"",true]; 		} else { 			_player setVariable [""AR_Animation_Move"",""HubSittingChairC_idle1""];		 		}; 	};  	_animationEventHandler = -1; 	if(local _player) then { 		_animationEventHandler = _player addEventHandler [""AnimChanged"",{ 			params [""_player"",""_animation""]; 			if(call AR_Has_Addon_Animations_Installed) then { 				if((toLowerANSI _animation) find ""ar_"" < 0) then { 					if([_player] call AR_Current_Weapon_Type_Selected isEqualTo ""HANDGUN"") then { 						_player switchMove ""AR_01_Aim_Pistol""; 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_Pistol_No_Actions"",true]; 					} else { 						_player switchMove ""AR_01_Aim""; 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_No_Actions"",true]; 					}; 				} else { 					if(toLowerANSI _animation isEqualTo ""ar_01_aim"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_No_Actions"",true]; 					}; 					if(toLowerANSI _animation isEqualTo ""ar_01_idle"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Idle_No_Actions"",true]; 					}; 					if(toLowerANSI _animation isEqualTo ""ar_01_aim_pistol"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Aim_Pistol_No_Actions"",true]; 					}; 					if(toLowerANSI _animation isEqualTo ""ar_01_idle_pistol"") then { 						_player setVariable [""AR_Animation_Move"",""AR_01_Idle_Pistol_No_Actions"",true]; 					}; 				}; 			} else { 				_player switchMove ""HubSittingChairC_idle1""; 				_player setVariable [""AR_Animation_Move"",""HubSittingChairC_idle1"",true]; 			}; 		}]; 	}; 	 	if(!local _player) then { 		[_player,_serial] spawn { 			params [""_player"",""_serial""]; 			private [""_currentState""]; 			while {alive _player && {_player getVariable ['AR_Is_Rappelling',false]} && {(_player getVariable ['QS_AR_serial',0]) isEqualTo _serial}} do { 				_currentState = toLowerANSI animationState _player; 				_newState = toLowerANSI (_player getVariable [""AR_Animation_Move"",""""]); 				if!(call AR_Has_Addon_Animations_Installed) then { 					_newState = ""HubSittingChairC_idle1""; 				}; 				if(_currentState != _newState) then { 					_player switchMove _newState; 					_player switchGesture """"; 					sleep 1; 					_player switchMove _newState; 					_player switchGesture """"; 				}; 				sleep 0.1; 			};			 		}; 	}; 	 	waitUntil {uiSleep 0.1; !alive _player || {!(_player getVariable ['AR_Is_Rappelling',false])} || {(_player getVariable ['QS_AR_serial',0]) isNotEqualTo _serial}};
         if (_animationEventHandler isNotEqualTo -1) then { 		_player removeEventHandler [""AnimChanged"", _animationEventHandler]; 	}; 	 	if ((_player getVariable ['QS_AR_serial',0]) isNotEqualTo _serial) exitWith {};
         _player switchMove """";	 	_player enableSimulation true;
 ";
@@ -617,9 +655,20 @@ params [""_player"",[""_globalExec"",false]];
 AR_Rappel_Detach_Action = compileFinal " 	params [""_player""]; 	_player setVariable [""AR_Detach_Rope"",true]; ";
 AR_Rappel_Detach_Action_Check = compileFinal " 	params [""_player""]; 	if!(_player getVariable [""AR_Is_Rappelling"",false]) exitWith {false;}; 	true; ";
 AR_Rappel_From_Heli_Action = compileFinal " 	params [""_player"",""_vehicle""];	 	if([_player, _vehicle] call AR_Rappel_From_Heli_Action_Check) then { 		[_player, _vehicle] call AR_Rappel_From_Heli; 	}; ";
+// The server may see a remote occupant before assignedVehicleRole catches up;
+// fullCrew supplies the authoritative occupied role for the security recheck.
 AR_Rappel_From_Heli_Action_Check = compileFinal "
 	params ['_player','_vehicle'];
 	private _c = FALSE;
+	private _role = assignedVehicleRole _player;
+	if (_role isEqualTo [] && {_player in _vehicle}) then {
+		private _crewSlot = ((fullCrew _vehicle) select {(_x # 0) isEqualTo _player}) param [0,[]];
+		if ((count _crewSlot) >= 4) then {
+			_role = [_crewSlot # 1];
+			if ((toLowerANSI (_crewSlot # 1)) isEqualTo 'turret') then {_role pushBack (_crewSlot # 3);};
+		};
+	};
+	private _roleName = toLowerANSI (_role param [0,'',['']]);
 	if ([_vehicle] call AR_Is_Supported_Vehicle) then {
 		if (_player isNotEqualTo (currentPilot _vehicle)) then {
 			private _vehPos = getPosWorld _vehicle;
@@ -634,10 +683,10 @@ AR_Rappel_From_Heli_Action_Check = compileFinal "
 				{((_vehPos # 2) > 5)} &&
 				{((lineIntersectsSurfaces [(_vehicle modelToWorldWorld [0,0,-1]),(_vehicle modelToWorldWorld [0,0,-6]),_vehicle,objNull,TRUE,-1,'GEOM','ROADWAY',TRUE]) isEqualTo [])} &&
 				{(((vectorMagnitude (velocity _vehicle)) * 3.6) < 35)} &&
-				{((toLower ((assignedVehicleRole _player) # 0)) in ['cargo','turret'])}
+				{_roleName in ['cargo','turret']}
 			) then {
-				if ((count (assignedVehicleRole _player)) > 1) then {
-					if (!((((assignedVehicleRole _player) # 0) isEqualTo 'Turret') && ((((assignedVehicleRole _player) # 1) # 0) < 1))) then {
+				if ((count _role) > 1) then {
+					if (!((_roleName isEqualTo 'turret') && {((_role # 1) param [0,0]) < 1})) then {
 						_c = TRUE;
 					};
 				} else {
@@ -657,11 +706,14 @@ AR_Hint = compileFinal "
 	hint _msg;
 ";
 AR_Hide_Object_Global = compileFinal "
-	params ['_obj'];
+	params ['_obj','_unit','_serial','_heli'];
 	if((_obj isKindOf 'Land_Can_V2_F') || {(_obj isKindOf 'B_static_AA_F')} || {(_obj isKindOf 'B_UAV_01_F')}) then {
 		for '_x' from 0 to 2 step 1 do {
 			_obj hideObject TRUE;
 			_obj hideObjectGlobal TRUE;
+		};
+		if (!isNull _heli) then {
+			[65,_obj,_heli,FALSE,[0,101] select (_obj isKindOf 'B_UAV_01_F')] remoteExecCall ['QS_fnc_remoteExec',0,FALSE];
 		};
 	};
 ";

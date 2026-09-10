@@ -143,15 +143,68 @@ if ((_this param [0,[]]) isEqualTo 'TARU_DELIVER') exitWith {
     private _dropBy = diag_tickTime + 45;
     if (call _fn_flying && {call _fn_inPosition} && {diag_tickTime < _arrivalBy}) then {
         _heli limitSpeed 9;
-        if (_rappel) then {
-            private _handle = [_heli,25,AGLToASL _aim,45] call AR_Rappel_All_Cargo;
-            if (isNil '_handle') then {_handle = scriptNull;};
-            waitUntil {uiSleep 0.25; !(call _fn_flying) || {scriptDone _handle} || {diag_tickTime >= _dropBy}};
-            _heli setVariable ['AR_Units_Rappelling',FALSE];
-            // The shared helper owns its ropes and bounded finalizer.
-            private _finishBy = diag_tickTime + 5;
-            waitUntil {uiSleep 0.1; scriptDone _handle || {diag_tickTime >= _finishBy}};
-        };
+		if (_rappel) then {
+			private _handle = [_heli,25,AGLToASL _aim,45] call AR_Rappel_All_Cargo;
+			if (isNil '_handle') then {_handle = scriptNull;};
+			waitUntil {uiSleep 0.25; !(call _fn_flying) || {scriptDone _handle} || {diag_tickTime >= _dropBy}};
+			// Stop admitting new ropes, then hold this still-operable transport for
+			// the units already descending. At 25 m their normal descent fits well
+			// inside this separate bound; a stalled worker still cannot pin the Taru.
+			_heli setVariable ['AR_Units_Rappelling',FALSE];
+			private _finishBy = diag_tickTime + 5;
+			waitUntil {uiSleep 0.1; scriptDone _handle || {diag_tickTime >= _finishBy}};
+			private _descents = (_members select {
+				alive _x && {!(_x call _fn_exempt)} &&
+				{_x getVariable ['AR_Is_Rappelling',FALSE]} &&
+				{(_x getVariable ['AR_Rappelling_Vehicle',objNull]) isEqualTo _heli}
+			}) apply {[_x,_x getVariable ['QS_AR_serial',-1]]};
+			private _fn_activeDescent = {
+				params ['_unit','_serial'];
+				alive _unit && {!(_unit call _fn_exempt)} &&
+				{_unit getVariable ['AR_Is_Rappelling',FALSE]} &&
+				{(_unit getVariable ['AR_Rappelling_Vehicle',objNull]) isEqualTo _heli} &&
+				{(_unit getVariable ['QS_AR_serial',-1]) isEqualTo _serial}
+			};
+			private _fn_descentClean = {
+				params ['_unit','_serial'];
+				private _record = _unit getVariable ['QS_AR_helpers',[]];
+				_record isEqualTo [] || {(_record # 0) isNotEqualTo _serial}
+			};
+			if (_descents isNotEqualTo []) then {
+				private _holdOwned = FALSE;
+				// Do not mutate a transport after a player/Zeus/locality takeover. Keep
+				// this ownership recheck and the initial hold orders unscheduled.
+				isNil {
+					_holdOwned = call _fn_owned;
+					if (_holdOwned) then {
+						_heli limitSpeed 5;
+						_pilots move _aim;
+						_pilot doMove _aim;
+					};
+				};
+				if (_holdOwned) then {
+					private _descentBy = diag_tickTime + 30;
+					waitUntil {
+						uiSleep 0.1;
+						((_descents findIf {_x call _fn_activeDescent}) < 0) ||
+						{!(call _fn_owned)} || {!alive _heli} || {!canMove _heli} ||
+						{!alive _pilot} || {diag_tickTime >= _descentBy}
+					};
+					if ((call _fn_owned) &&
+						{!alive _heli || {!canMove _heli} || {!alive _pilot} || {diag_tickTime >= _descentBy}}) then {
+						{
+							_x params ['_unit','_serial'];
+							if (_x call _fn_activeDescent) then {
+								_unit setVariable ['AR_Is_Rappelling',FALSE,TRUE];
+							};
+						} forEach _descents;
+						private _cancelBy = diag_tickTime + 2;
+						waitUntil {uiSleep 0.05; (_descents findIf {!(_x call _fn_descentClean)}) < 0 ||
+							{!(call _fn_owned)} || {diag_tickTime >= _cancelBy}};
+					};
+				};
+			};
+		};
         // TARU_CLEARANCE_FALLBACK_BEGIN
         // A late blocked footprint can use the existing parachute route only
         // before any rope release. Climb normally; never eject cargo at 25 m.
