@@ -1,4 +1,7 @@
 if (!isServer) exitWith {};
+private _sharedRadioChannelsEnabled = missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE];
+['radio.server.gateDefaultsOff',!_sharedRadioChannelsEnabled] call IA_fnc_assert;
+['radio.server.slot11FreeBeforeOptInFixture',!((radioChannelInfo 11) param [5,FALSE]),radioChannelInfo 11] call IA_fnc_assert;
 for '_slot' from 1 to 11 do {
     if (!((radioChannelInfo _slot) param [5,FALSE])) then {
         private _created = radioChannelCreate [[0,0.8,1,1],format ['IA test channel %1',_slot],'%UNIT_NAME',[],TRUE];

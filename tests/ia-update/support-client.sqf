@@ -204,7 +204,40 @@ for '_i' from 1 to 4 do {['REQUEST',player,'TUBE',[]] remoteExec ['QS_fnc_mortar
 uiSleep 0.5;
 _state = ['TICK'] call _snapshot;
 ['support_full_section_keeps_fourth_tube',count (_state # 1) isEqualTo 3 && {backpack player isEqualTo 'B_Mortar_01_weapon_F'}] call IA_fnc_assert;
-call _reset;
+private _incapacitatedSection = (_state # 1) apply {_x # 0};
+player setUnconscious TRUE;
+private _incapacitatedUntil = diag_tickTime + 3;
+waitUntil {uiSleep 0.05; (lifeState player) isEqualTo 'INCAPACITATED' || {diag_tickTime >= _incapacitatedUntil}};
+['support_section_owner_enters_incapacitated_state',(lifeState player) isEqualTo 'INCAPACITATED'] call IA_fnc_assert;
+uiSleep 2.2;
+['support_incapacitation_removes_mortar_menus_with_section',
+    ((localNamespace getVariable ['QS_mortarSupport_menuOwner',[objNull,[]]]) # 1) isEqualTo []] call IA_fnc_assert;
+// The ordinary menu callback must be inert even if invoked after its action was removed.
+['REQUEST_RESET'] call QS_fnc_mortarSupport;
+uiSleep 0.25;
+_state = [] call _snapshot;
+['support_incapacitated_local_reset_denied',
+    ((_state # 1) apply {_x # 0}) isEqualTo _incapacitatedSection] call IA_fnc_assert;
+// A modified client cannot skip the local guard and invoke RESET directly.
+['RESET',player] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
+uiSleep 0.25;
+_state = [] call _snapshot;
+['support_incapacitated_forged_raw_reset_denied',
+    ((_state # 1) apply {_x # 0}) isEqualTo _incapacitatedSection] call IA_fnc_assert;
+player setUnconscious FALSE;
+private _recoveredUntil = diag_tickTime + 3;
+waitUntil {uiSleep 0.05; (lifeState player) isNotEqualTo 'INCAPACITATED' || {diag_tickTime >= _recoveredUntil}};
+['support_section_owner_recovers',(lifeState player) isNotEqualTo 'INCAPACITATED'] call IA_fnc_assert;
+// Recovery leaves the engine player prone; resume the valid construction stance
+// expected by the remaining mortar scenarios.
+player switchMove 'AmovPercMstpSnonWnonDnon';
+uiSleep 2.2;
+['support_recovery_restores_mortar_menus_with_section',
+    count ((localNamespace getVariable ['QS_mortarSupport_menuOwner',[objNull,[]]]) # 1) isEqualTo 3] call IA_fnc_assert;
+['REQUEST_RESET'] call QS_fnc_mortarSupport;
+_result = [{params ['_entries']; _entries isEqualTo []}] call _waitEntries;
+['support_recovered_local_reset_authorized',_result # 0] call IA_fnc_assert;
+uiSleep 2.05;
 localNamespace setVariable ['IA_support_holdPlacement',TRUE];
 ['REQUEST',player,'MORTAR',[]] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
 _result = [{params ['_entries']; count _entries isEqualTo 1 && {(_entries # 0) # 2}}] call _waitEntries;

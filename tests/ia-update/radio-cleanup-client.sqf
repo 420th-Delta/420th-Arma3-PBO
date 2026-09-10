@@ -25,9 +25,62 @@ private _oldPreference = missionProfileNamespace getVariable ['QS_client_radioCh
 QS_client_channelAccessInitialized = TRUE;
 QS_client_radioChannels = [];
 QS_client_radioAccessState = [];
-QS_radioChannel_side = _side;
 QS_whitelist_data = createHashMap;
 TGC_channels_masks = [];
+
+// The tabled policy is disabled when the server has not explicitly published
+// an opt-in. Exercise that production default before enabling the dormant path.
+['radio.gate.defaultsOff',!(missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE])] call IA_fnc_assert;
+QS_radio_sharedBroadcastsEnabled = FALSE;
+QS_radioChannel_side = 0;
+_side radioChannelRemove [player];
+8 radioChannelRemove [player];
+[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+uiSleep 0.2;
+['radio.legacy.nativeSidePolicy',(channelEnabled 1 select [0,2]) isEqualTo [TRUE,FALSE]] call IA_fnc_assert;
+['radio.legacy.noCustomSideMembership',!(player in (radioChannelInfo _side # 3)) && {!(_side in QS_client_radioChannels)}] call IA_fnc_assert;
+['radio.legacy.generalNotForced',!(8 in QS_client_radioChannels)] call IA_fnc_assert;
+[1,8] call QS_fnc_clientRadio;
+['radio.legacy.generalCanSubscribe',8 in QS_client_radioChannels] call IA_fnc_assert;
+[0,8] call QS_fnc_clientRadio;
+['radio.legacy.generalCanUnsubscribe',!(8 in QS_client_radioChannels)] call IA_fnc_assert;
+
+QS_whitelist_data set ['ALL',createHashMapFromArray [[_uid,TRUE]]];
+[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+['radio.legacy.staffSideVoice',(channelEnabled 1 select [0,2]) isEqualTo [TRUE,TRUE]] call IA_fnc_assert;
+['radio.legacy.privateStaffMembership',1 in QS_client_radioChannels] call IA_fnc_assert;
+isNil {[] call TGC_fnc_staffChannelsGUI;};
+uiSleep 0.2;
+private _legacyGuiMasks = [];
+isNil {with uiNamespace do {_legacyGuiMasks = call TGC_fnc_getChannelMasks;};};
+['radio.legacy.staffGUIOmitsTabledSide',(count _legacyGuiMasks) isEqualTo 4 && {(_legacyGuiMasks findIf {_x # 0 isEqualTo _sideUI}) isEqualTo -1},_legacyGuiMasks] call IA_fnc_assert;
+closeDialog 2;
+[[]] call TGC_fnc_setChannelMasks;
+
+private _legacyGroup = createGroup [WEST,TRUE];
+private _legacyBody = _legacyGroup createUnit ['B_Soldier_F',(getPosATL player) vectorAdd [2,0,0],[],0,'CAN_COLLIDE'];
+QS_client_radioChannels = [8];
+8 radioChannelAdd [_legacyBody];
+private _legacyUntil = diag_tickTime + 5;
+waitUntil {uiSleep 0.1; _legacyBody in (radioChannelInfo 8 # 3) || {diag_tickTime >= _legacyUntil}};
+['radio.legacy.killedBodyRegistered',_legacyBody in (radioChannelInfo 8 # 3)] call IA_fnc_assert;
+[3,0,_legacyBody] call QS_fnc_clientRadio;
+_legacyUntil = diag_tickTime + 5;
+waitUntil {uiSleep 0.1; !(_legacyBody in (radioChannelInfo 8 # 3)) || {diag_tickTime >= _legacyUntil}};
+['radio.legacy.killedRemovesGeneral',!(_legacyBody in (radioChannelInfo 8 # 3))] call IA_fnc_assert;
+deleteVehicle _legacyBody;
+deleteGroup _legacyGroup;
+
+// Explicit opt-in preserves the reviewed shared Side/mandatory General logic.
+1 radioChannelRemove [player];
+9 radioChannelRemove [player];
+8 radioChannelRemove [player];
+_side radioChannelRemove [player];
+QS_radio_sharedBroadcastsEnabled = TRUE;
+QS_client_radioChannels = [];
+QS_client_radioAccessState = [];
+QS_radioChannel_side = _side;
+QS_whitelist_data = createHashMap;
 missionProfileNamespace setVariable ['QS_client_radioChannel_side',TRUE];
 [TRUE] call TGC_fnc_refreshStaffChannelAccess;
 uiSleep 0.2;
@@ -173,6 +226,7 @@ uiSleep 0.3;
 ['radio.lifecycle.currentLiveBodyNotRetired',player in (radioChannelInfo 8 # 3) && {_guardReplacement in (radioChannelInfo 8 # 3)}] call IA_fnc_assert;
 deleteVehicle _guardReplacement;
 deleteGroup _oldGroup;
+QS_radio_sharedBroadcastsEnabled = FALSE;
 missionProfileNamespace setVariable ['QS_client_radioChannel_side',_oldPreference];
 ['NOTE',['Radio tests use genuine client engine permissions/membership and actual staff GUI. Voice/audio delivery, second Steam identity and a real death/respawn remain integration acceptance checks.']] call IA_fnc_log;
 [] call IA_fnc_finish;

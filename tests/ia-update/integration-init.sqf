@@ -4,6 +4,8 @@
     ['mission_initialized',missionNamespace getVariable ['QS_mission_init',FALSE]] call IA_fnc_assert;
     ['ready',[productVersion,hasInterface,isDedicated]] call IA_fnc_log;
     if (isServer) then {
+        private _bleedoutDelay = getMissionConfigValue ['ReviveBleedOutDelay',-1];
+        ['revive_bleedout_five_minutes',_bleedoutDelay isEqualTo 300,[_bleedoutDelay]] call IA_fnc_assert;
         private _fn_connections = {
             private _registry = +(missionNamespace getVariable ['QS_headlessClients',[]]);
             private _actualOwners = (allPlayers select {_x isKindOf 'HeadlessClient_F'}) apply {owner _x};
