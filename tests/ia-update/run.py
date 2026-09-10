@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -49,7 +51,7 @@ def braced(text, anchor):
 
 def main():
     parser = argparse.ArgumentParser(__doc__)
-    parser.add_argument("suite", choices=["damage", "guided", "support", "radio-cleanup", "ai-spawn", "hq-delete", "integration"])
+    parser.add_argument("suite", choices=["damage", "guided", "support", "radio-cleanup", "ai-spawn", "rappel-security", "hq-delete", "integration"])
     parser.add_argument("--players", type=int, choices=[0, 1, 2], default=0)
     parser.add_argument("--client-start-gap", type=int, default=3, help="Seconds between owned graphical client launches (1..120)")
     parser.add_argument("--timeout", type=int, default=240)
@@ -59,11 +61,18 @@ def main():
     parser.add_argument("--mfd-control", choices=["off", "reviewed-scout-v1"], default="off", help="Integration only: use the lab's pinned altered-content Scout display control")
     parser.add_argument("--port", type=int, default=2392)
     parser.add_argument("--lab", type=Path)
-    parser.add_argument("--arma", type=Path, default=Path(r"D:\SteamLibrary\steamapps\common\Arma 3"))
+    arma_env = os.environ.get("ARMA3_ROOT")
+    parser.add_argument("--arma", type=Path, default=Path(arma_env) if arma_env else None,
+                        help="Arma 3 install root (or set ARMA3_ROOT)")
     args = parser.parse_args()
     tests = Path(__file__).resolve().parent
     repo = tests.parents[1]
     lab = (args.lab or repo.parent / "420th-Arma3-Server-Lab").resolve()
+    if args.arma is None:
+        parser.error("Provide --arma or set ARMA3_ROOT to the Arma 3 install root")
+    args.arma = args.arma.resolve()
+    if not (args.arma / "arma3server_x64.exe").is_file():
+        parser.error(f"Arma 3 server executable not found under {args.arma}")
     if not 30 <= args.timeout <= 1800 or not 1024 <= args.port <= 65530:
         parser.error("Require timeout 30..1800 seconds and port 1024..65530")
     if not 1 <= args.client_start_gap <= 120:
@@ -112,6 +121,7 @@ class QS_fnc_artillerySupport {allowedTargets=0;};
 class QS_fnc_mortarSupport {allowedTargets=0;};
 class QS_fnc_iaSupportTest {allowedTargets=2;};
 class QS_fnc_eventAttach {allowedTargets=0;};
+class QS_fnc_remoteExec {allowedTargets=0;};
 class QS_fnc_remoteExecCmd {allowedTargets=0;};
 class QS_fnc_showNotification {allowedTargets=0;};
 class QS_fnc_serverSetEntityFeatureType {allowedTargets=2;};
@@ -126,7 +136,14 @@ class QS_fnc_clientApplyEntityState {allowedTargets=1; jip=0;};
         if args.suite == "ai-spawn":
             extractor = [sys.executable, str(tests / "ai_spawn_extract.py"), "--repo", str(repo)]
             subprocess.run(extractor + ["--source-root", str(mission / "production"), "--output", str(mission / "tests/ai-spawn-extracted")], check=True, timeout=30)
-            subprocess.run(extractor + ["--revision", "dec9787", "--output", str(mission / "tests/ai-spawn-baseline")], check=True, timeout=30)
+            # Verify the frozen text, normalized to LF, that the staged mission will execute.
+            baseline = mission / "tests/ai-spawn-baseline"
+            baseline_manifest = json.loads((baseline / "manifest.json").read_text(encoding="utf-8"))
+            for record in baseline_manifest["files"]:
+                path = baseline / record["path"]
+                digest = hashlib.sha256(path.read_text(encoding="utf-8").encode()).hexdigest()
+                if digest != record["sha256"]:
+                    raise ValueError(f"AI baseline hash changed: {record['path']}")
         mfd = None
         if args.suite == "integration":
             import integration
@@ -163,7 +180,7 @@ class QS_fnc_clientApplyEntityState {allowedTargets=1; jip=0;};
         (output / "Run-Cell.ps1").write_text(runner, encoding="utf-8")
         cleanup = cleanup_source.read_text(encoding="utf-8-sig")
         cleanup = cleanup.replace("'artifacts\\fe'", "'artifacts\\ia-update'")
-        cleanup = cleanup.replace("'^E(0[1-9]|1[0-9]|2[0-2])$'", "'^(damage|guided|support|radio-cleanup|ai-spawn|hq-delete|integration)$'")
+        cleanup = cleanup.replace("'^E(0[1-9]|1[0-9]|2[0-2])$'", "'^(damage|guided|support|radio-cleanup|ai-spawn|rappel-security|hq-delete|integration)$'")
         old_name = "('^'+$spec.run_token+'-'+$spec.scenario+'-[0-2][AB](-X(08|09)-[01][01])?$')"
         if cleanup.count(old_name) != 1:
             raise ValueError("Cleanup identity guard changed")
@@ -206,7 +223,8 @@ class QS_fnc_clientApplyEntityState {allowedTargets=1; jip=0;};
         records, malformed = [], []
         for rpt in output.glob("*.rpt"):
             for line in rpt.read_text(encoding="utf-8-sig", errors="replace").splitlines():
-                if re.match(r"^\d{1,2}:\d{2}:\d{2} FRZ\|", line):
+                # Arma left-pads one-digit local hours in RPT timestamps.
+                if re.match(r"^\s*\d{1,2}:\d{2}:\d{2} FRZ\|", line):
                     try:
                         records.append(json.loads(line.split("FRZ|", 1)[1]))
                     except json.JSONDecodeError:

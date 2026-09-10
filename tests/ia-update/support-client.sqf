@@ -32,9 +32,13 @@ private _freshTube = {
         ((_state # 3) isEqualTo backpackContainer player && {!isNull (_state # 3)}) || {diag_tickTime >= _until}};
 };
 private _reset = {
+    params [['_waitForAttempt',TRUE]];
     ['RESET',player] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
     private _result = [{params ['_entries']; _entries isEqualTo []}] call _waitEntries;
     ['support_reset_clears_section',_result # 0] call IA_fnc_assert;
+    // Match the client UI and server's two-second attempt spacing before the
+    // next scenario asks the server to construct another support asset.
+    if (_waitForAttempt) then {uiSleep 2.05;};
 };
 // Real CfgFunctions postInit should already have started one observer.
 ['support_postinit_starts_observer',localNamespace getVariable ['QS_artillerySupport_clientStarted',FALSE]] call IA_fnc_assert;
@@ -201,13 +205,29 @@ uiSleep 0.5;
 _state = ['TICK'] call _snapshot;
 ['support_full_section_keeps_fourth_tube',count (_state # 1) isEqualTo 3 && {backpack player isEqualTo 'B_Mortar_01_weapon_F'}] call IA_fnc_assert;
 call _reset;
+localNamespace setVariable ['IA_support_holdPlacement',TRUE];
+['REQUEST',player,'MORTAR',[]] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
+_result = [{params ['_entries']; count _entries isEqualTo 1 && {(_entries # 0) # 2}}] call _waitEntries;
+_state = [] call _snapshot;
+['support_free_pending_has_no_cooldown',_result # 0 && {((_state # 6) # 0) <= 0.01},[_state # 6]] call IA_fnc_assert;
+[FALSE] call _reset;
+localNamespace setVariable ['IA_support_holdPlacement',FALSE];
+['REQUEST',player,'MORTAR',[]] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
+uiSleep 0.25;
+['support_server_attempt_throttle_survives_reset',(([] call _snapshot) # 1) isEqualTo []] call IA_fnc_assert;
+uiSleep 2.05;
+_state = [] call _snapshot;
+['support_free_reset_before_arm_has_no_cooldown',((_state # 6) # 0) <= 0.01,[_state # 6]] call IA_fnc_assert;
 ['REQUEST',player,'MORTAR',[]] remoteExec ['QS_fnc_mortarSupport',2,FALSE];
 _result = [{params ['_entries']; count _entries isEqualTo 1 && {!((_entries # 0) # 2)} && {((_entries # 0) # 6) isEqualTo 8}},14] call _waitEntries;
 ['support_free_request_preserves_backpack',_result # 0 && {backpack player isEqualTo 'B_Mortar_01_weapon_F'}] call IA_fnc_assert;
+_state = [] call _snapshot;
+['support_free_arm_starts_cooldown',((_state # 6) # 0) > 590,[_state # 6]] call IA_fnc_assert;
 call _reset;
 ['REQUEST',player,'MORTAR',[]] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
 uiSleep 0.5;
-['support_reset_preserves_free_request_cooldown',(([] call _snapshot) # 1) isEqualTo []] call IA_fnc_assert;
+_state = [] call _snapshot;
+['support_reset_preserves_free_request_cooldown',(_state # 1) isEqualTo [] && {((_state # 6) # 0) > 580},[_state # 6]] call IA_fnc_assert;
 call _reset;
 player setVariable ['QS_unit_role','rifleman',TRUE];
 ['CLIENT'] call QS_fnc_artillerySupport;

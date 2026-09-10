@@ -35,8 +35,10 @@ private _entries = (_row getOrDefault ['mortars',[]]) apply {
     {_rounds = _rounds + (_x # 2);} forEach (magazinesAllTurrets [_mortar,TRUE]);
     [_mortar,_x # 1,_x # 2,_x # 4,_x # 6,_x # 7,_rounds,_x # 8,owner _mortar,_mortar turretOwner [0]]
 };
+private _snapshotNow = diag_tickTime;
+private _cooldownRemaining = (+(_row getOrDefault ['cooldowns',[0,0]])) apply {(_x - _snapshotNow) max 0};
 _unit setVariable ['IA_support_snapshot',[_sequence,_entries,backpack _unit,backpackContainer _unit,
-    [stance _unit,lifeState _unit,str side group _unit,_unit getVariable ['QS_unit_role',''],
-        surfaceIsWater getPosATL _unit,_unit getVariable ['QS_client_remoteControlling',FALSE],
-        (allUnits findIf {(_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull]) isEqualTo _unit}) >= 0],
-    _unit getVariable ['IA_support_capturedTube',objNull]],owner _unit];
+	[stance _unit,lifeState _unit,str side group _unit,_unit getVariable ['QS_unit_role',''],
+		surfaceIsWater getPosATL _unit,_unit getVariable ['QS_client_remoteControlling',FALSE],
+		(allUnits findIf {(_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull]) isEqualTo _unit}) >= 0],
+	_unit getVariable ['IA_support_capturedTube',objNull],_cooldownRemaining],owner _unit];

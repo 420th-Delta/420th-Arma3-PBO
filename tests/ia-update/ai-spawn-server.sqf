@@ -125,13 +125,11 @@ private _aircrew = _owned select {_x isKindOf 'CAManBase'};
 if (_planes isNotEqualTo [] && {_aircrew isNotEqualTo []}) then {
 	private _aircraft = _planes # 0;
 	_aircraft setVariable ['QS_primaryAO_exempt',TRUE];
-	if (fileExists 'tests\ai-spawn-baseline\ai-pressure.sqf') then {
-		private _fixed = QS_fnc_aoPressure;
-		call compile preprocessFileLineNumbers 'tests\ai-spawn-baseline\ai-pressure.sqf';
-		private _unsafe = ['STOP'] call QS_fnc_aoPressure;
+	if (fileExists 'tests\ai-spawn-baseline\stop-entity-selection.sqf') then {
+		private _fn_exempt = compile preprocessFileLineNumbers 'tests\ai-spawn-baseline\stop-exempt.sqf';
+		private _baselineStop = compile preprocessFileLineNumbers 'tests\ai-spawn-baseline\stop-entity-selection.sqf';
+		private _unsafe = [_state,_fn_exempt] call _baselineStop;
 		['rotary_baseline_reproduces_exempt_hull_crew_cleanup',count _unsafe isEqualTo count _aircrew,[count _unsafe,count _aircrew]] call IA_fnc_assert;
-		QS_fnc_aoPressure = _fixed;
-		QS_primaryPressure_state = _state;
 	};
 	private _protected = ['STOP'] call QS_fnc_aoPressure;
 	['rotary_exempt_hull_preserves_crew',_protected isEqualTo [],[count _protected]] call IA_fnc_assert;

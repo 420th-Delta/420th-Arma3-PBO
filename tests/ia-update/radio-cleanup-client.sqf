@@ -121,6 +121,27 @@ waitUntil {uiSleep 0.1; (_newBody in (radioChannelInfo 8 # 3) && {!(_freshOldBod
 ['radio.lifecycle.otherMemberUnchanged',player in (radioChannelInfo 8 # 3)] call IA_fnc_assert;
 deleteVehicle _newBody;
 deleteVehicle _freshOldBody;
+// Hold replacement membership beyond the old three-second observer bound. The
+// old body must remain until the new body joins, then retire within the new
+// bounded window.
+private _slowOldBody = _oldGroup createUnit ['B_Soldier_F',(getPosATL player) vectorAdd [3,0,0],[],0,'CAN_COLLIDE'];
+private _slowNewBody = _oldGroup createUnit ['B_Soldier_F',(getPosATL player) vectorAdd [5,0,0],[],0,'CAN_COLLIDE'];
+8 radioChannelAdd [_slowOldBody];
+_replicationUntil = diag_tickTime + 5;
+waitUntil {uiSleep 0.1; _slowOldBody in (radioChannelInfo 8 # 3) || {diag_tickTime >= _replicationUntil}};
+isNil {
+	[2,-1,_slowNewBody,_slowOldBody] call QS_fnc_clientRadio;
+	8 radioChannelRemove [_slowNewBody];
+};
+['radio.lifecycle.slowReplacementSetup',_slowOldBody in (radioChannelInfo 8 # 3) && {!(_slowNewBody in (radioChannelInfo 8 # 3))}] call IA_fnc_assert;
+uiSleep 4;
+['radio.lifecycle.slowReplacementKeepsOldPending',_slowOldBody in (radioChannelInfo 8 # 3) && {!(_slowNewBody in (radioChannelInfo 8 # 3))}] call IA_fnc_assert;
+8 radioChannelAdd [_slowNewBody];
+_replicationUntil = diag_tickTime + 4;
+waitUntil {uiSleep 0.1; (!(_slowOldBody in (radioChannelInfo 8 # 3)) && {_slowNewBody in (radioChannelInfo 8 # 3)}) || {diag_tickTime >= _replicationUntil}};
+['radio.lifecycle.slowReplacementRetiresOld',!(_slowOldBody in (radioChannelInfo 8 # 3)) && {_slowNewBody in (radioChannelInfo 8 # 3)}] call IA_fnc_assert;
+deleteVehicle _slowNewBody;
+deleteVehicle _slowOldBody;
 {
     private _mode = _x;
     private _raceOldBody = _oldGroup createUnit ['B_Soldier_F',(getPosATL player) vectorAdd [3,0,0],[],0,'CAN_COLLIDE'];

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "source_revision": "dec97876d73cdef34042b6469d67a9aae783e86d",
+  "files": [
+    {
+      "path": "spawnGroup.sqf",
+      "sha256": "d4434da4012b12707fc20d67b36ce4e69dc98c1b5034f8de042337410ad95dc3",
+      "source": "Apex_framework.terrain/code/functions/fn_spawnGroup.sqf",
+      "source_sha256": "c8a950489aa9320889ea9926cabd9d4cd9a65b3a93025f0f0800be148c309767",
+      "exact_source": false,
+      "note": "The dec9787 source normalized to LF with trailing horizontal whitespace removed; executable tokens are unchanged."
+    },
+    {
+      "path": "stop-entity-selection.sqf",
+      "sha256": "5a7641fc7b6d42037f4cf277f08681082e86682a2ba2dfc4101f2a483e9454ff",
+      "source": "Apex_framework.terrain/code/functions/fn_AI.sqf",
+      "source_sha256": "a3982d05ebdac6fb16183c78b5fc7a0a8d7228b44dd4d6d5ab80f88121c3517f",
+      "exact_source": false,
+      "note": "Runnable equivalent of the dec9787 STOP entity-selection predicate, with explicit state and exemption parameters."
+    },
+    {
+      "path": "stop-exempt.sqf",
+      "sha256": "38331c2d77188dbb3f45c4966633b13cc9b2690743d48a04c536004b65450845",
+      "source": "Apex_framework.terrain/code/functions/fn_AI.sqf",
+      "source_sha256": "a3982d05ebdac6fb16183c78b5fc7a0a8d7228b44dd4d6d5ab80f88121c3517f",
+      "exact_source": false,
+      "note": "Runnable equivalent of the dec9787 STOP exemption predicate used by the frozen entity selector."
+    }
+  ]
+}

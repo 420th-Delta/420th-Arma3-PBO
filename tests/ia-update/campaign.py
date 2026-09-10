@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 
-CELL_NAME = re.compile(r'^[a-f0-9]{12}-(damage|guided|support|radio-cleanup|ai-spawn|hq-delete|integration|config)$')
+CELL_NAME = re.compile(r'^[a-f0-9]{12}-(damage|guided|support|radio-cleanup|ai-spawn|rappel-security|hq-delete|integration|config)$')
 LABEL = re.compile(r'^[A-Za-z][A-Za-z0-9_.:-]{0,159}$')
 HEADLESS_LOOP = re.compile(r'for\(\$hcIndex=1;\$hcIndex -le ([0-2]);\$hcIndex\+\+\)')
 

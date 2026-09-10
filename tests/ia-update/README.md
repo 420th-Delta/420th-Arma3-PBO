@@ -8,6 +8,7 @@ Run from the mission repository, one cell at a time:
 python tests/ia-update/run.py support --players 1 --timeout 300
 python tests/ia-update/run.py damage --players 0 --timeout 180
 python tests/ia-update/run.py ai-spawn --players 1 --timeout 240
+python tests/ia-update/run.py rappel-security --players 1 --timeout 300
 python tests/ia-update/run.py radio-cleanup --players 1 --timeout 240
 python tests/ia-update/run.py hq-delete --players 1 --timeout 240
 python tests/ia-update/run.py hq-delete --players 2 --client-start-gap 75 --timeout 300
@@ -15,7 +16,14 @@ python tests/ia-update/run.py integration --players 1 --headless 0 --observe 120
 python tests/ia-update/run.py integration --cycle --players 1 --headless 0 --timeout 1200
 ```
 
-Integration also accepts one or two headless clients. `--lab`, `--arma` and `--port` select explicit local paths/ports. Graphical clients run hidden and may require the existing sandbox escalation to access Steam. Never change global Git trust to run these tests; the baseline extractor scopes its read-only trust setting to the exact selected checkout.
+Integration also accepts one or two headless clients. `--lab`, `--arma` and `--port` select explicit local paths/ports. Set `ARMA3_ROOT` instead of repeating `--arma`; one of them is required. Graphical clients run hidden and may require the existing sandbox escalation to access Steam. The ai-spawn negative controls are checked-in, hash-pinned fixtures under `ai-spawn-baseline/`, so they do not depend on local Git history. The extractor's optional `--revision` mode remains available when deliberately refreshing historical evidence and scopes its read-only trust setting to the exact selected checkout. `rappel-security` exercises the actual player request and server session path with controlled helpers; it covers binding, duplicate relay and cleanup, while bulk Taru/HC interruption remains an integration or live acceptance case.
+
+CfgConvert validation similarly requires either an explicit tool path or an environment variable:
+
+```powershell
+$env:ARMA3_CFGCONVERT = 'C:\path\to\Arma 3 Tools\CfgConvert\CfgConvert.exe'
+python tests/ia-update/validate_config.py
+```
 
 The stock Windows build can fail its Scout display expression before mission assertions run. Preserve that failed result. For a separate altered-content control, append `--mfd-control reviewed-scout-v1` to an integration command. The adapter validates the lab's fixed source/build/tool/Tank asset pins, copies its one-file addon into the private fixture, declares its dependency there and loads it in every owned role. Native assertions verify the activated patch, effective typed display conditions, inheritance, source addons and engine build. This changes only the Scout READY TO/FIRE display condition in that test; it is not a stock-content pass, game repair or deployment recommendation. The default is `off`, and strict error rejection remains enabled. See the [stock investigation](../../docs/community-updates/ia-performance-gameplay-20260910/stock-mfd-investigation.md).
 

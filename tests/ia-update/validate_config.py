@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import uuid
@@ -9,8 +10,15 @@ import uuid
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(__doc__)
-    parser.add_argument("--tool", type=Path, default=Path(r"D:\SteamLibrary\steamapps\common\Arma 3 Tools\CfgConvert\CfgConvert.exe"))
+    tool_env = os.environ.get("ARMA3_CFGCONVERT")
+    parser.add_argument("--tool", type=Path, default=Path(tool_env) if tool_env else None,
+                        help="CfgConvert.exe path (or set ARMA3_CFGCONVERT)")
     args = parser.parse_args()
+    if args.tool is None:
+        parser.error("Provide --tool or set ARMA3_CFGCONVERT to CfgConvert.exe")
+    args.tool = args.tool.resolve()
+    if not args.tool.is_file():
+        parser.error(f"CfgConvert executable not found: {args.tool}")
     repo = Path(__file__).resolve().parents[2]
     mission = repo / "Apex_framework.terrain"
     output = repo.parent / "420th-Arma3-Server-Lab/artifacts/ia-update" / (uuid.uuid4().hex[:12] + "-config")
