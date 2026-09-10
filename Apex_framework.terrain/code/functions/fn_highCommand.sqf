@@ -32,7 +32,12 @@ disableRemoteSensors FALSE;
 //|[1,[TRUE,TRUE]] call TGC_fnc_enableChannel;
 //|[] call TGC_fnc_refreshChannels;
 // Updated Code
-[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+if (missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE]) then {
+	[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+} else {
+	[1,[TRUE,TRUE]] call TGC_fnc_enableChannel;
+	[] call TGC_fnc_refreshChannels;
+};
 // End Updated Code
 (group player) setGroupIDGlobal ['Command'];
 if (!(_commanderCanUseWeapons)) then {
@@ -476,7 +481,12 @@ for '_x' from 0 to 1 step 0 do {
 //|		[1,[TRUE,FALSE]] call TGC_fnc_enableChannel;
 //|		[] call TGC_fnc_refreshChannels;
 // Updated Code
-		[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+		if (missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE]) then {
+			[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+		} else {
+			[1,[TRUE,FALSE]] call TGC_fnc_enableChannel;
+			[] call TGC_fnc_refreshChannels;
+		};
 // End Updated Code
 		(group player) setGroupIDGlobal [(format ['%1',profileName])];
 	};

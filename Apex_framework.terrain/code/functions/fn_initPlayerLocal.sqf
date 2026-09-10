@@ -65,6 +65,7 @@ if (missionNamespace getVariable ['QS_missionConfig_dbWhitelistEnabled',false]) 
 };
 private _isAdmin = (getPlayerUID player) in (['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 private _isDonator = (getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
+private _sharedRadioChannelsEnabled = missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE];
 if (_isAdmin) then {
 	_code = {
 		params ['','','','_array'];
@@ -919,14 +920,12 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 /*/================= Radio Channels/*/
 
 enableRadio TRUE;
-{
-	_x call TGC_fnc_enableChannel;
-} count [
+private _radioChannelConfiguration = [
 	[0,[FALSE,FALSE]],
 /* Legacy Code as of 9.9.2026 */
 //|	[1,[TRUE,_isAdmin]],
 // Updated Code
-	[1,[FALSE,FALSE]],
+	[1,([[TRUE,_isAdmin],[FALSE,FALSE]] select _sharedRadioChannelsEnabled)],
 // End Updated Code
 	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
@@ -934,10 +933,15 @@ enableRadio TRUE;
 /* Legacy Code as of 9.9.2026 */
 //|	[5,[TRUE,TRUE]]
 // Updated Code
-	[5,[TRUE,TRUE]],
-	[13,[TRUE,FALSE]]
+	[5,[TRUE,TRUE]]
 // End Updated Code
 ];
+if (_sharedRadioChannelsEnabled) then {
+	_radioChannelConfiguration pushBack [13,[TRUE,FALSE]];
+};
+{
+	_x call TGC_fnc_enableChannel;
+} count _radioChannelConfiguration;
 [] call TGC_fnc_refreshChannels;
 if (currentChannel isEqualTo 4) then {
 	setCurrentChannel 5;
@@ -1010,7 +1014,11 @@ if (isNil {missionProfileNamespace getVariable 'QS_client_radioChannels_profile'
 //|			};
 //|		};
 // Updated Code
-		// General is mandatory; ignore the old optional General preference.
+		if (!_sharedRadioChannelsEnabled && {(_QS_radioChannels_profile # 7) isEqualType TRUE}) then {
+			if (_QS_radioChannels_profile # 7) then {
+				[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+			};
+		};
 // End Updated Code
 		if ((_QS_radioChannels_profile # 8) isEqualType TRUE) then {
 			if ((_QS_radioChannels_profile # 8) && {_isDonator}) then {
@@ -1027,7 +1035,9 @@ missionNamespace setVariable ['QS_client_channelAccessInitialized',TRUE,FALSE];
 		uiSleep 1;
 		[4,10] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 // Added Code
-		[] call TGC_fnc_refreshStaffChannelAccess;
+		if (missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE]) then {
+			[] call TGC_fnc_refreshStaffChannelAccess;
+		};
 // End Updated Code
 	};
 };

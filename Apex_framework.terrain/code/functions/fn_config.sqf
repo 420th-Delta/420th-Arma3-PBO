@@ -325,6 +325,10 @@ for '_x' from 0 to 11 step 1 do {
 	['QS_virtualCargo_handler',[]]
 ];
 private _weaponsList = configFile >> 'CfgWeapons';
+// Startup-only gate for the tabled shared Side/staff General design. The
+// external parameter is deliberately default-off and its resolved value is
+// published so every client follows the same policy for the whole session.
+private _sharedRadioChannelsEnabled = (missionNamespace getVariable ['QS_missionConfig_sharedRadioChannels',FALSE]) isEqualTo TRUE;
 // Mission Namespace
 {
 	missionNamespace setVariable _x;
@@ -378,6 +382,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_billboards',[],FALSE],
 	['QS_activeRegion',-1,FALSE],
 	['QS_HC_AO_enemyArray',[],TRUE],
+	['QS_radio_sharedBroadcastsEnabled',_sharedRadioChannelsEnabled,TRUE],
 	[
 		'QS_radioChannels',
 		[
@@ -398,7 +403,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	// Optional player Side channel. Separate from the existing ten channels;
 	// never rename or expose the private Staff/Admin channel.
 	// Match native Side directly from the game chat configuration.
-	['QS_radioChannel_side',(call {
+	['QS_radioChannel_side',(if (_sharedRadioChannelsEnabled) then {
 		private _colour = getArray (configFile >> 'CfgInGameUI' >> 'Chat' >> 'colorSideChannel');
 		// Keep allocation valid if a mod omits or replaces the native setting.
 		if (count _colour isNotEqualTo 4 || {(_colour findIf {!(_x isEqualType 0)}) >= 0}) then {_colour = [0,0.8,1,1];};
@@ -407,7 +412,7 @@ private _weaponsList = configFile >> 'CfgWeapons';
 			diag_log '***** RADIO ***** Custom Side allocation failed; using native team-local Side. Full cross-team Side requires Arma 3 2.22+ and an available custom slot.';
 		};
 		_channel
-	}),TRUE],
+	} else {0}),TRUE],
 // End Updated Code
 	['QS_enemyGroundReinforceArray',[],TRUE],
 	['QS_enemyVehicleReinforcementsArray',[],TRUE],
@@ -862,14 +867,12 @@ _markerData = nil;
 missionNamespace setVariable ['QS_RD_markers',_markers,FALSE];
 _markers = nil;
 /*/===== RADIO (defined also in pbo description.ext and server.cfg)/*/
-{
-	_x call TGC_fnc_enableChannel;
-} count [
+private _radioChannelConfiguration = [
 	[0,[FALSE,FALSE]],
 /* Legacy Code as of 9.9.2026 */
 //|	[1,[TRUE,FALSE]],
 // Updated Code
-	[1,[FALSE,FALSE]],
+	[1,([[TRUE,FALSE],[FALSE,FALSE]] select _sharedRadioChannelsEnabled)],
 // End Updated Code
 	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
@@ -877,10 +880,15 @@ _markers = nil;
 /* Legacy Code as of 9.9.2026 */
 //|	[5,[TRUE,TRUE]]
 // Updated Code
-	[5,[TRUE,TRUE]],
-	[13,[TRUE,FALSE]] // General text open; voice remains closed until client authorization.
+	[5,[TRUE,TRUE]]
 // End Updated Code
 ];
+if (_sharedRadioChannelsEnabled) then {
+	_radioChannelConfiguration pushBack [13,[TRUE,FALSE]]; // General text open; voice remains closed until client authorization.
+};
+{
+	_x call TGC_fnc_enableChannel;
+} count _radioChannelConfiguration;
 [] call TGC_fnc_refreshChannels;
 ['Initialize',[FALSE,50,FALSE,'']] call (missionNamespace getVariable 'BIS_fnc_dynamicGroups');
 call (missionNamespace getVariable 'AR_Advanced_Rappelling_Install');

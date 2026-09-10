@@ -14,7 +14,6 @@ Author:
 //|if (!hasInterface) exitWith {};
 //|if !(missionNamespace getVariable ["QS_client_channelAccessInitialized", false]) exitWith {};
 // Updated Code
-// General now carries public staff broadcasts; private Staff access remains unchanged.
 params [['_force',FALSE]];
 if (!hasInterface || {isNull player}) exitWith {};
 if !(missionNamespace getVariable ['QS_client_channelAccessInitialized',FALSE]) exitWith {};
@@ -27,6 +26,18 @@ private _uid = getPlayerUID player;
 // Preserve the existing private Staff channel's ALL eligibility.
 private _isStaff = _uid in (['ALL'] call QS_fnc_whitelist);
 private _isDonator = _uid in (['DONATOR'] call QS_fnc_whitelist);
+private _sharedRadioChannelsEnabled = missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE];
+if (!_sharedRadioChannelsEnabled) exitWith {
+    // Preserve the served mission's channel policy while the shared radio
+    // design is tabled: native Side text for everyone and VON for staff.
+    [1,[TRUE,_isStaff]] call TGC_fnc_enableChannel;
+    [] call TGC_fnc_refreshChannels;
+    [([0,1] select _isStaff),1] call QS_fnc_clientRadio;
+    [([0,1] select _isDonator),9] call QS_fnc_clientRadio;
+};
+
+// Experimental shared Side/staff General policy. The server publishes the
+// startup-only feature gate and does not allocate its channel while disabled.
 private _generalVoice = (_uid in (['ADMIN'] call QS_fnc_whitelist)) ||
     {_uid in (['CURATOR'] call QS_fnc_whitelist)} ||
     {serverCommandAvailable '#logout'} || {!isNull (getAssignedCuratorLogic player)};

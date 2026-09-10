@@ -75,15 +75,14 @@ player enableAIFeature ['RADIOPROTOCOL',FALSE];
 showSubtitles FALSE;
 
 private _isAdmin = (getPlayerUID player) in (['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
+private _sharedRadioChannelsEnabled = missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE];
 enableRadio TRUE;
-{
-	_x call TGC_fnc_enableChannel;
-} count [
+private _radioChannelConfiguration = [
 	[0,[FALSE,FALSE]],
 /* Legacy Code as of 9.9.2026 */
 //|	[1,[TRUE,_isAdmin]],
 // Updated Code
-	[1,[FALSE,FALSE]],
+	[1,([[TRUE,_isAdmin],[FALSE,FALSE]] select _sharedRadioChannelsEnabled)],
 // End Updated Code
 	[2,[FALSE,FALSE]],
 	[3,[TRUE,TRUE]],
@@ -91,10 +90,15 @@ enableRadio TRUE;
 /* Legacy Code as of 9.9.2026 */
 //|	[5,[TRUE,TRUE]]
 // Updated Code
-	[5,[TRUE,TRUE]],
-	[13,[TRUE,FALSE]]
+	[5,[TRUE,TRUE]]
 // End Updated Code
 ];
+if (_sharedRadioChannelsEnabled) then {
+	_radioChannelConfiguration pushBack [13,[TRUE,FALSE]];
+};
+{
+	_x call TGC_fnc_enableChannel;
+} count _radioChannelConfiguration;
 [] call TGC_fnc_refreshChannels;
 for '_i' from 0 to 499 step 1 do {
 	if (ppEffectEnabled _i) then {
@@ -251,10 +255,14 @@ if (_deploymentData isEqualTo []) then {
 };
 ['SELECT',_deploymentData] call QS_fnc_deployment;
 ['SET_SAVED_LOADOUT',(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_fnc_roles');
-// Channel membership belongs to the unit object. Restore the captured respawn
-// unit synchronously so delayed killed-event work cannot act on a new `player`.
-[2,-1,_newUnit,_oldUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+if (_sharedRadioChannelsEnabled) then {
+	// Channel membership belongs to the unit object. Restore the captured
+	// respawn unit before retiring the old General membership.
+	[2,-1,_newUnit,_oldUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+	[TRUE] call TGC_fnc_refreshStaffChannelAccess;
+} else {
+	[2,-1,_newUnit] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+};
 _newUnit spawn {
 	private _respawnUnit = _this;
 	uiSleep 1;
