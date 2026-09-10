@@ -611,6 +611,41 @@ private _fn_cleanupQueueHolder = {
         (missionNamespace getVariable ['QS_cleanup_holderQueue',[]]) pushBack [_object,serverTime + 30];
     };
 };
+// CLEANUP_REGRESSION_HELPERS_BEGIN
+private _fn_cleanupHolderCargo = {
+    params ['_object'];
+    [getWeaponCargo _object,getMagazineCargo _object,getItemCargo _object,
+        getBackpackCargo _object,weaponsItemsCargo _object]
+};
+private _fn_cleanupHolderDeadline = {
+    params ['_now','_deadline','_previousCargo','_cargo'];
+    if (_previousCargo isNotEqualTo _cargo) then {_now + 30} else {_deadline}
+};
+private _fn_cleanupKavalaSafe = {
+    params ['_object'];
+    private _objects = [_object,vehicle _object];
+    _objects append (attachedObjects _object);
+    private _parent = attachedTo _object;
+    if (!isNull _parent) then {_objects pushBack _parent;};
+    ((_objects findIf {
+        isPlayer _x || {captive _x} || {_x getVariable ['QS_cleanup_protected',FALSE]} ||
+        {((crew _x) findIf {isPlayer _x || {captive _x}}) >= 0} ||
+        {!isNull (isVehicleCargo _x)} || {!isNull (ropeAttachedTo _x)} ||
+        {(ropes _x) isNotEqualTo []} || {(getVehicleCargo _x) isNotEqualTo []}
+    }) < 0) && {
+        isNull (attachedTo _object)
+    } && {
+        ((allPlayers select {!(_x isKindOf 'HeadlessClient_F')}) inAreaArray [_object,150,150,0,FALSE]) isEqualTo []
+    }
+};
+private _fn_cleanupRestoreTerrain = {
+    params ['_object',['_scope',[]]];
+    if (_scope isNotEqualTo [] && {(missionNamespace getVariable [_scope # 0,-1]) isNotEqualTo (_scope # 1)}) exitWith {TRUE};
+    if (((allPlayers select {!(_x isKindOf 'HeadlessClient_F')}) inAreaArray [_object,100,100,0,FALSE]) isNotEqualTo []) exitWith {FALSE};
+    _object hideObjectGlobal FALSE;
+    TRUE
+};
+// CLEANUP_REGRESSION_HELPERS_END
 // POLICY: a landed aircraft counts; a flyover does not. Downed ground players
 // still protect nearby equipment. The predicate is shared by every crate check.
 private _fn_cleanupGroundFact = {
@@ -1524,22 +1559,29 @@ for '_x' from 0 to 1 step 0 do {
 		_queue deleteRange [0,count _cleanupHolderBatch];
 	};
 	{
-		_x params ['_object','_deadline'];
+		_x params ['_object','_deadline',['_previousCargo',[]]];
 		if (!isNull _object) then {
+			// Snapshot comparison also observes scripted/server cargo additions.
+			// Keep the read, final attachment checks and deletion in one transition.
+			isNil {
+			private _cargo = [_object] call _fn_cleanupHolderCargo;
+			_deadline = [serverTime,_deadline,_previousCargo,_cargo] call _fn_cleanupHolderDeadline;
 			if ([_object] call _fn_cleanupArsenalNear &&
 				{!(_object getVariable ['QS_cleanup_protected',FALSE])} &&
 				{!(_object getVariable ['QS_arsenal_object',FALSE])} &&
 				{isNull (attachedTo _object)} && {isNull (isVehicleCargo _object)} &&
-				{isNull (ropeAttachedTo _object)}) then {
+				{isNull (ropeAttachedTo _object)} && {(ropes _object) isEqualTo []} &&
+				{(getVehicleCargo _object) isEqualTo []}) then {
 				if (serverTime >= _deadline) then {
 					deleteVehicle _object;
 					missionNamespace setVariable ['QS_analytics_entities_deleted',
 						1 + (missionNamespace getVariable ['QS_analytics_entities_deleted',0]),FALSE];
 				} else {
-					(missionNamespace getVariable 'QS_cleanup_holderQueue') pushBack [_object,_deadline];
+					(missionNamespace getVariable 'QS_cleanup_holderQueue') pushBack [_object,_deadline,_cargo];
 				};
 			} else {
 				_object setVariable ['QS_cleanup_holderQueued',FALSE,FALSE];
+			};
 			};
 		};
 	} forEach _cleanupHolderBatch;
@@ -4262,6 +4304,25 @@ for '_x' from 0 to 1 step 0 do {
 												_QS_deleteThis = _true;
 											};
 										};
+										if (_QS_instructions isEqualTo 'KAVALA_DISCREET') then {
+											// Players can board, tow or capture an object after it was
+											// queued. Recheck at deletion, without the deferred batch gap.
+											isNil {
+												if ([_QS_obj] call _fn_cleanupKavalaSafe) then {
+													if (!([1,0,_QS_obj] call _fn_serverObjectsRecycler)) then {
+														private _deleteCrew = _QS_obj isKindOf 'CAManBase' && {!isNull objectParent _QS_obj};
+														private _perfDelete = [['core.cleanup.deleteVehicle','core.cleanup.deleteVehicleCrew'] select _deleteCrew,1] call QS_fnc_perfBegin;
+														if (_deleteCrew) then {
+															(objectParent _QS_obj) deleteVehicleCrew _QS_obj;
+														} else {deleteVehicle _QS_obj;};
+														[_perfDelete,-1] call QS_fnc_perfEnd;
+														_perfDeleteRequests = _perfDeleteRequests + 1;
+														missionNamespace setVariable ['QS_analytics_entities_deleted',1 + (missionNamespace getVariable ['QS_analytics_entities_deleted',0]),FALSE];
+													};
+													(missionNamespace getVariable 'QS_garbageCollector') set [_forEachIndex,FALSE];
+												};
+											};
+										};
 										if (_QS_instructions isEqualTo 'DELAYED_FORCED') then {
 											if (_timeNow > _QS_timeDelete) then {
 												_QS_attemptRecycle = _true;
@@ -4349,9 +4410,10 @@ for '_x' from 0 to 1 step 0 do {
 // End Updated Code
 										};
 										if (_QS_instructions isEqualTo 'UNHIDE_DISCREET') then {
-											if ((_allPlayers inAreaArray [_QS_objWorldPos,100,100,0,_false]) isEqualTo []) then {
-												_QS_obj hideObjectGlobal _false;
-												(missionNamespace getVariable 'QS_garbageCollector') set [_forEachIndex,_false];
+											isNil {
+												if ([_QS_obj,_x param [3,[]]] call _fn_cleanupRestoreTerrain) then {
+													(missionNamespace getVariable 'QS_garbageCollector') set [_forEachIndex,_false];
+												};
 											};
 										};
 										if (_QS_deleteThis) then {

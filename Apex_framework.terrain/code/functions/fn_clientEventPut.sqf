@@ -30,6 +30,6 @@ if (_unit isEqualTo player && {!isNull _container} && {
     }) >= 0
 } && {diag_tickTime >= (localNamespace getVariable ['QS_cleanup_dropNoticeAfter',-1])}) then {
     localNamespace setVariable ['QS_cleanup_dropNoticeAfter',diag_tickTime + 15];
-    systemChat 'Dropped gear near arsenals expires after 30 seconds.';
+    systemChat 'Dropped gear near arsenals expires after 30 seconds without inventory changes.';
 };
 // End Updated Code
