@@ -55,6 +55,12 @@ if (_type isEqualTo 'onLoad') then {
 	(_display displayCtrl 1827) cbSetChecked (_sideChannel in (missionNamespace getVariable 'QS_client_radioChannels'));
 	(_display displayCtrl 1827) ctrlSetTooltip 'Subscribe to Side text and voice across all teams';
 	(_display displayCtrl 1827) ctrlEnable (_sideChannel > 0);
+	if (_sideChannel <= 0) then {
+		(_display displayCtrl 1808) ctrlSetTooltip 'Native Side: text and voice within your team. Custom Side requires an available channel slot (Arma 3 2.22+).';
+		(_display displayCtrl 1816) ctrlSetText 'Native Side';
+		(_display displayCtrl 1827) cbSetChecked TRUE;
+		(_display displayCtrl 1827) ctrlSetTooltip 'Native Side is active. Receive subscription cannot be disabled individually.';
+	};
 // End Updated Code
 	/*/CHANNEL 7 - AIRCRAFT - 1809, 1817, 1828/*/
 	(_display displayCtrl 1809) ctrlSetText (localize 'STR_QS_Menu_061');

@@ -26,6 +26,9 @@ with uiNamespace do {
             [7, radioChannelInfo 2 # 1],
             [13, radioChannelInfo 8 # 1]
         ];
+        private _sideChannel = missionNamespace getVariable ['QS_radioChannel_side',0];
+        private _sideUI = if (_sideChannel > 0) then {_sideChannel + ([5,15] select (_sideChannel > 10))} else {1};
+        _masks pushBack [_sideUI,if (_sideChannel > 0) then {'Side channel'} else {'Side (native)'}];
 
         {
             _x params ["_channel"];

@@ -57,11 +57,10 @@ private _groupChanged = (_previous param [5,grpNull]) isNotEqualTo _group ||
 // channel permissions or membership; there is no new worker or network poll.
 isNil {
     missionNamespace setVariable ['QS_client_radioAccessState',_state];
-    // Native Side remains available to scripted Crossroads traffic. Players
-    // use the custom Side channel so opting out really removes membership.
-    // Never reopen native Side as a second player channel, even on an
-    // allocation failure. General and the other existing channels remain.
-    [1,[FALSE,FALSE]] call TGC_fnc_enableChannel;
+    // Allocation can fail on older engines or when all custom slots are used.
+    // Native Side then preserves team-local communication; it cannot provide
+    // the optional cross-team receive membership of a custom channel.
+    [1,[_sideChannel <= 0,_sideChannel <= 0]] call TGC_fnc_enableChannel;
     if (_sideChannel > 0) then {
         // Arma 2.22+: custom 1Ã¢â‚¬â€œ10 -> UI 6Ã¢â‚¬â€œ15; custom 11Ã¢â‚¬â€œ50 -> UI 26Ã¢â‚¬â€œ65.
         private _sideUI = _sideChannel + ([5,15] select (_sideChannel > 10));
@@ -70,7 +69,7 @@ isNil {
     [13,[TRUE,_generalVoice]] call TGC_fnc_enableChannel;
     [] call TGC_fnc_refreshChannels;
     // A returning client may still have native Side selected from the old setup.
-    if (currentChannel isEqualTo 1) then {setCurrentChannel 5;};
+    if (_sideChannel > 0 && {currentChannel isEqualTo 1}) then {setCurrentChannel 5;};
     [1,8] call QS_fnc_clientRadio;
     if (_sideChannel > 0) then {
         [([0,1] select _sideRequested),_sideChannel] call QS_fnc_clientRadio;

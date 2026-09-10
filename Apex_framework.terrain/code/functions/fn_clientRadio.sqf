@@ -49,15 +49,40 @@ if (_type isEqualTo 0) then {
 	} else {
 		if (_type isEqualTo 2) then {
 			/*/Respawn Event/*/
-// Added Code
-			if (!isNull _oldUnit && {_oldUnit isNotEqualTo _unit}) then {
-				{_x radioChannelRemove [_oldUnit];} forEach (missionNamespace getVariable 'QS_client_radioChannels');
-			};
-// End Updated Code
-			if ((missionNamespace getVariable 'QS_client_radioChannels') isNotEqualTo []) then {
+			private _channels = +(missionNamespace getVariable 'QS_client_radioChannels');
+			if (_channels isNotEqualTo []) then {
 				{
 					_x radioChannelAdd [_unit];
-				} forEach (missionNamespace getVariable 'QS_client_radioChannels');
+				} forEach _channels;
+			};
+			if (!isNull _oldUnit && {_oldUnit isNotEqualTo _unit} && {_channels isNotEqualTo []}) then {
+				// Same-frame remove/add can restore the old roster on a client.
+				// Observe the new membership before retiring the captured old body.
+				[_unit,_oldUnit,_channels] spawn {
+					params ['_newBody','_oldBody','_channels'];
+					private _until = diag_tickTime + 3;
+					waitUntil {
+						uiSleep 0.1;
+						private _done = FALSE;
+						isNil {
+							if (isNull _oldBody || {_oldBody isEqualTo player && {alive _oldBody}}) exitWith {_done = TRUE;};
+							private _pending = FALSE;
+							private _wanted = missionNamespace getVariable ['QS_client_radioChannels',[]];
+							{
+								private _members = (radioChannelInfo _x) param [3,[]];
+								if (_oldBody in _members) then {
+									_pending = TRUE;
+									// A dead/deleted replacement or revoked subscription need not join first.
+									if (_newBody in _members || {isNull _newBody} || {!alive _newBody} || {!(_x in _wanted)}) then {
+										_x radioChannelRemove [_oldBody];
+									};
+								};
+							} forEach _channels;
+							_done = !_pending || {diag_tickTime >= _until};
+						};
+						_done
+					};
+				};
 			};
 		} else {
 			if (_type isEqualTo 3) then {
