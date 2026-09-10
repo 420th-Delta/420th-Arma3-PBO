@@ -6006,7 +6006,11 @@ for '_z' from 0 to 1 step 0 do {
 	};
 	if (_QS_module_soundControllers) then {
 		if (_QS_uiTime > _QS_module_soundControllers_checkDelay) then {
-			_QS_player setVariable ['QS_client_soundControllers',[(getAllSoundControllers _QS_v2),(getAllEnvSoundControllers _QS_posWorldPlayer)],_false];
+			// Vehicle sound controllers are unavailable on an on-foot unit.
+			_QS_player setVariable ['QS_client_soundControllers',[
+				(if (isNull _QS_v2 || {_QS_v2 isKindOf 'CAManBase'}) then {[]} else {getAllSoundControllers _QS_v2}),
+				(getAllEnvSoundControllers _QS_posWorldPlayer)
+			],_false];
 			_QS_module_soundControllers_checkDelay = _QS_uiTime + (_QS_module_soundControllers_delay + (random 3));
 		};
 	};

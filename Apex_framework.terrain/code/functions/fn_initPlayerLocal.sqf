@@ -466,7 +466,11 @@ if (_initialPlayerSide isEqualTo sideUnknown) then {
 	['QS_client_lastGesture',time,FALSE],
 	['QS_client_sectorScanLastRequest',time,FALSE],
 	['QS_client_hc_waypoint',[],FALSE],
-	['QS_client_soundControllers',[(getAllSoundControllers (vehicle player)),(getAllEnvSoundControllers (getPosWorld player))],FALSE],
+	['QS_client_soundControllers',[(call {
+		private _soundVehicle = vehicle player;
+		if (isNull _soundVehicle || {_soundVehicle isKindOf 'CAManBase'}) exitWith {[]};
+		getAllSoundControllers _soundVehicle
+	}),(getAllEnvSoundControllers (getPosWorld player))],FALSE],
 	['QS_client_lastMedevacRequest',diag_tickTime,FALSE],
 	['QS_client_medevacRequested',FALSE,FALSE],
 	['QS_client_inBaseArea',FALSE,FALSE],
