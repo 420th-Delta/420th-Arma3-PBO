@@ -8,6 +8,9 @@ Description:
 */
 private _mode = _this param [0,'',['']];
 if (isRemoteExecutedJIP) exitWith {};
+if (isServer && {_mode isEqualTo 'REQUEST'} && {missionNamespace getVariable ['QS_mortarSupport_diagnostics',FALSE]}) then {
+    diag_log ['[Mortar Support] context',canSuspend,isRemoteExecuted,remoteExecutedOwner];
+};
 
 // MORTAR_POLICY_BEGIN
 private _fn_admission = {
@@ -39,7 +42,7 @@ private _fn_clientEligible = {
     !isNull player && {alive player} && {(lifeState player) isNotEqualTo 'INCAPACITATED'} &&
     {(player getVariable ['QS_unit_role','']) isEqualTo 'mortar_gunner'} &&
     {(player getVariable ['QS_unit_side',WEST]) isEqualTo WEST} &&
-    {isNull (remoteControlled player)} && {isNull curatorCamera}
+    {!isRemoteControlling player} && {isNull curatorCamera}
 };
 
 if (_mode isEqualTo 'CLIENT') exitWith {
@@ -65,7 +68,7 @@ if (_mode isEqualTo 'CLIENT') exitWith {
     if (_eligible && {_menus isEqualTo []}) then {
         _unit = player;
         _menus = ['QS_RequestMk6Mortar','QS_RequestMortarResupply','QS_ResetMortarSection'] apply {
-            [_unit,_x,[],[],FALSE] call BIS_fnc_addCommMenuItem
+            [_unit,_x,[],[],''] call BIS_fnc_addCommMenuItem
         };
     };
     localNamespace setVariable ['QS_mortarSupport_menuOwner',[_unit,_menus]];
@@ -93,8 +96,25 @@ if (_mode in ['REQUEST_MORTAR','REQUEST_SUPPLY','REQUEST_TUBE']) exitWith {
 
 // Client/object-local operations only accept the server. These cannot be used
 // by a requester to create objects, grant stock, or eject another player.
-if (_mode in ['PLACE','CANCEL','EJECT']) exitWith {
+if (_mode in ['PLACE','CANCEL','EJECT','ARM','DEBIT']) exitWith {
     if (!isRemoteExecuted || {remoteExecutedOwner isNotEqualTo 2}) exitWith {};
+    if (_mode isEqualTo 'DEBIT') exitWith {
+        params ['',['_unit',objNull,[objNull]],['_tube',objNull,[objNull]]];
+        // Check and remove at the inventory's locality in one unscheduled call.
+        // A backpack swapped while this RPC was in flight is never consumed.
+        if (!isNull _unit && {local _unit} && {!isNull _tube} &&
+            {(backpackContainer _unit) isEqualTo _tube}) then {removeBackpack _unit;};
+    };
+    if (_mode isEqualTo 'ARM') exitWith {
+        params ['',['_mortar',objNull,[objNull]],['_nonce',-1,[0]]];
+        if (!isNull _mortar && {_mortar turretLocal [0]} &&
+            {(_mortar getVariable ['QS_mortarSupport_nonce',-1]) isEqualTo _nonce} &&
+            {!(_mortar getVariable ['QS_mortarSupport_retiring',FALSE])}) then {
+            _mortar addMagazineTurret ['8Rnd_82mm_Mo_shells',[0],8];
+            _mortar allowDamage TRUE;
+            _mortar lock FALSE;
+        };
+    };
     if (_mode isEqualTo 'EJECT') exitWith {
         params ['','_unit','_mortar'];
         if (!isNull _unit && {local _unit} && {(objectParent _unit) isEqualTo _mortar}) then {
@@ -112,36 +132,48 @@ if (_mode in ['PLACE','CANCEL','EJECT']) exitWith {
         };
     };
     _this spawn {
-        params ['','_unit','_mortar','_nonce',['_consumeTube',FALSE]];
+        params ['','_unit','_mortar','_nonce'];
         private _until = diag_tickTime + 8;
         waitUntil {uiSleep 0.1; isNull _mortar ||
             {local _mortar && {(_mortar getVariable ['QS_mortarSupport_nonce',-1]) isEqualTo _nonce}} ||
             {diag_tickTime >= _until}};
+        if (missionNamespace getVariable ['QS_mortarSupport_diagnostics',FALSE]) then {
+            diag_log ['[Mortar Support] PLACE readiness',_nonce,isNull _mortar,local _mortar,
+                clientOwner,_mortar turretLocal [0],_mortar getVariable ['QS_mortarSupport_nonce',-1],
+                _unit isEqualTo player,alive player,lifeState player,
+                player getVariable ['QS_unit_role',''],isRemoteControlling player,isNull curatorCamera,
+                isNull objectParent player,missionNamespace getVariable ['QS_targetBoundingBox_placementMode',FALSE],
+                player distance2D _mortar,_mortar getVariable ['QS_mortarSupport_retiring',FALSE]];
+        };
         private _placed = FALSE;
         if (_unit isEqualTo player && {!isNull _mortar} && {local _mortar} &&
             {alive player} && {(lifeState player) isNotEqualTo 'INCAPACITATED'} &&
             {(player getVariable ['QS_unit_role','']) isEqualTo 'mortar_gunner'} &&
-            {isNull (remoteControlled player)} && {isNull curatorCamera} && {isNull (objectParent player)} &&
+            {!isRemoteControlling player} && {isNull curatorCamera} && {isNull (objectParent player)} &&
             {!(missionNamespace getVariable ['QS_targetBoundingBox_placementMode',FALSE])} &&
             {(player distance2D _mortar) <= 10} &&
             {!(_mortar getVariable ['QS_mortarSupport_retiring',FALSE])} &&
-            {!_consumeTube || {(toLowerANSI (backpack _unit)) in (['mortar_tubes_1'] call QS_data_listItems)}} &&
             {(_mortar getVariable ['QS_mortarSupport_nonce',-1]) isEqualTo _nonce}
         ) then {
             [player,_mortar,FALSE,TRUE] call QS_fnc_unloadCargoPlacementMode;
             _placed = (attachedTo _mortar) isEqualTo player;
-            if (_placed) then {
-                // A tube is consumed only after server slot admission and a
-                // successful native carry handoff. A full section costs none.
-                if (_consumeTube) then {removeBackpack _unit;};
-                _mortar allowDamage TRUE;
-            };
+        };
+        if (missionNamespace getVariable ['QS_mortarSupport_diagnostics',FALSE]) then {
+            diag_log ['[Mortar Support] PLACE result',_nonce,_placed,local _mortar,_mortar turretLocal [0],
+                isNull _mortar,(attachedTo _mortar) isEqualTo player];
         };
         ['ACK',_unit,_mortar,_nonce,_placed] remoteExecCall ['QS_fnc_mortarSupport',2,FALSE];
     };
 };
 if (!isServer) exitWith {};
 if (isRemoteExecuted && {!(_mode in ['REQUEST','ACK','RELEASE','RESET'])}) exitWith {};
+// isNil can clear the engine's remote-execution context. Capture provenance from
+// this actual entry, never from request arguments, before entering the atomic
+// server transition. Recursive API calls would otherwise reject remoteExec.
+private _remoteCall = isRemoteExecuted;
+private _remoteOwner = remoteExecutedOwner;
+private _serverArgs = +_this;
+private _fn_serverDispatch = {
 private _state = serverNamespace getVariable ['QS_mortarSupport_state',createHashMap];
 if (_mode isEqualTo 'TICK' && {count _state isEqualTo 0}) exitWith {};
 if (count _state isEqualTo 0) then {
@@ -149,6 +181,7 @@ if (count _state isEqualTo 0) then {
     serverNamespace setVariable ['QS_mortarSupport_state',_state];
 };
 private _rows = _state get 'rows';
+private _controlledOwners = allUnits apply {_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull]};
 private _fn_private = {
     params ['_unit','_message'];
     if (!isNull _unit && {isPlayer _unit}) then {
@@ -165,12 +198,21 @@ private _fn_roleHolder = {
     if (isNull _unit || {!isPlayer _unit} || {!alive _unit} ||
         {(side group _unit) isNotEqualTo WEST} ||
         {(_unit getVariable ['QS_unit_role','']) isNotEqualTo 'mortar_gunner'} ||
-        {_conscious && {((lifeState _unit) isEqualTo 'INCAPACITATED') || {!isNull (remoteControlled _unit)}}}
+        {_conscious && {((lifeState _unit) isEqualTo 'INCAPACITATED') ||
+            {_unit getVariable ['QS_client_remoteControlling',FALSE]} || {_unit in _controlledOwners} ||
+            {local _unit && {isRemoteControlling _unit}}}}
     ) exitWith {FALSE};
     private _roles = (missionNamespace getVariable ['QS_unit_roles',[[],[],[],[]]]) # 1;
     private _index = _roles findIf {((_x # 0) # 0) isEqualTo 'mortar_gunner'};
     if (_index < 0) exitWith {FALSE};
     (((_roles # _index) # 1) findIf {(_x # 0) isEqualTo getPlayerUID _unit}) >= 0
+};
+if (_mode isEqualTo 'REQUEST' && {missionNamespace getVariable ['QS_mortarSupport_diagnostics',FALSE]}) then {
+    private _unit = _this param [1,objNull,[objNull]];
+    diag_log ['[Mortar Support] admission',_remoteCall,_remoteOwner,canSuspend,
+        owner _unit,isPlayer _unit,alive _unit,str side group _unit,[_unit] call _fn_roleHolder,
+        getPlayerUID _unit isNotEqualTo '',backpack _unit,[_unit] call _fn_hasTube,
+        stance _unit,str lifeState _unit,isNull objectParent _unit];
 };
 private _fn_penalty = {
     params ['_unit'];
@@ -236,6 +278,30 @@ private _fn_clearSection = {
     _row set ['dropState',''];
     if (_kept isEqualTo []) then {(_row get 'unit') setVariable ['QS_mortar_lite',objNull,TRUE];};
 };
+private _fn_settlePlacement = {
+    params ['_entry','_unit','_row'];
+    _entry params ['_mortar','','_pending','','_kind','_tube','_debit','_ack'];
+    if (!_pending || {!_ack}) exitWith {};
+    if (_kind isEqualTo 'TUBE' && {!_debit}) then {
+        // The reserved physical backpack must still be worn. A dropped or
+        // substituted bag cannot pay for this request and is never removed.
+        if (!isNull _tube && {(backpackContainer _unit) isEqualTo _tube} && {[_unit] call _fn_hasTube}) then {
+            _entry set [6,TRUE];
+            ['DEBIT',_unit,_tube] remoteExecCall ['QS_fnc_mortarSupport',_unit,FALSE];
+        } else {
+            _entry set [2,FALSE];
+            [_mortar] call _fn_retire;
+        };
+    };
+    // Global inventory removal is asynchronous for remote players. An ACK,
+    // a changed backpack class, or dropping the bag is not proof of payment.
+    if (!(_entry # 2) || {_kind isEqualTo 'TUBE' && {!(_entry # 6) || {!isNull _tube}}}) exitWith {};
+    _entry set [2,FALSE];
+    _mortar hideObjectGlobal FALSE;
+    ['ARM',_mortar,_entry # 1] remoteExecCall ['QS_fnc_mortarSupport',_mortar turretOwner [0],FALSE];
+    [_unit,'Mk6 mortar ready. Eight HE rounds.'] call _fn_private;
+    if (({alive (_x # 0) && {!(_x # 2)}} count (_row get 'mortars')) >= 3) then {[_unit] call _fn_full;};
+};
 private _fn_sweepMortars = {
     params ['_row','_uid','_now'];
     private _unit = _row get 'unit';
@@ -249,12 +315,32 @@ private _fn_sweepMortars = {
         if (!isNull _mortar) then {
             private _retire = [_connected,alive _unit,_holder,_sameBody,_unit distance2D _mortar] call _fn_retireNeeded;
             _retire = _retire || {!alive _mortar} || {_mortar getVariable ['QS_mortarSupport_retiring',FALSE]} ||
-                {_pending && {_now >= _deadline}};
+                {_pending && {_now >= _deadline || {!([_unit] call _fn_roleHolder)} || {([_unit] call _fn_penalty) > 1} ||
+                    {(_mortar getVariable ['QS_mortarSupport_nonce',-1]) isNotEqualTo _nonce}}};
             private _done = FALSE;
             if (_retire) then {
                 _entry set [2,FALSE];
                 _done = [_mortar] call _fn_retire;
             } else {
+                if (_pending && {!(_entry # 8)} && {(owner _mortar) > 0}) then {
+                    // Newly created vehicles can have owner 0 and reject a
+                    // first-frame transfer. Retry from the existing core sweep,
+                    // while the reserved slot and original deadline stay valid.
+                    private _newOwner = owner _unit;
+                    private _transferred = (owner _mortar) isEqualTo _newOwner || {_mortar setOwner _newOwner};
+                    if (missionNamespace getVariable ['QS_mortarSupport_diagnostics',FALSE]) then {
+                        diag_log ['[Mortar Support] transfer',_nonce,_newOwner,_transferred,owner _mortar,_mortar turretOwner [0]];
+                    };
+                    if (_transferred) then {
+                        _entry set [8,TRUE];
+                        // Transfer and client placement each have one bounded
+                        // window. Core scheduling must not consume the client's
+                        // eight-second locality wait plus the later debit tick.
+                        _entry set [3,_now + 15];
+                        ['PLACE',_unit,_mortar,_nonce] remoteExecCall ['QS_fnc_mortarSupport',_unit,FALSE];
+                    };
+                };
+                [_entry,_unit,_row] call _fn_settlePlacement;
                 {if (!([_x] call _fn_roleHolder) || {([_x] call _fn_penalty) > 1}) then {[_x,_mortar] call _fn_eject;};} forEach crew _mortar;
             };
             if (!_done) then {_kept pushBack _entry;};
@@ -332,9 +418,9 @@ if (_mode isEqualTo 'TICK') exitWith {
         } forEach (keys _rows);
     };
 };
-if (!isRemoteExecuted || {!(_mode in ['REQUEST','ACK','RELEASE','RESET'])}) exitWith {};
+if (!_remoteCall || {!(_mode in ['REQUEST','ACK','RELEASE','RESET'])}) exitWith {};
 private _caller = _this param [1,objNull,[objNull]];
-if (isNull _caller || {!isPlayer _caller} || {(owner _caller) isNotEqualTo remoteExecutedOwner}) exitWith {};
+if (isNull _caller || {!isPlayer _caller} || {(owner _caller) isNotEqualTo _remoteOwner}) exitWith {};
 private _uid = getPlayerUID _caller;
 if (_uid isEqualTo '') exitWith {};
 private _row = _rows getOrDefault [_uid,createHashMap];
@@ -351,20 +437,20 @@ if (_mode isEqualTo 'RELEASE') exitWith {
 if (_mode isEqualTo 'ACK') exitWith {
     if (count _this isNotEqualTo 5 || {count _row isEqualTo 0}) exitWith {};
     params ['','','_mortar','_nonce','_placed'];
-    if (!(_placed isEqualType TRUE) || {!(_nonce isEqualType 0)} ||
+    if (!(_mortar isEqualType objNull) || {!(_nonce isEqualType 0)} || {!(_placed isEqualType TRUE)} ||
+        {isNull _mortar} || {!finite _nonce} ||
         {(_row get 'unit') isNotEqualTo _caller}) exitWith {};
     private _index = (_row get 'mortars') findIf {(_x # 0) isEqualTo _mortar && {(_x # 1) isEqualTo _nonce}};
     if (_index < 0) exitWith {};
     private _entry = (_row get 'mortars') # _index;
-    if (!(_entry # 2)) exitWith {};
-    _entry set [2,FALSE];
+    if (!(_entry # 2) || {!(_entry # 8)} || {_entry # 7}) exitWith {};
     if (_placed && {[_caller] call _fn_roleHolder} && {([_caller] call _fn_penalty) <= 1} &&
         {diag_tickTime < (_entry # 3)} &&
         {!(_mortar getVariable ['QS_mortarSupport_retiring',FALSE])}) then {
-        _mortar hideObjectGlobal FALSE;
-        [_caller,'Mk6 mortar ready. Eight HE rounds.'] call _fn_private;
-        if (({alive (_x # 0) && {!(_x # 2)}} count (_row get 'mortars')) >= 3) then {[_caller] call _fn_full;};
+        _entry set [7,TRUE];
+        [_entry,_caller,_row] call _fn_settlePlacement;
     } else {
+        _entry set [2,FALSE];
         [_mortar] call _fn_retire;
         [_caller,'Mortar delivery cancelled.'] call _fn_private;
     };
@@ -422,9 +508,11 @@ if (_kind in ['MORTAR','TUBE']) exitWith {
     private _mortar = createVehicle [_class,_caller modelToWorld [0,2,1],[],0,'CAN_COLLIDE'];
     if (isNull _mortar) exitWith {[_caller,'Mortar request failed. Try again.'] call _fn_private;};
     _mortar hideObjectGlobal TRUE;
+    _mortar lock TRUE;
     _mortar allowDamage FALSE;
     { _mortar removeMagazineTurret [_x # 0,_x # 1]; } forEach (magazinesAllTurrets [_mortar,TRUE]);
-    _mortar addMagazineTurret ['8Rnd_82mm_Mo_shells',[0],8];
+    // Native carry placement can unhide the object before ACK. Keep it empty
+    // until the server confirms debit, then arm it at the object's locality.
     _mortar setVariable ['QS_mortar_lite',TRUE,TRUE];
     [_mortar,_caller] call _fn_configureMortar;
     private _nonce = (_state get 'nonce') + 1;
@@ -432,10 +520,10 @@ if (_kind in ['MORTAR','TUBE']) exitWith {
     _mortar setVariable ['QS_mortarSupport_nonce',_nonce,TRUE];
     // Reserve a slot before transferring locality. Both request paths share
     // this HE-only creation path and cannot race past the three-mortar limit.
-    (_row get 'mortars') pushBack [_mortar,_nonce,TRUE,diag_tickTime + 15];
+    (_row get 'mortars') pushBack [_mortar,_nonce,TRUE,diag_tickTime + 15,_kind,
+        [objNull,backpackContainer _caller] select (_kind isEqualTo 'TUBE'),FALSE,FALSE,FALSE];
     if (_kind isEqualTo 'MORTAR') then {(_row get 'cooldowns') set [0,diag_tickTime + 600];};
-    _mortar setOwner remoteExecutedOwner;
-    ['PLACE',_caller,_mortar,_nonce,_kind isEqualTo 'TUBE'] remoteExecCall ['QS_fnc_mortarSupport',_caller,FALSE];
+    // The next core sweep transfers the now-registered object and sends PLACE.
 };
 private _target = _this param [3,[],[[]]];
 if (!(count _target in [2,3]) || {(_target findIf {!(_x isEqualType 0) || {!finite _x}}) >= 0}) exitWith {};
@@ -472,4 +560,6 @@ _row set ['crate',_crate]; _row set ['chute',_chute]; _row set ['dropTarget',_la
 _row set ['dropState','INBOUND']; _row set ['dropDeadline',diag_tickTime + 120];
 (_row get 'cooldowns') set [1,diag_tickTime + 600];
 [_caller,'Mortar resupply inbound. Five HE mortar tubes.'] call _fn_private;
+};
+isNil {_serverArgs call _fn_serverDispatch;};
 // End Updated Code

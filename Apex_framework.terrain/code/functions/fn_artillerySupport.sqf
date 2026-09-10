@@ -8,13 +8,13 @@ Description:
 */
 private _mode = 'INIT';
 if (_this isEqualType [] && {(_this param [0,FALSE]) isEqualType ''}) then {_mode = _this # 0;};
+if (_mode isEqualTo 'postInit') then {_mode = 'INIT';};
 if (isRemoteExecuted && {isRemoteExecutedJIP || {
     !((_mode in ['REQUEST','CANCEL'] && {isServer}) ||
     {_mode in ['CLIENT','PING','CLEAR_PING'] && {hasInterface} && {remoteExecutedOwner isEqualTo 2}})
 }}) exitWith {};
-// Lifecycle calls originate in scheduled mission loops. Keep their state
-// transition indivisible with respect to incoming network requests.
-if (isServer && {canSuspend} && {_mode in ['START','END','WATCHDOG']}) exitWith {
+// Client initialization has no remote caller and must latch exactly once.
+if (canSuspend && {_mode isEqualTo 'INIT'}) exitWith {
     private _args = +_this;
     isNil {_args call QS_fnc_artillerySupport;};
 };
@@ -125,17 +125,29 @@ private _profiles = [
     ['BOMB_LASER','JTAC','GBU-12 laser guided',1,'2Rnd_GBU12_LGB','LASER',[0],500,100],
     ['BOMB_CLUSTER','JTAC','CBU-85 cluster (laser)',2,'4Rnd_BombCluster_01_F','LASER',[0],500,100]
 ];
+private _fn_resolveAmmo = {
+    params ['_profile'];
+    private _class = getText (configFile >> 'CfgMagazines' >> (_profile # 4) >> 'ammo');
+    if ((_profile # 0) in ['LASER','IR']) then {
+        // Vertical virtual release of these shell carriers corrupts their native
+        // child's orientation. Release the configured missile directly instead.
+        _class = getText (configFile >> 'CfgAmmo' >> _class >> 'submunitionAmmo');
+        if ((toLowerANSI getText (configFile >> 'CfgAmmo' >> _class >> 'simulation')) isNotEqualTo 'shotmissile') then {_class = '';};
+    };
+    _class
+};
 if (_mode isEqualTo 'INIT') exitWith {
     if (!hasInterface || {localNamespace getVariable ['QS_artillerySupport_clientStarted',FALSE]}) exitWith {};
     localNamespace setVariable ['QS_artillerySupport_clientStarted',TRUE];
-    addMissionEventHandler ['EntityKilled',{
+    private _killedEH = addMissionEventHandler ['EntityKilled',{
         if ((_this # 0) isEqualTo player || {(_this # 0) isEqualTo ((localNamespace getVariable ['QS_artillerySupport_menuOwner',[objNull,-1,'']]) # 0)}) then {['CLIENT'] call QS_fnc_artillerySupport;};
     }];
-    addMissionEventHandler ['EntityRespawned',{
+    private _respawnEH = addMissionEventHandler ['EntityRespawned',{
         if ((_this # 0) isEqualTo player || {(_this # 1) isEqualTo ((localNamespace getVariable ['QS_artillerySupport_menuOwner',[objNull,-1,'']]) # 0)}) then {['CLIENT'] call QS_fnc_artillerySupport;};
     }];
     // One observer for all role Supports: JIP, revive, role and control changes.
-    [] spawn {while {TRUE} do {['CLIENT'] call QS_fnc_artillerySupport; uiSleep 2;};};
+    private _observer = [] spawn {while {TRUE} do {['CLIENT'] call QS_fnc_artillerySupport; uiSleep 2;};};
+    localNamespace setVariable ['QS_artillerySupport_clientLifecycle',[_killedEH,_respawnEH,_observer]];
 };
 if (_mode in ['PING','CLEAR_PING']) exitWith {
     if (!hasInterface || {!isRemoteExecuted} || {remoteExecutedOwner isNotEqualTo 2}) exitWith {};
@@ -167,7 +179,7 @@ if (_mode isEqualTo 'CLIENT') exitWith {
     };
     private _kind = [player getVariable ['QS_unit_role','']] call _fn_service;
     private _eligible = [_kind,(player getVariable ['QS_unit_side',WEST]) isEqualTo WEST,alive player,
-        (lifeState player) isEqualTo 'INCAPACITATED',!isNull (remoteControlled player) || {!isNull curatorCamera}] call _fn_eligible;
+        (lifeState player) isEqualTo 'INCAPACITATED',isRemoteControlling player || {!isNull curatorCamera}] call _fn_eligible;
     private _owner = localNamespace getVariable ['QS_artillerySupport_menuOwner',[objNull,-1,'']];
     _owner params ['_unit','_menu','_oldKind'];
     if (_menu >= 0 && {!_eligible || {player isNotEqualTo _unit} || {_kind isNotEqualTo _oldKind}}) then {
@@ -180,7 +192,7 @@ if (_mode isEqualTo 'CLIENT') exitWith {
     };
     if (_eligible && {_menu < 0}) then {
         _unit = player;
-        _menu = [_unit,['QS_CallForFire','QS_CallAirstrike'] select (_kind isEqualTo 'JTAC'),[],[],FALSE] call BIS_fnc_addCommMenuItem;
+        _menu = [_unit,['QS_CallForFire','QS_CallAirstrike'] select (_kind isEqualTo 'JTAC'),[],[],''] call BIS_fnc_addCommMenuItem;
     };
     localNamespace setVariable ['QS_artillerySupport_menuOwner',[_unit,_menu,_kind]];
 };
@@ -189,7 +201,7 @@ if (_mode in ['MENU','ROUNDS','DISPERSION','CONFIRM','SEND']) exitWith {
     if (!hasInterface || {isRemoteExecuted}) exitWith {};
     private _kind = [player getVariable ['QS_unit_role','']] call _fn_service;
     if (!([_kind,(player getVariable ['QS_unit_side',WEST]) isEqualTo WEST,alive player,
-        (lifeState player) isEqualTo 'INCAPACITATED',!isNull (remoteControlled player) || {!isNull curatorCamera}] call _fn_eligible)) exitWith {};
+        (lifeState player) isEqualTo 'INCAPACITATED',isRemoteControlling player || {!isNull curatorCamera}] call _fn_eligible)) exitWith {};
     if ((player getVariable ['QS_tto',0]) > 1) exitWith {systemChat 'Too much reported friendly fire';};
     private _status = player getVariable ['QS_artillerySupport_status',[]];
     if (count _status isNotEqualTo 7 || {(_status # 1) isNotEqualTo _kind}) exitWith {systemChat 'Fire support is unavailable between missions.';};
@@ -254,6 +266,17 @@ if (_mode in ['MENU','ROUNDS','DISPERSION','CONFIRM','SEND']) exitWith {
 };
 
 if (!isServer) exitWith {};
+// Preserve engine-authenticated provenance before isNil can clear that context.
+// Lifecycle, requests and refunds share one atomic server transition, including
+// CANCEL delivered through scheduled remoteExec. No network argument supplies
+// either of these provenance values.
+private _remoteCall = isRemoteExecuted;
+private _remoteOwner = remoteExecutedOwner;
+private _serverArgs = +_this;
+private _fn_serverDispatch = {
+// Native remote-control queries need local arguments. The mission and Zeus
+// publish owner markers on the controlled actor. Resolve them at each readiness
+// check, including the independently spawned fire worker after role/control changes.
 private _state = serverNamespace getVariable ['QS_artillerySupport_state',createHashMap];
 private _fn_private = {
     params ['_unit','_text'];
@@ -265,7 +288,9 @@ private _fn_holder = {
     private _kind = [_unit getVariable ['QS_unit_role','']] call _fn_service;
     if (_kind isEqualTo '') exitWith {''};
     if (_ready && {!([_kind,TRUE,alive _unit,(lifeState _unit) isEqualTo 'INCAPACITATED',
-        !isNull (remoteControlled _unit)] call _fn_eligible)}) exitWith {''};
+        (_unit getVariable ['QS_client_remoteControlling',FALSE]) ||
+        {(allUnits findIf {(_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull]) isEqualTo _unit}) >= 0} ||
+        {local _unit && {isRemoteControlling _unit}}] call _fn_eligible)}) exitWith {''};
     private _uid = getPlayerUID _unit;
     private _roles = (missionNamespace getVariable ['QS_unit_roles',[[],[],[],[]]]) # 1;
     private _found = _roles findIf {
@@ -335,6 +360,8 @@ private _fn_stock = {
 };
 private _fn_publish = {
     private _live = call _fn_live;
+    private _published = _state getOrDefault ['published',createHashMap];
+    _state set ['published',_published];
     {
         private _unit = _x;
         private _status = [];
@@ -344,7 +371,13 @@ private _fn_publish = {
             _status = [_state get 'epoch',_kind,_balance # 0,((_state get 'jobs') getOrDefault [_kind,[]]) isNotEqualTo [],
                 +(_state get 'available'),_balance # 1,_balance # 2];
         };
-        if ((_unit getVariable ['QS_artillerySupport_status',[]]) isNotEqualTo _status) then {
+        // Numeric-target setVariable writes only on that client. Keep the last
+        // publication in server state so END/role departure sends the empty
+        // status, and an ownership change receives the current status again.
+        private _identity = netId _unit;
+        private _publication = [owner _unit,_status];
+        if ((_published getOrDefault [_identity,[]]) isNotEqualTo _publication) then {
+            _published set [_identity,_publication];
             _unit setVariable ['QS_artillerySupport_status',_status,owner _unit];
         };
     } forEach (allPlayers select {isPlayer _x && {!(_x isKindOf 'HeadlessClient_F')}});
@@ -400,7 +433,7 @@ if (_mode isEqualTo 'START') exitWith {
     private _jtacSlots = call _fn_capacity;
     private _available = []; private _ammo = [];
     {
-        private _class = getText (configFile >> 'CfgMagazines' >> (_x # 4) >> 'ammo');
+        private _class = [_x] call _fn_resolveAmmo;
         if (_class isNotEqualTo '' && {isClass (configFile >> 'CfgAmmo' >> _class)}) then {_available pushBack _forEachIndex;}
         else {diag_log format ['[Role Support] Unsupported ammunition omitted: %1',_x # 4];};
         _ammo pushBack _class;
@@ -410,7 +443,8 @@ if (_mode isEqualTo 'START') exitWith {
         ['foStock',[_population,_kind isEqualTo 'DEFENSE','FO'] call _fn_allowance],
         ['jtacSlots',_jtacSlots],
         ['jtacIssued',[_population,_kind isEqualTo 'DEFENSE','JTAC',_jtacSlots] call _fn_allowance],
-        ['jtacDebits',[]],['uidDebits',createHashMap],['owners',[]],['jobs',createHashMap],['available',_available],['ammo',_ammo]
+        ['jtacDebits',[]],['uidDebits',createHashMap],['owners',[]],['jobs',createHashMap],['available',_available],['ammo',_ammo],
+        ['published',createHashMap]
     ];
     serverNamespace setVariable ['QS_artillerySupport_state',_state];
     call _fn_publish;
@@ -437,9 +471,9 @@ if (_mode isEqualTo 'WATCHDOG') exitWith {
     call _fn_publish;
 };
 if (_mode isEqualTo 'CANCEL') exitWith {
-    if (!isRemoteExecuted || {count _this isNotEqualTo 2}) exitWith {};
+    if (!_remoteCall || {count _this isNotEqualTo 2}) exitWith {};
     private _unit = _this param [1,objNull,[objNull]];
-    if (isNull _unit || {(owner _unit) isNotEqualTo remoteExecutedOwner}) exitWith {};
+    if (isNull _unit || {(owner _unit) isNotEqualTo _remoteOwner}) exitWith {};
     private _jobs = _state get 'jobs';
     {
         private _job = _jobs get _x;
@@ -450,9 +484,9 @@ if (_mode isEqualTo 'CANCEL') exitWith {
     } forEach (keys _jobs);
     call _fn_publish;
 };
-if (_mode isNotEqualTo 'REQUEST' || {!isRemoteExecuted} || {count _this isNotEqualTo 7}) exitWith {};
+if (_mode isNotEqualTo 'REQUEST' || {!_remoteCall} || {count _this isNotEqualTo 7}) exitWith {};
 params ['',['_caller',objNull,[objNull]],['_epoch',-1,[0]],['_target',[],[[]]],['_index',-1,[0]],['_rounds',0,[0]],['_dispersion',0,[0]]];
-if (isNull _caller || {(owner _caller) isNotEqualTo remoteExecutedOwner}) exitWith {};
+if (isNull _caller || {(owner _caller) isNotEqualTo _remoteOwner}) exitWith {};
 private _kind = [_caller] call _fn_holder;
 if (_kind isEqualTo '') exitWith {};
 if (([_caller] call _fn_penalty) > 1) exitWith {[_caller,'Too much reported friendly fire'] call _fn_private;};
@@ -559,12 +593,22 @@ private _worker = [_state,_job,_epoch,+_target,_profile,(_state get 'ammo') # _i
                     if (call _fn_valid) then {
                         private _projectile = createVehicle [_ammo,_aim vectorAdd [0,0,_profile # 7],[],0,'CAN_COLLIDE'];
                         if (!isNull _projectile) then {
-                            _job set [6,(_job # 6) - 1];
-                            _released = TRUE;
-                            _projectile setShotParents [objNull,_caller];
+                            // Virtual fire still has a physical source for damage and Hit attribution.
+                            _projectile setShotParents [_caller,_caller];
                             _projectile setVectorDirAndUp [[0,0,-1],[0,1,0]];
-                            if (!isNull (_designation # 1)) then {_projectile setMissileTarget (_designation # 1);};
-                            _projectile setVelocity [0,0,-(_profile # 8)];
+                            private _targetAccepted = TRUE;
+                            if ((_profile # 5) isNotEqualTo 'NONE') then {
+                                private _target = _designation # 1;
+                                // New IR missiles can reject an already validated target on their first frame.
+                                _targetAccepted = !isNull _target && {alive _target} && {_projectile setMissileTarget [_target,TRUE]};
+                            };
+                            if (_targetAccepted) then {
+                                _projectile setVelocity [0,0,-(_profile # 8)];
+                                _job set [6,(_job # 6) - 1];
+                                _released = TRUE;
+                            } else {
+                                deleteVehicle _projectile;
+                            };
                         };
                     };
                 };
@@ -590,4 +634,6 @@ private _worker = [_state,_job,_epoch,+_target,_profile,(_state get 'ammo') # _i
     };
 };
 _job set [1,_worker];
+};
+isNil {_serverArgs call _fn_serverDispatch;};
 // End Updated Code

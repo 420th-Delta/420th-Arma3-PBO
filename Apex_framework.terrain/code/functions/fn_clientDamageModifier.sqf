@@ -31,7 +31,8 @@ if (_unitSide isEqualTo sideUnknown) then {
 if (_inSafezone && _safezoneActive && (_safezoneLevel > 1)) exitWith {0};
 if (isNull _objectParent) then {
 	if (_source isEqualType objNull) then {
-		if (!isNull _source) then {
+		// Virtual ordnance can report no source while retaining its instigator.
+		if (!isNull _source || {!isNull _combatAttacker}) then {
 			if (
 /* Legacy Code as of 9.9.2026 */
 //|				((side (group _instigator)) in [_unitSide,sideEnemy]) ||

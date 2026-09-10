@@ -46,6 +46,12 @@ private _getUnitSide = {
 // Use the physical firing unit for combat side; use its controller only for
 // accountability. Controlling friendly AI does not grant friendly-fire immunity.
 private _attacker = ['ATTACKER',_causedBy,_instigator,_unit] call TGC_fnc_isFriendlyFire;
+// An attributed virtual projectile may omit the physical source in Hit.
+// Resolve the firing unit before checking crew and reporting accountability.
+if (isNull _causedBy && {!isNull _attacker}) then {
+	_causedBy = _attacker;
+	_vehicleCausedBy = vehicle _causedBy;
+};
 private _controller = objNull;
 if (!isNull _attacker) then {
 	_controller = remoteControlled _attacker;
