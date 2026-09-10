@@ -295,8 +295,12 @@ private _fn_settlePlacement = {
     };
     // Global inventory removal is asynchronous for remote players. An ACK,
     // a changed backpack class, or dropping the bag is not proof of payment.
-    if (!(_entry # 2) || {_kind isEqualTo 'TUBE' && {!(_entry # 6) || {!isNull _tube}}}) exitWith {};
-    _entry set [2,FALSE];
+	if (!(_entry # 2) || {_kind isEqualTo 'TUBE' && {!(_entry # 6) || {!isNull _tube}}}) exitWith {};
+	// A free request starts its long cooldown only after the placement handoff
+	// succeeds. Timeouts, cancellation and false acknowledgements grant nothing
+	// and therefore leave the request available for a clean retry.
+	if (_kind isEqualTo 'MORTAR') then {(_row get 'cooldowns') set [0,diag_tickTime + 600];};
+	_entry set [2,FALSE];
     _mortar hideObjectGlobal FALSE;
     ['ARM',_mortar,_entry # 1] remoteExecCall ['QS_fnc_mortarSupport',_mortar turretOwner [0],FALSE];
     [_unit,'Mk6 mortar ready. Eight HE rounds.'] call _fn_private;
@@ -412,7 +416,8 @@ if (_mode isEqualTo 'TICK') exitWith {
                 deleteVehicle _chute; _row set ['chute',objNull];
             };
             if ((_row get 'mortars') isEqualTo [] && {isNull (_row get 'crate')} &&
-                {isNull (_row get 'chute')} && {((_row get 'cooldowns') findIf {_now < _x}) < 0}) then {
+                {isNull (_row get 'chute')} && {((_row get 'cooldowns') findIf {_now < _x}) < 0} &&
+                {_now >= (_row getOrDefault ['attemptAfter',0])}) then {
                 _rows deleteAt _uid;
             };
         } forEach (keys _rows);
@@ -464,7 +469,7 @@ if !(_kind in ['MORTAR','SUPPLY','TUBE']) exitWith {};
 if (count _row isEqualTo 0) then {
     _row = createHashMapFromArray [['unit',_caller],['mortars',[]],['crate',objNull],['chute',objNull],
         ['cooldowns',[0,0]],
-        ['dropState',''],['dropTarget',[0,0,0]],['dropDeadline',0],['chuteDeleteAt',0]];
+        ['attemptAfter',0],['dropState',''],['dropTarget',[0,0,0]],['dropDeadline',0],['chuteDeleteAt',0]];
     _rows set [_uid,_row];
 };
 // A new body must wait for its old equipment to retire; its cooldowns persist.
@@ -498,6 +503,12 @@ if (_decision isNotEqualTo '') exitWith {
 };
 ([_caller,'SAFE'] call QS_fnc_inZone) params ['_inSafezone','_level','_safezoneActive'];
 if (_inSafezone && {_safezoneActive} && {_level > 1}) exitWith {[_caller,localize 'STR_QS_Text_067'] call _fn_private;};
+private _fn_takeAttempt = {
+    private _requestNow = diag_tickTime;
+    if (_requestNow < (_row getOrDefault ['attemptAfter',0])) exitWith {FALSE};
+    _row set ['attemptAfter',_requestNow + 2];
+    TRUE
+};
 if (_kind in ['MORTAR','TUBE']) exitWith {
     if (!isNull (objectParent _caller) || {surfaceIsWater getPosATL _caller} ||
         {!(stance _caller in ['STAND','CROUCH'])}) exitWith {[_caller,'Stand on dry ground to request your mortar.'] call _fn_private;};
@@ -505,6 +516,7 @@ if (_kind in ['MORTAR','TUBE']) exitWith {
     private _class = 'B_Mortar_01_F';
     if (!isClass (configFile >> 'CfgVehicles' >> _class) || {!(_class isKindOf 'StaticMortar')} ||
         {!isClass (configFile >> 'CfgMagazines' >> '8Rnd_82mm_Mo_shells')}) exitWith {[_caller,'Mk6 mortar support is unavailable.'] call _fn_private;};
+    if (!(call _fn_takeAttempt)) exitWith {};
     private _mortar = createVehicle [_class,_caller modelToWorld [0,2,1],[],0,'CAN_COLLIDE'];
     if (isNull _mortar) exitWith {[_caller,'Mortar request failed. Try again.'] call _fn_private;};
     _mortar hideObjectGlobal TRUE;
@@ -522,8 +534,7 @@ if (_kind in ['MORTAR','TUBE']) exitWith {
     // this HE-only creation path and cannot race past the three-mortar limit.
     (_row get 'mortars') pushBack [_mortar,_nonce,TRUE,diag_tickTime + 15,_kind,
         [objNull,backpackContainer _caller] select (_kind isEqualTo 'TUBE'),FALSE,FALSE,FALSE];
-    if (_kind isEqualTo 'MORTAR') then {(_row get 'cooldowns') set [0,diag_tickTime + 600];};
-    // The next core sweep transfers the now-registered object and sends PLACE.
+	// The next core sweep transfers the now-registered object and sends PLACE.
 };
 private _target = _this param [3,[],[[]]];
 if (!(count _target in [2,3]) || {(_target findIf {!(_x isEqualType 0) || {!finite _x}}) >= 0}) exitWith {};
@@ -541,6 +552,7 @@ if (_landing isEqualTo [] || {surfaceIsWater _landing} || {(_caller distance2D _
 };
 ([_landing,'SAFE'] call QS_fnc_inZone) params ['_inSafezone','_level','_safezoneActive'];
 if (_inSafezone && {_safezoneActive} && {_level > 1}) exitWith {[_caller,'Mortar resupply is unavailable in this safe zone.'] call _fn_private;};
+if (!(call _fn_takeAttempt)) exitWith {};
 private _chute = createVehicle ['B_Parachute_02_F',_landing vectorAdd [0,0,180],[],0,'FLY'];
 if (isNull _chute) exitWith {[_caller,'Resupply request failed. Try again.'] call _fn_private;};
 private _crate = createVehicle [_crateClass,_landing vectorAdd [0,0,178],[],0,'CAN_COLLIDE'];

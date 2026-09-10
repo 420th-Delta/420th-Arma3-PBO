@@ -1323,7 +1323,10 @@ if (_type isEqualTo 'INIT_SYSTEM') exitWith {
 	if (isServer) then {
 		private _roleData = missionNamespace getVariable ['QS_roles_data',[[],[],[],[]]];
 		private _westRoles = _roleData # 1;
-		private _entry = ['forward_observer',WEST,1,1,-1,0,4,0,{TRUE},{TRUE},{''}];
+		private _entry = ['forward_observer',WEST,1,1,-1,0,0,0,{TRUE},{
+			(player getVariable ['QS_unit_side',WEST]) isEqualTo WEST ||
+			{missionNamespace getVariable ['QS_RSS_client_canSideSwitch',FALSE]}
+		},{''}];
 		private _index = _westRoles findIf {(_x # 0) isEqualTo 'forward_observer'};
 		if (_index < 0) then {_westRoles pushBack _entry;} else {_westRoles set [_index,_entry];};
 		_roleData set [1,_westRoles];
