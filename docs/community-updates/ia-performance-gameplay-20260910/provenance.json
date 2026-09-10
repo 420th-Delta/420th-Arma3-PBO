@@ -1,0 +1,433 @@
+{
+  "contributor": "https://github.com/JollyRogerEXP",
+  "base_commit": "a0a58e1caa0a4f66bbe02bd5f30a4eb5fd5ee4d7",
+  "package_name": "IA_PerformanceGameplayUpdate",
+  "baseline_archive": "Apex_framework_420th_A.Altis(1).zip",
+  "baseline_archive_sha256": "eff6619e6429fc1f0839ff25b9b7fbd2cbe2815b8bd40843d115f66d37fbd41d",
+  "baseline_archive_identity": "Declared in contributor manifest; archive itself not independently located/hashed. All 55 changed original files were reconstructed and verified.",
+  "package_metadata_sha256": {
+    "combat_update.patch": "3367d71ba96683884d30580b33ebed46c853d4f1fa9b937457bb72f523e8331e",
+    "manifest.json": "23bb1086243db175f825bb35dddde59946d2e3905752b3df61fa931c17ba83e3",
+    "README.md": "e811efeac210e8af121af111fc74a106c071667c884c9232efc4ccb4ffb1b749",
+    "RELEASE_NOTES.md": "10fc6d37b16f787c50d2154195670f74960a8a17488b492a9cec5eaf6ecd2f79",
+    "stage.py": "f125371dfa3b4613119c617ca37607fbf16adb67e6eb7307e760531d95f847de",
+    "TECHNICAL_NOTES.md": "11d3699963d44695eab5c53ee2a4f189507d5674fb869c931edd687bc66c4d83"
+  },
+  "payload_files_verified": 59,
+  "original_files_reconstructed_and_verified": 55,
+  "files": [
+    {
+      "path": "TGC/Functions/Channels/fn_refreshStaffChannelAccess.sqf",
+      "original_sha256": "d344663b987512b2ea837a6117d010e27834274967ddba5cd1fe6fb32f292a1d",
+      "incoming_sha256": "f0e481bcfa76fa0bf546f2c335d08f2220b3fff297b1b4dafe3d23519ea3f785",
+      "integrated_sha256": "0c8e28a55764dad6a66d43c7253b4ac30f4e177b0e2e0866c4f046b4dd3615df",
+      "commit_group": 7
+    },
+    {
+      "path": "TGC/Functions/Damage/fn_addFriendlyAIHandlers.sqf",
+      "original_sha256": "80792065181df1d8cedfdd623a2b929271963f3f230c6a8b8b2d4971aa84d231",
+      "incoming_sha256": "235dc995291b10a05e9877eafdb435d087a76cc47873956835fbd88926f56ba0",
+      "integrated_sha256": "235dc995291b10a05e9877eafdb435d087a76cc47873956835fbd88926f56ba0",
+      "commit_group": 6
+    },
+    {
+      "path": "TGC/Functions/Damage/fn_addSpawnMenuVehicleHandlers.sqf",
+      "original_sha256": "7cee25ba668c000b7abff6a224b9e1e2092252139c48210e5c1254135d4f61e6",
+      "incoming_sha256": "56da6a478e716de0a34ad481e42fd249ac6a70ee6ae5c72a8fac1486862f0f73",
+      "integrated_sha256": "56da6a478e716de0a34ad481e42fd249ac6a70ee6ae5c72a8fac1486862f0f73",
+      "commit_group": 4
+    },
+    {
+      "path": "TGC/Functions/Damage/fn_initFriendlyAIProtection.sqf",
+      "original_sha256": "b9db14de102fc76a8c0268269bca449da75888eb21e748cdffa29bf296309abf",
+      "incoming_sha256": "1ef449430303cf9d27bfc9d727288a9f3c468c824aaa17136a9a9148e343e03e",
+      "integrated_sha256": "1ef449430303cf9d27bfc9d727288a9f3c468c824aaa17136a9a9148e343e03e",
+      "commit_group": 6
+    },
+    {
+      "path": "TGC/Functions/Damage/fn_isFriendlyFire.sqf",
+      "original_sha256": "ec04df131edb2cb4bd53aff334d367fedca565f15b9fa6747bf3fe0f1e43bb52",
+      "incoming_sha256": "0d190acd52269ff5da01d2b464ea8ec657362a78deffa7307c8dcd876f423f63",
+      "integrated_sha256": "0d190acd52269ff5da01d2b464ea8ec657362a78deffa7307c8dcd876f423f63",
+      "commit_group": 8
+    },
+    {
+      "path": "TGC/Functions/Lasers/fn_initLaserHandlers.sqf",
+      "original_sha256": "10c680495bd935edc4d82a3ca90a6881ed7479b6b16043a2d144a17970689204",
+      "incoming_sha256": "ab41c2885274183ee2f41decc1de2a16bdb5d782171e23ab1a67cb40e7b147bd",
+      "integrated_sha256": "ab41c2885274183ee2f41decc1de2a16bdb5d782171e23ab1a67cb40e7b147bd",
+      "commit_group": 2
+    },
+    {
+      "path": "code/config/security.hpp",
+      "original_sha256": "521305398b096aa49fade852065146b693e8eb96f0986b28525989de1ffc3e81",
+      "incoming_sha256": "292da9d845f92af23ecabc1e675cd86aeed080b4de942f8cd34936cbc575f008",
+      "integrated_sha256": "292da9d845f92af23ecabc1e675cd86aeed080b4de942f8cd34936cbc575f008",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AI.sqf",
+      "original_sha256": "25c23cc8deb892c734da6fff1dd8abc59918f5544a442ca684aece0afd42b63d",
+      "incoming_sha256": "302580788acf705fd0e282a67ab9ca58a0b9634408a9fbe0c1e026963e5930e4",
+      "integrated_sha256": "a3982d05ebdac6fb16183c78b5fc7a0a8d7228b44dd4d6d5ab80f88121c3517f",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIFireMission.sqf",
+      "original_sha256": "515404ab60bf35126aff2ea82f2892f468ef3910cb64a8abe616874e8e4f55be",
+      "incoming_sha256": "bc207c48ee4e16a9952c992be2f148f36c0ef37c317526dcbccf5aefeaa8d15f",
+      "integrated_sha256": "1dca475a7e0d53dac12ae9faa673e6ea93dac8f10317b487f12317c586d17cc2",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIHandleGroup.sqf",
+      "original_sha256": "a2be70779cfeee48a14c93712d89c1910681c9b0fb771e643ad0536fbae70db3",
+      "incoming_sha256": "892d911544a57362b7457c36b26b367983747cc7223721efac6a12200dd28725",
+      "integrated_sha256": "892d911544a57362b7457c36b26b367983747cc7223721efac6a12200dd28725",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIHandleUnit.sqf",
+      "original_sha256": "f649310f560530dc292ad1c9bb095cc290e519595f9c904cc02a77092251f539",
+      "incoming_sha256": "a1ce1082d970259b57f18d6e15b28c3c644e31645c244d4aec39fd67fc6b8139",
+      "integrated_sha256": "a1ce1082d970259b57f18d6e15b28c3c644e31645c244d4aec39fd67fc6b8139",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIXHeliInsert.sqf",
+      "original_sha256": "393376828b3b8a2c9086d0865fae1e2fbf4ecf53a53db6ea2a248a91f8de32de",
+      "incoming_sha256": "57a6b3db64d50c78aff44f994a39ff56507d92062918ffec303cd36e2d20234a",
+      "integrated_sha256": "57a6b3db64d50c78aff44f994a39ff56507d92062918ffec303cd36e2d20234a",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIXHeliInsertLanding.sqf",
+      "original_sha256": "efa8471d55014646c30ebb3507918b00405b955dbeaadc02893062c58dab98ec",
+      "incoming_sha256": "b3288ae88525b0f8496fdd27f77d046ae10db7535f29a3ae2b3bcb7673c6bf2f",
+      "integrated_sha256": "b3288ae88525b0f8496fdd27f77d046ae10db7535f29a3ae2b3bcb7673c6bf2f",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIXMissileCountermeasure.sqf",
+      "original_sha256": "b63e9cc2b71a64e41821e2c166641cc8d4bd0e911b18c3e43b3cf147a0331ed9",
+      "incoming_sha256": "0aca0017f19a1318d737da89edb78d3d8593f5b963ef381f3b363fe8a363affd",
+      "integrated_sha256": "0aca0017f19a1318d737da89edb78d3d8593f5b963ef381f3b363fe8a363affd",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_AIXSuppressiveFire.sqf",
+      "original_sha256": "198cf5076d4524b09fa53937bfed792e649d7077e5415f61aec74c849b346344",
+      "incoming_sha256": "27177d0c5900265179222e2cc9b800a8a6b9cf0cf88ee1c0ba18035255654b50",
+      "integrated_sha256": "27177d0c5900265179222e2cc9b800a8a6b9cf0cf88ee1c0ba18035255654b50",
+      "commit_group": 5
+    },
+    {
+      "path": "code/functions/fn_ambientHostility.sqf",
+      "original_sha256": "7a6139823c53e7b432098a6d8811561c39dd84488a99733521e5ab971ea4f1ca",
+      "incoming_sha256": "d8d65a8f65f3b1ea66fb26a12a1038e38b9e97f655af316693a4d70be56ccfea",
+      "integrated_sha256": "d8d65a8f65f3b1ea66fb26a12a1038e38b9e97f655af316693a4d70be56ccfea",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_aoDefend.sqf",
+      "original_sha256": "54adc23adcace27e01eb9d94fc0ead4e9f4ff23c55d0b8003c95de95ef4ee922",
+      "incoming_sha256": "c9c8a34694e161d25afee46d260f880b1246481830d59a58e696c130255ec849",
+      "integrated_sha256": "9d2c521729cdba3b690880fa898c843c876bc8d384e99d980a945262439993c9",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_aoEnemy.sqf",
+      "original_sha256": "b2cd42452657d9f7d4a2b06017a152b8fb08a2fbbb090c9883b936f6cb3ce7af",
+      "incoming_sha256": "67298d4441ee82cc77ff4fd423071988904ee78f2d90ab7f3338a39747d6b239",
+      "integrated_sha256": "cf6101f62615b45735251b9a08b4cbe7bbf03daa412a56eba117407dd949b6b3",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_aoEnemyReinforceVehicles.sqf",
+      "original_sha256": "311d64759dea5261f12c9f051a2e9a9e06f5432aefe8c7a66cbafd862027796f",
+      "incoming_sha256": "271a7176fff1acd5883e0b2983bfee2c9c5c377d7ef11bbd20d865e684950a13",
+      "integrated_sha256": "271a7176fff1acd5883e0b2983bfee2c9c5c377d7ef11bbd20d865e684950a13",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_aoSubObjectives.sqf",
+      "original_sha256": "8ff05a50568c82893add94e8359361d743584faa51446e86af78c780035a7776",
+      "incoming_sha256": "d10b83e673f80b8aae752cdb9571f97a7a9fbe7876c5f0c65aaee1791755b5dd",
+      "integrated_sha256": "d10b83e673f80b8aae752cdb9571f97a7a9fbe7876c5f0c65aaee1791755b5dd",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_artillerySupport.sqf",
+      "original_sha256": null,
+      "incoming_sha256": "d3d9cac91d252efe5438f438a09e4d8bb59ff935c96b186710917fc6db351bbf",
+      "integrated_sha256": "d3d9cac91d252efe5438f438a09e4d8bb59ff935c96b186710917fc6db351bbf",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientArsenal.sqf",
+      "original_sha256": "241da589e85de06241b7e55fa9f984ef268bd2df7e92cb3d3d88a705c5c0f574",
+      "incoming_sha256": "2115c6188679a27611f1f59e0e2e6bf31cb958c1607d3be0ebd093bc5acc1a28",
+      "integrated_sha256": "2115c6188679a27611f1f59e0e2e6bf31cb958c1607d3be0ebd093bc5acc1a28",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientCore.sqf",
+      "original_sha256": "1971fd44b035250d61f8edc742ec0b7aa7f0f493f4d2c97e7bf9f647df897635",
+      "incoming_sha256": "3d12b5dc5d0eccd0519163b504807d91797d5a0ed3d1284b8b0c95f62ab6d1f6",
+      "integrated_sha256": "3d12b5dc5d0eccd0519163b504807d91797d5a0ed3d1284b8b0c95f62ab6d1f6",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientDamageModifier.sqf",
+      "original_sha256": "a1ab24c8559ad4f33e0df2501b321b3af8a23a80520524f035031604f3ec6258",
+      "incoming_sha256": "d7fe2a848357d73a37212cb214aba68e6df5e7dd0e1496d84ffbc4b15d8d4919",
+      "integrated_sha256": "d7fe2a848357d73a37212cb214aba68e6df5e7dd0e1496d84ffbc4b15d8d4919",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientEventHit.sqf",
+      "original_sha256": "390a0dea846589c95b1510807a3c5f20e91bb48ae989fad2e5869521eb333e10",
+      "incoming_sha256": "1bb4248cda2438e9a36519117c69f06d856d79243baaf55e737c9c92e4603a40",
+      "integrated_sha256": "1bb4248cda2438e9a36519117c69f06d856d79243baaf55e737c9c92e4603a40",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientEventPut.sqf",
+      "original_sha256": "4970c73eeba2a0c371079c0c4fcfe087e07033b10e36ac3c43bcfc6509a9ecb3",
+      "incoming_sha256": "9985a172e33101e5c768966cc8da35279684885bd405433cbc77187560ee201d",
+      "integrated_sha256": "9985a172e33101e5c768966cc8da35279684885bd405433cbc77187560ee201d",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientEventRespawn.sqf",
+      "original_sha256": "1a37496503edb2cbc961179bf088a823a230af3ce2de74c104b7cee2c3c33473",
+      "incoming_sha256": "d87759555094160b6160097f52139b1e7c8cfab10b5fea92e212b3ca01bc7c38",
+      "integrated_sha256": "a65ace8eb126f1e8478efe32e4d0df97da3d371dca842575c148e47a9809ea8f",
+      "commit_group": 7
+    },
+    {
+      "path": "code/functions/fn_clientInteractMortarLite.sqf",
+      "original_sha256": "77228f234c51d30885b0d6405f613fdf06569782d44f7f0f5df53e7a2d104473",
+      "incoming_sha256": "3d48902bb51c8c0c722f602f056677faa6e5dbd836f3253f8895d7884cda6f79",
+      "integrated_sha256": "3d48902bb51c8c0c722f602f056677faa6e5dbd836f3253f8895d7884cda6f79",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_clientMenuRadio.sqf",
+      "original_sha256": "219fbcc153e48d2d74d5dedfc8d467760bcbf33d007d687aa4bcd771fe9184a1",
+      "incoming_sha256": "5c2410f0d0bd4bc7247592ed6d457edee93d321eeae57a123ba52d36d0c738ec",
+      "integrated_sha256": "a93e87db17fb58261d39095f20ee0f8717452bb18762e99c255eeb017d852897",
+      "commit_group": 7
+    },
+    {
+      "path": "code/functions/fn_clientRadio.sqf",
+      "original_sha256": "c05a89b9f85c37192ae12e5ea0846b2aadc48ba514a04db2b71eff87b0d4df1b",
+      "incoming_sha256": "c8f42bd57edd91c221cfafc7598686e1ac42ccacd9aa6087ff1eecca25ad1e51",
+      "integrated_sha256": "eaf8f855ea8307c86d60be6d75551f664d9c5b677df50a8d316b0f9c278fb75d",
+      "commit_group": 7
+    },
+    {
+      "path": "code/functions/fn_config.sqf",
+      "original_sha256": "ebb9da5509692a39c2e61f2019abcb7b2553d168839e252be27345d3590ff767",
+      "incoming_sha256": "eca26b570b4fb363fe232d52d8db3b42d7f5dc0c51751237a927084c8da9fe7c",
+      "integrated_sha256": "7ba8d0268b2a9d12f2cdb8d228762740411ab242d683db546bcddfaa1ce1c3c7",
+      "commit_group": 7
+    },
+    {
+      "path": "code/functions/fn_core.sqf",
+      "original_sha256": "692fcb16f27625d512f111510e3d9391a48510829714344efbb44c147e0a09a4",
+      "incoming_sha256": "580493ca1368ddfb2cc5a15def9a7ba52f7c23c8c9295d9a7c1ef68be53e2c94",
+      "integrated_sha256": "62a73d339b66c0b490c06cbcba3dacfbf9b0bf5d7324c8384edff57a20fee14e",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_enemyCAS.sqf",
+      "original_sha256": "1f0b4f77fc06059985d5c1f397e27890a32545af0fd8b7e8929a208753c4c2dc",
+      "incoming_sha256": "1f712a1e35ccfcd921e121732fd729ad328911d3725d6fa71bb42ffdb91d561d",
+      "integrated_sha256": "34abd4a171cde749d6d065c67a55b0a130b027d2ee6d946a316126596d7f8bb7",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_eventBuildingChanged.sqf",
+      "original_sha256": "33e9edfb1f5f7035eacac05b9731030bfa96cf8f5cc10b76a2e3dd08d180032c",
+      "incoming_sha256": "c853300f930f072aedeb1a74d6708434b254bc746bbbea7cd02b7170b561779b",
+      "integrated_sha256": "c853300f930f072aedeb1a74d6708434b254bc746bbbea7cd02b7170b561779b",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_fobEnemyAssault.sqf",
+      "original_sha256": "a18b961790a334759e8d029ae07d04208c85ed1f9b1fdcc690139ad66aa905c4",
+      "incoming_sha256": "020124af9616d9dd1726517df4549044a5a0d827056bde4fe56384a8214792fd",
+      "integrated_sha256": "020124af9616d9dd1726517df4549044a5a0d827056bde4fe56384a8214792fd",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_gridEnemy.sqf",
+      "original_sha256": "9b7604f3b424e54b0d168b3009c0a6d126856ab3b9c5890992f705691bcda5cc",
+      "incoming_sha256": "221bd0578570f7043a81b197ddce4b4baa2fb473f638d4a102e19f8af2a58272",
+      "integrated_sha256": "221bd0578570f7043a81b197ddce4b4baa2fb473f638d4a102e19f8af2a58272",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_gridSpawnAttack.sqf",
+      "original_sha256": "e28b7b009ebaa9d6903e0068d9c3d0a749081782cf04158b0e79f2f2c370cc35",
+      "incoming_sha256": "83fa80fd59feed70d294c58d37bbd3a8fb2b61d9355a2149ae1c7386c9b42d39",
+      "integrated_sha256": "83fa80fd59feed70d294c58d37bbd3a8fb2b61d9355a2149ae1c7386c9b42d39",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_gridSpawnPatrol.sqf",
+      "original_sha256": "5c9b8c699e933e94f9645ca4fd26ee25781f12ee0659411eb53d49496e81537b",
+      "incoming_sha256": "c504dae73ab603e37a63ccbd66f4f043b34d9156f538ae9d1e87ce400bd17424",
+      "integrated_sha256": "c504dae73ab603e37a63ccbd66f4f043b34d9156f538ae9d1e87ce400bd17424",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_hcCore.sqf",
+      "original_sha256": "15b3ccc864a2cb6352eebee61172849d6a3ccf809fee36f38854867a8fa864e1",
+      "incoming_sha256": "d289f3e3b2c2393d07f22a061147e693cae83abfc85b0e2d600d276b3769bd6b",
+      "integrated_sha256": "d289f3e3b2c2393d07f22a061147e693cae83abfc85b0e2d600d276b3769bd6b",
+      "commit_group": 3
+    },
+    {
+      "path": "code/functions/fn_highCommand.sqf",
+      "original_sha256": "38bfb27db4ddbf53460ef339523df6098e84afd30386f2aacaebb2abbc9bfd5a",
+      "incoming_sha256": "9b7deebe88ba03ba2518b9cd5bf390f8703229a0ae63bb228270727eee0f789d",
+      "integrated_sha256": "9b7deebe88ba03ba2518b9cd5bf390f8703229a0ae63bb228270727eee0f789d",
+      "commit_group": 7
+    },
+    {
+      "path": "code/functions/fn_incapacitated.sqf",
+      "original_sha256": "55420342a42677352079e9cbf8d6b90a1258d61a23dfe375e98d569841d6d80b",
+      "incoming_sha256": "2b21380e23eb5364e8fd50a560f5f071c465cd0cd265cd95d9f6a699be7d7b65",
+      "integrated_sha256": "2b21380e23eb5364e8fd50a560f5f071c465cd0cd265cd95d9f6a699be7d7b65",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_initPlayerLocal.sqf",
+      "original_sha256": "c5419f1195081edcd02003121f60c139829f28f585b64ad6f1bf4d2a5082be5c",
+      "incoming_sha256": "86f7251d2dfbab33d6958e9fce974321096d579d4ac76c31b3004a4348750f5e",
+      "integrated_sha256": "86f7251d2dfbab33d6958e9fce974321096d579d4ac76c31b3004a4348750f5e",
+      "commit_group": 7
+    },
+    {
+      "path": "code/functions/fn_missionGeorgetown.sqf",
+      "original_sha256": "5563f839533d5d45f9247461523d722565b24511e5b1b4f88f5d1e02106b85da",
+      "incoming_sha256": "fe2daf7bfaf8b459c0f6ad16de79c787ba7bc0d73fcfb3e7a52c7ef136c133fa",
+      "integrated_sha256": "fe2daf7bfaf8b459c0f6ad16de79c787ba7bc0d73fcfb3e7a52c7ef136c133fa",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_missionKavala.sqf",
+      "original_sha256": "5f1e33f821be9dccef8994c0de7eebe4bd7c8050e3f6db31f667c51159448fab",
+      "incoming_sha256": "789516f318b140e1c7709e79d7b3577ef1bec54e8a0c843cc8d09c271b691965",
+      "integrated_sha256": "87cb994d44ff6d3d28e4a3da8ba91a442ff4450618ca50e7c431c70743ef1a65",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_mortarSupport.sqf",
+      "original_sha256": null,
+      "incoming_sha256": "a9f25cabaa07d61864fff5cdb22112315a001ed2b27901b2b9a307f26c862877",
+      "integrated_sha256": "a9f25cabaa07d61864fff5cdb22112315a001ed2b27901b2b9a307f26c862877",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_roles.sqf",
+      "original_sha256": "2dd4ec59b56b03b2ac0328e0aa85817672b37d445197039b3f4d6f38b62f5bb4",
+      "incoming_sha256": "14431717317576b5ef5bdaf0f953f507b17647d7860bb15dbc528c984dd6043b",
+      "integrated_sha256": "1b561d7dfb705ba8daa346f47777f242cf568c799640e1c9a9836611ec8656d1",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_scEnemy.sqf",
+      "original_sha256": "64da457681b753c315e5c353a74bd993a52740b90b80063bc60035833f24c9b9",
+      "incoming_sha256": "eb85018ad5d9dcbb48f28ebdf0505f467e9212a09fa4af726170c51b607952c8",
+      "integrated_sha256": "eb85018ad5d9dcbb48f28ebdf0505f467e9212a09fa4af726170c51b607952c8",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_scSpawnHeli.sqf",
+      "original_sha256": "483066d9d8e83580fdc9cd9ad8d5b2de14bb3c4d55f0502e7092b3a6fa6d9bfc",
+      "incoming_sha256": "cc87e90af719e20816bddd9fdd8b288d9114113d4c85aaf46af8756947b0d415",
+      "integrated_sha256": "cc87e90af719e20816bddd9fdd8b288d9114113d4c85aaf46af8756947b0d415",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_scSpawnLandVehicle.sqf",
+      "original_sha256": "b41aafbd1ffc6dc7879f3978575502fc9204dfb2e5c2b39953f4b11a5433da3f",
+      "incoming_sha256": "a4765822b4b86c026fc4ecb66919516ebb2c9b3124f8d830250be0bf7c26490e",
+      "integrated_sha256": "a4765822b4b86c026fc4ecb66919516ebb2c9b3124f8d830250be0bf7c26490e",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_serverDetector.sqf",
+      "original_sha256": "246215994a8fa098dce3ad22df4515b5f1ffaee7b9b73e4138b7664a049732f2",
+      "incoming_sha256": "cf109253065a5fe0334b183a80ecd87ed9c6014ca6f2cb50af664e0cf313ae46",
+      "integrated_sha256": "cf109253065a5fe0334b183a80ecd87ed9c6014ca6f2cb50af664e0cf313ae46",
+      "commit_group": 1
+    },
+    {
+      "path": "code/functions/fn_spawnGroup.sqf",
+      "original_sha256": "4bb87f0fac2c9eb84ed8bfd90e16e43e864a19560c800c2c9c420b29f98752c0",
+      "incoming_sha256": "53c7e06e9f90a2e89f2e79561ba7e81d943f44c397a4758fc5e7f2511eb05b28",
+      "integrated_sha256": "c8a950489aa9320889ea9926cabd9d4cd9a65b3a93025f0f0800be148c309767",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_spawnSupport.sqf",
+      "original_sha256": "d5162048dc68c51b462677196a548161183d2c8ba661a85f9c7e886f7bba5bd4",
+      "incoming_sha256": "f61797135cff7817f084fd225ed7971eeef21063e008b5461c6baf1ca3a15d7f",
+      "integrated_sha256": "f61797135cff7817f084fd225ed7971eeef21063e008b5461c6baf1ca3a15d7f",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_spawnViperTeam.sqf",
+      "original_sha256": "36a8fa29fb50219c20cd6dd09e79ba319715ad64d25166d552fb11a8ab5cb7d7",
+      "incoming_sha256": "0037ddc4a5f402778c007d9d6874c0c7db62f1eace65b3bbca848e8c34ed57a6",
+      "integrated_sha256": "0037ddc4a5f402778c007d9d6874c0c7db62f1eace65b3bbca848e8c34ed57a6",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_taskAttack.sqf",
+      "original_sha256": "bdf3cfe5ad957cb6101469cc78388a34623e210d2c49d54dd83d6042c78fa2d4",
+      "incoming_sha256": "1c674fac3def5343e32a73fd91953fb8a68691d3e6d01a81e456a8787e61b9be",
+      "integrated_sha256": "1c674fac3def5343e32a73fd91953fb8a68691d3e6d01a81e456a8787e61b9be",
+      "commit_group": 8
+    },
+    {
+      "path": "code/functions/fn_taskPatrol.sqf",
+      "original_sha256": "b6dd516bac06b49b1fc71b73aa970a4ff05a2b018f899961fe6630491a444e44",
+      "incoming_sha256": "00abadc83cc32f3f2347a03280521d82a93958a3ec5f6ecbaf15dfae0963ad57",
+      "integrated_sha256": "00abadc83cc32f3f2347a03280521d82a93958a3ec5f6ecbaf15dfae0963ad57",
+      "commit_group": 8
+    },
+    {
+      "path": "code/scripts/AR_AdvancedRappelling_ext.sqf",
+      "original_sha256": "90d4b0510fee9a92152179c9514f679a107e42490ddd6ea79bbee9559024a701",
+      "incoming_sha256": "86069539e826e5ecc3f1c5e10220c54d6b18c3630f06fb6da9eb41d4cf735a76",
+      "integrated_sha256": "70f8812b692b44f956a447aa265e9013d8b91919c6a0361768c05b1a51aa5111",
+      "commit_group": 8
+    },
+    {
+      "path": "code/scripts/IA_MegaDefense.sqf",
+      "original_sha256": null,
+      "incoming_sha256": "b8236d3a70fb47141f31b2ceada431dc3f91494ce5dddc5aca76344b72b8bcf3",
+      "integrated_sha256": "b8236d3a70fb47141f31b2ceada431dc3f91494ce5dddc5aca76344b72b8bcf3",
+      "commit_group": 8
+    },
+    {
+      "path": "description.ext",
+      "original_sha256": "da464856d03c9ed11587f5b0e5d472186911f42507aa34ee9cc6a241264d289f",
+      "incoming_sha256": "5580bc54883765a5e989740dec523f4c0b046ffbe23830e1a4c4d153c846956c",
+      "integrated_sha256": "955b443c7d6ccaef3f77bb48283b26965639ff77c8591c4b3989da4b4c985b9d",
+      "commit_group": 8
+    },
+    {
+      "path": "media/images/roles/arid/forward_observer.jpg",
+      "original_sha256": null,
+      "incoming_sha256": "4f4ea2c9f648844f7887398030bbeb382880fe5d2b85cf69d5878e9d8b2750e1",
+      "integrated_sha256": "4f4ea2c9f648844f7887398030bbeb382880fe5d2b85cf69d5878e9d8b2750e1",
+      "commit_group": 8
+    }
+  ]
+}

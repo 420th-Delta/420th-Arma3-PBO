@@ -1,0 +1,41 @@
+{
+  "balance_sqf_passed": 56,
+  "git_diff_check": "pass",
+  "whitespace_lines_normalized": 50,
+  "engine": {
+    "total": 56,
+    "ok": 56,
+    "fail": 0,
+    "scriptErrors": 0,
+    "durationSeconds": 15.3
+  },
+  "config_checks": [
+    {
+      "path": "description.ext",
+      "pass": true
+    },
+    {
+      "path": "code/config/security.hpp",
+      "pass": true
+    },
+    {
+      "path": "mission.sqm",
+      "pass": true
+    }
+  ],
+  "server_version": "2.22.0.154045",
+  "snapshot_unchanged": true,
+  "post_snapshot_changes": "Only recorded trailing whitespace outside strings or within compileFinal code literals outside their nested strings; non-whitespace character stream unchanged.",
+  "cleanup": {
+    "fixture_removed": true,
+    "content_junctions_removed": true,
+    "temporary_alias_removed": true
+  },
+  "wrapper_limitation": "Outer coordinator did not emit review-summary.json after the inner harness finished and cleanup removed its junctions. Task-owned coordinator PID 9308 was stopped after observing sustained CPU. Retained inner compile-smoke.json/RPT show success. Extra mission.sqm CfgConvert check rerun directly with captured exit code. This is not a successful outer-wrapper run.",
+  "limitations": [
+    "Compiled SQF was not executed; nested compileFinal strings were not engine-compiled by this fixture.",
+    "Synthetic unmodded Stratis dedicated fixture; full Altis mission not booted.",
+    "No multiplayer, graphical player, HC, Linux, production mod-set or FPS acceptance.",
+    "Contributor 15 verifiers and 58,320 assertions not supplied or independently rerun."
+  ]
+}
