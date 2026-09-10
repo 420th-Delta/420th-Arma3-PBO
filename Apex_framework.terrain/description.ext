@@ -77,7 +77,7 @@ ReviveForceRespawnDelay = 3;							// Apex Framework Notes: Not used												
 /* Legacy Code as of 9.9.2026 */
 //|ReviveBleedOutDelay = 600;								// Apex Framework Notes: General bleedout time. default: 600 seconds (10 minutes)							//unconscious state duration (in secs)
 // Updated Code
-ReviveBleedOutDelay = 240; // Four-minute normal bleed-out window; transport and medevac extensions remain native.
+ReviveBleedOutDelay = 300; // Five-minute normal bleed-out window; transport and medevac extensions remain native.
 // End Updated Code
 
 respawn = 3;											/*/ 0 = none. 1 = bird. 2 = instant where died. 3 = base or respawn_west marker. 4 = respawn with team, or bird. 5 = into AI or bird./*/
