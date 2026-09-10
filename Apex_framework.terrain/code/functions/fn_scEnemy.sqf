@@ -250,7 +250,9 @@ for '_radialAttempt' from 1 to 24 do {
 // End Updated Code
 	_randomPos = ['RADIUS',_centerPos,_centerRadius,'LAND',[1.5,0,0.5,3,0,FALSE,objNull],TRUE,[],[],TRUE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 	_infantryGroupType = selectRandomWeighted _infantryGroupTypes;
-	_grp = [_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+	_grp = [_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE,{
+		params ['_point']; (_point distance2D _centerPos) <= _centerRadius && {['BLACKLIST',_point] call QS_fnc_findRandomPos}
+	}] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
 /* Legacy Code as of 9.9.2026 */
 //|	[(units _grp),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
 //|	{
@@ -473,9 +475,9 @@ if (_allowVehicles) then {
 	private _supportEntities = [];
 	private _supportElement = [];
 	private _supportEntity = objNull;
-	_supportData pushBack ['REPAIR',TRUE,[_roadsValidPositions]];
+	_supportData pushBack ['REPAIR',TRUE,[_roadsValidPositions,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	if ((random 1) > 0.5) then {
-		_supportData pushBack ['MEDICAL',TRUE,[_roadsValidPositions]];
+		_supportData pushBack ['MEDICAL',TRUE,[_roadsValidPositions,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	};
 	{
 		_supportElement = _x;

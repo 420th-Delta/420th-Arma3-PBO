@@ -93,7 +93,10 @@ if (_type isEqualTo 0) exitWith {
 		_spawnPosition = selectRandom _usedBuildingPositions;
 		_enemyGrp = createGroup [EAST,TRUE];
 // Added Code
-		private _slots = ['SLOTS',_spawnPosition,_teamSize,random 360] call QS_fnc_spawnGroup;
+		private _slots = ['SLOTS',_spawnPosition,_teamSize,random 360,'O_Soldier_F',TRUE,FALSE,300,{
+			params ['_point']; (!(_spawnPosition inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
 // End Updated Code
 		for '_j' from 0 to (_teamSize - 1) step 1 do {
 // Added Code
@@ -180,7 +183,10 @@ if (_type isEqualTo 1) exitWith {
 	if ((count _patrolRoute) > 1) then {
 		_enemyGrp = createGroup [EAST,TRUE];
 // Added Code
-		private _slots = ['SLOTS',(_patrolRoute # 0),_teamSize,random 360] call QS_fnc_spawnGroup;
+		private _slots = ['SLOTS',(_patrolRoute # 0),_teamSize,random 360,'O_Soldier_F',TRUE,FALSE,300,{
+			params ['_point']; (!((_patrolRoute # 0) inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
 // End Updated Code
 		for '_j' from 0 to (_teamSize - 1) step 1 do {
 // Added Code

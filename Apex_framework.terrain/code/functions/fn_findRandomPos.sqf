@@ -39,6 +39,26 @@ Example 1:
 	] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 _____________________________________________________________________/*/
 
+// Reuse the same blacklist on final displaced spawn slots. This mode does
+// no position search and keeps the original nearby-WEST exception.
+private _fn_positionBlacklist = {
+	params ['_point'];
+	private _areas = switch worldName do {
+		case 'Altis': {[
+			[markerPos 'respawn',500], [markerPos 'QS_marker_Almyra_blacklist_area',1500],
+			[markerPos 'QS_marker_base_marker',1000], [markerPos 'QS_marker_module_fob',100]
+		]};
+		case 'Tanoa': {[
+			[markerPos 'respawn',300], [markerPos 'QS_marker_base_marker',800],
+			[markerPos 'QS_marker_module_fob',100], [[5763,10369,0],750]
+		]};
+		default {[]};
+	};
+	(_areas findIf {(_point distance2D (_x # 0)) < (_x # 1)}) < 0 ||
+	{([_point,100,[WEST],allPlayers,0] call QS_fnc_serverDetector) isNotEqualTo []}
+};
+if ((_this param [0,'']) isEqualTo 'BLACKLIST') exitWith {[_this # 1] call _fn_positionBlacklist};
+
 params ['_type','_centerPos','_radius','_whitelist','_isFlatEmpty','_blacklistEnabled','_selectBestPlaces','_findEmptyPosition','_forceFind'];
 private _perfPosition = ['findRandomPos.total',0,[_type,_radius]] call QS_fnc_perfBegin;
 private _perfAttempts = 0;
@@ -73,57 +93,7 @@ if (_emptyPositionEnabled) then {
 	};
 };
 private _fn_blacklist = {TRUE};
-if (_blacklistEnabled) then {
-	if (_worldName isEqualTo 'Altis') then {
-		_fn_blacklist = {
-			_pos = _this;
-			private _c = TRUE;
-			_blacklistData = [
-				[(markerPos 'respawn'),500],
-				[(markerPos 'QS_marker_Almyra_blacklist_area'),1500],
-				[(markerPos 'QS_marker_base_marker'),1000],
-				[(markerPos 'QS_marker_module_fob'),100]
-			];
-			{
-				if ((_pos distance2D (_x # 0)) < (_x # 1)) then {
-					if (([_pos,100,[WEST],allPlayers,0] call (missionNamespace getVariable 'QS_fnc_serverDetector')) isEqualTo []) exitWith {
-						_c = FALSE;
-					};
-				};
-			} forEach _blacklistData;
-			_c;
-		};
-	};
-	if (_worldName isEqualTo 'Stratis') then {
-		_fn_blacklist = {TRUE};
-	};
-	if (_worldName isEqualTo 'Tanoa') then {
-		_fn_blacklist = {
-			_pos = _this;
-			private _c = TRUE;
-			_blacklistData = [
-				[(markerPos 'respawn'),300],
-				[(markerPos 'QS_marker_base_marker'),800],
-				[(markerPos 'QS_marker_module_fob'),100],
-				[[5763,10369,0],750]
-			];
-			{
-				if ((_pos distance2D (_x # 0)) < (_x # 1)) then {
-					if (([_pos,100,[WEST],allPlayers,0] call (missionNamespace getVariable 'QS_fnc_serverDetector')) isEqualTo []) exitWith {
-						_c = FALSE;
-					};
-				};
-			} forEach _blacklistData;
-			_c;
-		};
-	};
-	if (_worldName isEqualTo 'Malden') then {
-		_fn_blacklist = {TRUE};
-	};
-	if (_worldName isEqualTo 'Enoch') then {
-		_fn_blacklist = {TRUE};
-	};
-};
+if (_blacklistEnabled) then {_fn_blacklist = {[_this] call _fn_positionBlacklist};};
 _true = TRUE;
 _false = FALSE;
 _attempts = 499;

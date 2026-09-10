@@ -1466,7 +1466,8 @@ if (_mode isEqualTo 'STOP') exitWith {
 	{[_x # 1] call _fn_deleteChute;} forEach (_state get 'air');
 	private _entities = (_state get 'entities') select {
 		(_x getVariable ['QS_primaryPressure_entityEpoch',-1]) isEqualTo (_state get 'epoch') &&
-		{!(_x call _fn_exempt)} && {((crew (vehicle _x)) findIf {_x call _fn_exempt}) < 0}
+		{!(_x call _fn_exempt)} && {!((vehicle _x) call _fn_exempt)} &&
+		{((crew (vehicle _x)) findIf {_x call _fn_exempt}) < 0}
 	};
 	diag_log format ['[PrimaryAO] STOP epoch=%1 menCreated=%2 vehiclesCreated=%3 objects=%4',_state get 'epoch',_state get 'used',_state get 'vehicleUsed',count _entities];
 	missionNamespace setVariable ['QS_primaryPressure_finalIntel',[],TRUE];
@@ -2059,8 +2060,11 @@ if (_mode isEqualTo 'WORK') exitWith {
 		// Reuse the native rotary classes/loadouts and bounded entry search.
 		// This is inside the same reserved worker; there is no second spawn loop.
 		if (call _fn_admit) then {
-			private _objects = [0] call QS_fnc_scSpawnHeli;
+			// Register each creation before the worker can be cancelled. Tracking
+			// feeds the force census; it does not transfer cleanup ownership.
+			private _objects = [0,_fn_register] call QS_fnc_scSpawnHeli;
 			if (_objects isNotEqualTo []) then {
+				{[_x] call _fn_register;} forEach _objects;
 				[_objects] call _fn_track;
 				private _aircraft = _objects # ((count _objects) - 1);
 				private _flight = group (driver _aircraft);
@@ -2092,7 +2096,11 @@ if (_mode isEqualTo 'WORK') exitWith {
 	if (_delivery isEqualTo 'VEHICLE') exitWith {
 		private _class = selectRandom ['O_MRAP_02_hmg_F','O_APC_Wheeled_02_rcws_v2_F'];
 		_class = QS_core_vehicles_map getOrDefault [toLowerANSI _class,_class];
-		private _slots = ['VEHICLE_SLOTS',_landing,1,(_landing getDir _goal),_class,TRUE,TRUE,400] call QS_fnc_spawnGroup;
+		private _slots = ['VEHICLE_SLOTS',_landing,1,(_landing getDir _goal),_class,TRUE,TRUE,400,{
+			params ['_point'];
+			(_point distance2D (markerPos 'QS_marker_base_marker')) > 1200 &&
+			{(_point distance2D _pos) < (_radius + 500)} && {!([_point,_goal,25] call QS_fnc_waterIntersect)}
+		}] call QS_fnc_spawnGroup;
 		private _empty = _slots param [0,[]];
 		if (_empty isNotEqualTo [] && {!surfaceIsWater _empty} && {(allPlayers inAreaArray [_empty,400,400,0,FALSE]) isEqualTo []} && {[_empty,allPlayers] call _fn_concealed} && {isClass (configFile >> 'CfgVehicles' >> _class)} && {call _fn_admit}) then {
 			private _vehicle = createVehicle [_class,_empty,[],0,'NONE'];
@@ -2192,7 +2200,11 @@ if (_mode isEqualTo 'WORK') exitWith {
 	private _heading = _landing getDir _goal;
 	private _groundSlots = [];
 	if (_delivery isEqualTo 'GROUND') then {
-		_groundSlots = ['SLOTS',_landing,_quantity,_heading,'O_Soldier_F',TRUE,TRUE] call QS_fnc_spawnGroup;
+		_groundSlots = ['SLOTS',_landing,_quantity,_heading,'O_Soldier_F',TRUE,TRUE,180,{
+			params ['_point'];
+			(_point distance2D (markerPos 'QS_marker_base_marker')) > 1200 &&
+			{(_point distance2D _pos) < (_radius + 500)} && {!([_point,_goal,25] call QS_fnc_waterIntersect)}
+		}] call QS_fnc_spawnGroup;
 		// Spreading the accepted center must not cross the AO/base boundary
 		// or put a soldier across water from its objective. Check before creation.
 		private _base = markerPos 'QS_marker_base_marker';
@@ -2930,7 +2942,9 @@ private _QS_module_classic_efb_checkDelay = _QS_uiTime + _QS_module_classic_efb_
 private _QS_module_classic_efb_group = grpNull;
 private _QS_module_classic_efb_threshold = 25;
 //comment 'grid ao';
-private _QS_module_grid = (missionNamespace getVariable ['QS_missionConfig_aoType','ZEUS']) isEqualTo 'GRID';
+// Like Classic/SC, one server owns spawning and consumes the public trigger.
+// HCs run the group/unit handlers after the completed groups are transferred.
+private _QS_module_grid = _isDedicated && (missionNamespace getVariable ['QS_missionConfig_aoType','ZEUS']) isEqualTo 'GRID';
 private _QS_module_grid_delay = 10;
 private _QS_module_grid_checkDelay = _QS_uiTime + _QS_module_grid_delay;
 private _QS_module_grid_aoPos = [0,0,0];

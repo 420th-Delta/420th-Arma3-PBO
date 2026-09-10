@@ -87,7 +87,9 @@ _randomRoadPosition = _roadRoadValid;
 _vehicleType = selectRandomWeighted ([1] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
 // Added Code
 // Reserve a clear ground cell before vehicle or crew creation.
-private _slots = ['VEHICLE_SLOTS',_randomRoadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,500] call QS_fnc_spawnGroup;
+private _slots = ['VEHICLE_SLOTS',_randomRoadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,500,{
+	params ['_point']; _point call _fn_blacklist && {!([_point,_centerPos,25] call QS_fnc_waterIntersect)}
+}] call QS_fnc_spawnGroup;
 if (_slots isEqualTo []) exitWith {[]};
 _randomRoadPosition = _slots # 0;
 if (!(_randomRoadPosition call _fn_blacklist) || {[_randomRoadPosition,_centerPos,25] call QS_fnc_waterIntersect}) exitWith {[]};

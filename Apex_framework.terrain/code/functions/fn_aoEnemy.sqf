@@ -153,7 +153,9 @@ for '_x' from 0 to (_grpCount - 1) step 1 do {
 	};
 	_randomPos = ['RADIUS',_centerPos,([_aoSize,_aoSize * 0.85] select ((random 1) > 0.5)),'LAND',[1.5,-1,0.5,3,0,FALSE,objNull],TRUE,_bestPlaces,[],FALSE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 	if ((_randomPos distance2D _centerPos) < (_aoSize * 1.5)) then {
-		_patrolGroup = [_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+		_patrolGroup = [_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE,{
+			params ['_point']; (_point distance2D _centerPos) < (_aoSize * 1.5) && {['BLACKLIST',_point] call QS_fnc_findRandomPos}
+		}] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
 // Added Code
 		// AO_PATROL_ADMISSION_BEGIN
 		call {
@@ -523,7 +525,9 @@ for '_x' from 0 to (_vehCount - 1) step 1 do {
 	};
 	_AOvehType = selectRandomWeighted ([_motorPool] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
 // Added Code
-	private _slots = ['VEHICLE_SLOTS',_randomPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _AOvehType,_AOvehType]] call QS_fnc_spawnGroup;
+	private _slots = ['VEHICLE_SLOTS',_randomPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _AOvehType,_AOvehType],TRUE,FALSE,-1,{
+		params ['_point']; (_point distance2D _centerPos) <= _centerRadius
+	}] call QS_fnc_spawnGroup;
 	if (_slots isEqualTo []) exitWith {deleteGroup _AOvehGroup;};
 	_randomPos = _slots # 0;
 // End Updated Code
@@ -605,9 +609,9 @@ if (_allowVehicles) then {
 	private _supportEntities = [];
 	private _supportElement = [];
 	private _supportEntity = objNull;
-	_supportData pushBack ['REPAIR',TRUE,[_roadPositionsValid]];
+	_supportData pushBack ['REPAIR',TRUE,[_roadPositionsValid,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	if ((random 1) > 0.5) then {
-		_supportData pushBack ['MEDICAL',TRUE,[_roadPositionsValid]];
+		_supportData pushBack ['MEDICAL',TRUE,[_roadPositionsValid,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	};
 	{
 		_supportElement = _x;

@@ -1270,7 +1270,9 @@ for '_x' from 0 to 1 step 0 do {
 				if (({(alive _x)} count _aaUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _aaPatrolCenter getPos [(random _aaPatrolRadius),(random 360)];
 // Added Code
-				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{
+					params ['_point']; (_point distance2D _aaPatrolCenter) <= _aaPatrolRadius
+				}] call QS_fnc_spawnGroup;
 				if (_slots isEqualTo []) exitWith {};
 				_spawnPos = _slots # 0;
 // End Updated Code
@@ -1301,7 +1303,9 @@ for '_x' from 0 to 1 step 0 do {
 				if (({(alive _x)} count _sniperUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _sniperPatrolCenter getPos [(random _sniperPatrolRadius),(random 360)];
 // Added Code
-				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{
+					params ['_point']; (_point distance2D _sniperPatrolCenter) <= _sniperPatrolRadius
+				}] call QS_fnc_spawnGroup;
 				if (_slots isEqualTo []) exitWith {};
 				_spawnPos = _slots # 0;
 // End Updated Code
@@ -1332,7 +1336,9 @@ for '_x' from 0 to 1 step 0 do {
 				if (({(alive _x)} count _atUnits) >= _atPatrolThresh) exitWith {};
 				_spawnPos = _atPatrolCenter getPos [(random _atPatrolRadius),(random 360)];
 // Added Code
-				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE] call QS_fnc_spawnGroup;
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{
+					params ['_point']; (_point distance2D _atPatrolCenter) <= _atPatrolRadius
+				}] call QS_fnc_spawnGroup;
 				if (_slots isEqualTo []) exitWith {};
 				_spawnPos = _slots # 0;
 // End Updated Code

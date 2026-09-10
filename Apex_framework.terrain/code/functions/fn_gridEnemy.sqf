@@ -205,7 +205,10 @@ if (_interBuildingPatrols > 0) then {
 			_spawnPosition = selectRandom _usedBuildingPositions;
 			_enemyGrp = createGroup [EAST,TRUE];
 // Added Code
-			private _slots = ['SLOTS',_spawnPosition,_enemyTeamSize,random 360] call QS_fnc_spawnGroup;
+			private _slots = ['SLOTS',_spawnPosition,_enemyTeamSize,random 360,'O_Soldier_F',TRUE,FALSE,-1,{
+			params ['_point']; (!(_spawnPosition inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
 // End Updated Code
 			for '_j' from 0 to (_enemyTeamSize - 1) step 1 do {
 // Added Code
@@ -279,7 +282,10 @@ if (_areaPatrols > 0) then {
 		if ((count _patrolRoute) > 1) then {
 			_enemyGrp = createGroup [EAST,TRUE];
 // Added Code
-			private _slots = ['SLOTS',(_patrolRoute # 0),_enemyTeamSize,random 360] call QS_fnc_spawnGroup;
+			private _slots = ['SLOTS',(_patrolRoute # 0),_enemyTeamSize,random 360,'O_Soldier_F',TRUE,FALSE,-1,{
+			params ['_point']; (!((_patrolRoute # 0) inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
 // End Updated Code
 			for '_j' from 0 to (_enemyTeamSize - 1) step 1 do {
 // Added Code
@@ -379,7 +385,9 @@ if (_armedVehicleCount > 0) then {
 				};
 				_vehicleType = selectRandomWeighted ([4] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
 // Added Code
-				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,_spawnDirection,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType]] call QS_fnc_spawnGroup;
+				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,_spawnDirection,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,-1,{
+					params ['_point']; (!(_spawnPos inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+				}] call QS_fnc_spawnGroup;
 				if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
 				_spawnPos = _slots # 0;
 // End Updated Code

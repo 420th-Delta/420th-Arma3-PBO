@@ -58,7 +58,13 @@ if (_type in ['CLASSIC','SC']) exitWith {
 	};
 	if (_iterations > 300) exitWith {};
 // Added Code
-	private _slots = ['SLOTS',_position1,_total - _quantity,random 360] call QS_fnc_spawnGroup;
+	private _slots = ['SLOTS',_position1,_total - _quantity,random 360,'O_Soldier_F',TRUE,FALSE,250,{
+		params ['_point'];
+		(_point distance2D _centerPos) < 1500 &&
+		{['BLACKLIST',_point] call QS_fnc_findRandomPos} &&
+		{((_point nearRoads 25) select {roadsConnectedTo _x isNotEqualTo []}) isEqualTo []} &&
+		{([AGLToASL _point,_checkVisibleDistance,_playersOnGround,[WEST,CIVILIAN,SIDEFRIENDLY],0,0] call QS_fnc_isPosVisible) <= 0.1}
+	}] call QS_fnc_spawnGroup;
 	if (_slots isEqualTo []) exitWith {[]};
 // End Updated Code
 	private _unit = objNull;

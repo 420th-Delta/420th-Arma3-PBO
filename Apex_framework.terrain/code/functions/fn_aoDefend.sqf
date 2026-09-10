@@ -928,7 +928,7 @@ for '_x' from 0 to 1 step 0 do {
 			_lift = _flight isNotEqualTo [];
 			private _spawn = [_spawnPos,_entry] select _lift;
 			_direction = _spawn getDir _centerPos;
-			_grp = [[_spawn,[-1015,-1015,0]] select _lift,_direction,EAST,_infType,FALSE,grpNull,!_lift,TRUE,_fn_infantryPosition] call _fn_spawnGroup;
+			_grp = [[_spawn,[-1015,-1015,0]] select _lift,_direction,EAST,_infType,FALSE,grpNull,!_lift,TRUE,_fn_infantryPosition,_infantrySpawnDistanceFromPlayer] call _fn_spawnGroup;
 			if (_lift) then {
 				private _heli = _flight # 0; private _pilots = _flight # 1;
 				if (isNull _grp || {count (units _grp) isNotEqualTo _size}) then {
@@ -1099,7 +1099,10 @@ for '_x' from 0 to 1 step 0 do {
 				_armorType = selectRandomWeighted ([_motorPool] call _fn_getAIMotorPool);
 // Added Code
 				if (!_foundSpawnPos) exitWith {};
-				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],TRUE,FALSE,400] call QS_fnc_spawnGroup;
+				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],TRUE,FALSE,400,{
+					params ['_point'];
+					(_point distance2D _centerPos) < 1201 && {_point call _fn_blacklist} && {!([_point,_centerPos,25] call _fn_waterIntersect)}
+				}] call QS_fnc_spawnGroup;
 				if (_slots isEqualTo []) exitWith {};
 				_spawnPos = _slots # 0;
 				if (!(_spawnPos call _fn_blacklist) || {[_spawnPos,_centerPos,25] call _fn_waterIntersect}) exitWith {};
@@ -1223,7 +1226,10 @@ for '_x' from 0 to 1 step 0 do {
 						_groundTransportType = selectRandom _groundTransportTypes;
 // Added Code
 						if (!_foundSpawnPos) exitWith {};
-						private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _groundTransportType,_groundTransportType],TRUE,FALSE,400] call QS_fnc_spawnGroup;
+						private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _groundTransportType,_groundTransportType],TRUE,FALSE,400,{
+							params ['_point'];
+							(_point distance2D _centerPos) < 1201 && {_point call _fn_blacklist} && {!([_point,_centerPos,25] call _fn_waterIntersect)}
+						}] call QS_fnc_spawnGroup;
 						if (_slots isEqualTo []) exitWith {};
 						_spawnPos = _slots # 0;
 						if (!(_spawnPos call _fn_blacklist) || {[_spawnPos,_centerPos,25] call _fn_waterIntersect}) exitWith {};

@@ -68,11 +68,15 @@ private _fn_groundPick = {
 if ((_this param [0,[]]) in ['SLOTS','VEHICLE_SLOTS']) exitWith {
 	params ['_mode','_anchor','_count',['_heading',0],['_class','O_Soldier_F'],['_separateGroups',TRUE],['_concealed',FALSE],['_exclusion',-1],['_validPosition',{TRUE}]];
 	if (_count <= 0 || {_count > 32} || {_anchor isEqualTo []}) exitWith {[]};
+	// The audited callers create on the server, then hand completed groups to
+	// HCs. Local claim arrays cannot arbitrate simultaneous network owners.
+	if (!isServer) exitWith {diag_log '[GroundSpawn] rejected non-server admission'; []};
 	private _infantry = _mode isEqualTo 'SLOTS';
 	private _result = [];
-	// Atomic on the spawning machine; brief reservations cover scheduled
-	// creation. The old separate-centers argument remains call-compatible.
-	isNil {
+	private _started = diag_tickTime;
+	// Clearance, terrain, rays and greedy layout remain schedulable. Only the
+	// fresh occupancy check and claim insertion below are an atomic transaction.
+	call {
 		private _claims = (missionNamespace getVariable ['QS_groundSpawn_claims',[]]) select {diag_tickTime < (_x # 0)};
 		private _occupied = []; private _hardOccupied = [];
 		{_occupied append (_x # 2); if (_x param [3,FALSE]) then {_hardOccupied append (_x # 2);};} forEach _claims;
@@ -96,6 +100,7 @@ if ((_this param [0,[]]) in ['SLOTS','VEHICLE_SLOTS']) exitWith {
 			_x params ['_offsetColumn','_offsetRow'];
 			for '_row' from -2 to 2 do {
 				for '_column' from -2 to 2 do {
+					if (!canSuspend && {(diag_tickTime - _started) > 0.004}) exitWith {};
 					private _columnAt = _column + _offsetColumn;
 					private _rowAt = _row + _offsetRow;
 					// Skip nominal cells beyond the admitted square before asking
@@ -124,21 +129,40 @@ if ((_this param [0,[]]) in ['SLOTS','VEHICLE_SLOTS']) exitWith {
 			};
 			_result = [_points,_occupied,_count,_anchor] call _fn_groundPick;
 			if (_result isNotEqualTo []) exitWith {};
+			if (!canSuspend && {(diag_tickTime - _started) > 0.004}) exitWith {};
 		} forEach _patterns;
-		if (_result isNotEqualTo []) then {_claims pushBack [diag_tickTime + 20,+_anchor,_result,!_infantry];};
-		missionNamespace setVariable ['QS_groundSpawn_claims',_claims,FALSE];
+	};
+	if (_result isNotEqualTo []) then {
+		isNil {
+			private _claims = (missionNamespace getVariable ['QS_groundSpawn_claims',[]]) select {diag_tickTime < (_x # 0)};
+			private _occupied = [];
+			{_occupied append (_x # 2);} forEach _claims;
+			{if (alive _x && {isNull objectParent _x}) then {_occupied pushBack getPosATL _x;};} forEach (_anchor nearEntities ['CAManBase',110]);
+			{if (((getPosATL _x) # 2) < 5) then {_occupied pushBack getPosATL _x;};} forEach (nearestObjects [_anchor,['LandVehicle','Air','Ship'],110,TRUE]);
+			private _players = allPlayers select {alive _x && {!(_x isKindOf 'HeadlessClient_F')}};
+			private _radius = ([30,150] select _concealed) max _exclusion;
+			// Another scheduled search may have committed, or a player/vehicle
+			// moved here. Reject the stale layout; never overwrite its reservation.
+			if ((_result findIf {
+				!([_x,_occupied] call _fn_groundSeparate) ||
+				{(_players inAreaArray [_x,_radius,_radius,0,FALSE]) isNotEqualTo []}
+			}) >= 0) then {_result = [];} else {
+				_claims pushBack [diag_tickTime + 20,+_anchor,+_result,!_infantry];
+			};
+			missionNamespace setVariable ['QS_groundSpawn_claims',_claims,FALSE];
+		};
 	};
 	_result
 };
 
-params [['_pos',[]],['_dir',-1],['_side',sideUnknown],['_type',''],['_isProne',FALSE],['_grp',grpNull],['_useRecycler',FALSE],['_deleteWhenEmpty',TRUE],['_groundValid',{TRUE}]];
+params [['_pos',[]],['_dir',-1],['_side',sideUnknown],['_type',''],['_isProne',FALSE],['_grp',grpNull],['_useRecycler',FALSE],['_deleteWhenEmpty',TRUE],['_groundValid',{TRUE}],['_groundExclusion',-1]];
 // End Updated Code
 if (
 	(_pos isEqualTo []) ||
 	{(_dir isEqualTo -1)} ||
 	{(_side isEqualTo sideUnknown)} ||
 	{(_type isEqualTo '')}
-) exitWith {};
+) exitWith {grpNull};
 private _unit = objNull;
 if (_type isEqualType []) then {
 	if ((_type findIf {(_x isEqualType 0)}) isNotEqualTo -1) then {
@@ -147,10 +171,11 @@ if (_type isEqualType []) then {
 		_type = selectRandom _type;
 	};
 };
+if (isNil '_type' || {!(_type isEqualType '')} || {_type isEqualTo ''}) exitWith {grpNull};
 if (_useRecycler) then {
 	_useRecycler = isDedicated;
 };
-_groupComposition = QS_core_groups_map getOrDefault [toLowerANSI _type,[]];
+private _groupComposition = QS_core_groups_map getOrDefault [toLowerANSI _type,[]];
 if (_groupComposition isEqualTo []) exitWith {
 	diag_log (format ['***** DEBUG ***** Group composition is null - %1 *****',_type]);
 	grpNull;
@@ -160,9 +185,11 @@ private _perfGroup = ['spawnGroup.total',count _groupComposition,[_type,_useRecy
 // Off-map staging, aircraft cargo, water and elevated building placements
 // keep their existing positions. Outdoor enemy infantry use the shared grid.
 private _groundSlots = [];
-private _spread = (WEST getFriend _side) < 0.6 && {(_pos # 0) > 0} && {(_pos # 1) > 0} &&
+// A ninth argument opts into rejectable outdoor placement. Legacy objective,
+// building and existing-group callers retain their compact creation contract.
+private _spread = (count _this > 8) && {(WEST getFriend _side) < 0.6} && {(_pos # 0) > 0} && {(_pos # 1) > 0} &&
 	{(_pos # 0) < worldSize} && {(_pos # 1) < worldSize} && {abs (_pos param [2,0]) < 2} && {!surfaceIsWater _pos};
-if (_spread) then {_groundSlots = ['SLOTS',_pos,count _groupComposition,_dir,'O_Soldier_F',TRUE,FALSE,-1,_groundValid] call QS_fnc_spawnGroup;};
+if (_spread) then {_groundSlots = ['SLOTS',_pos,count _groupComposition,_dir,'O_Soldier_F',TRUE,FALSE,_groundExclusion,_groundValid] call QS_fnc_spawnGroup;};
 if (_spread && {_groundSlots isEqualTo []}) exitWith {[_perfGroup,0] call QS_fnc_perfEnd; grpNull};
 // End Updated Code
 if (isNull _grp) then {
@@ -174,6 +201,7 @@ if (isNull _grp) then {
 		_grp deleteGroupWhenEmpty TRUE;
 	};
 };
+if (isNull _grp) exitWith {[_perfGroup,0] call QS_fnc_perfEnd; grpNull};
 private _unitType = '';
 for '_i' from 0 to ((count _groupComposition) - 1) step 1 do {
 	_unitType = (_groupComposition # _i) # 0;
