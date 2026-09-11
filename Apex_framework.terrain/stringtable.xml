@@ -5782,9 +5782,14 @@ _____________________________________________________________-->
             <Chinese>IDPA工作人員已經得到緊急治療，情況暫時穩定， 立即將傷員帶回到基地醫療站！</Chinese>
         </Key>
         <Key ID="STR_QS_Task_094">
-            <Original>The enemy has set up an Anti-Air Battery near our base. This is a priority target, soldiers! It has extremely long range! Get over there and take it out at all cost. While it is active, it is not advised to use air transport. This objective is not accurately marked. While it is re-arming (30 seconds), it will not be able to lock on at long range. Bringing heavy explosives is advised.</Original>
-            <Chinesesimp>敌方在我方基地附近建立了一个大型防空阵地。该阵地为最优先目标！ 防空阵地射程很远，对我方所有空中单位都造成了严重威胁，立即前往其所在区域不惜一切代价摧毁阵地。 防空阵地装填完毕后会一直处于攻击状态，建议暂时停止空中运输。 在重新装填(30秒)时，敌军防空设备无法攻击。 建议携带炸药将其摧毁。</Chinesesimp>
-            <Chinese>敵方在我方基地附近建立了一個大型防空陣地。該陣地為最優先目標！ 防空陣地射程很遠，對我方所有空中單位都造成了嚴重威脅，立即前往其所在區域不惜一切代價摧毀陣地。 防空陣地裝填完畢後會一直處於攻擊狀態，建議暫時停止空中運輸。 在重新裝填(30秒)時，敵軍防空裝置無法攻擊。 建議攜帶炸藥將其摧毀。</Chinese>
+            <Original>The enemy has established a Rhea surface-to-air missile battery near the main area of operations. Destroy the Cronus radar and every Rhea launcher, including launchers outside the compound walls. Mobile Tigrises, a tank and Viper infantry defend the site. The search area is approximate. Aircraft should use terrain to hide from enemy radar. Each launcher replenishes its ammunition after a 15-30 second resupply delay; normal weapon reload time still applies. Bring heavy explosives.</Original>
+            <Chinesesimp>敌军在主要作战区域附近建立了 Rhea 地对空导弹阵地。摧毁 Cronus 雷达和所有 Rhea 发射器，包括围墙外的发射器。阵地由机动 Tigris 防空车、坦克和 Viper 步兵守卫。搜索区域仅为大致位置。建议飞行员利用地形掩护，避开敌方雷达探测。每台发射器在弹药耗尽后会延迟 15 至 30 秒补充弹药，武器本身的装填时间仍然适用。建议携带重型炸药。</Chinesesimp>
+            <Chinese>敵軍在主要作戰區域附近建立了 Rhea 地對空導彈陣地。摧毀 Cronus 雷達和所有 Rhea 發射器，包括圍牆外的發射器。陣地由機動 Tigris 防空車、坦克和 Viper 步兵守衛。搜尋區域僅為大致位置。建議飛行員利用地形掩護，避開敵方雷達偵測。每台發射器在彈藥耗盡後會延遲 15 至 30 秒補充彈藥，武器本身的裝填時間仍然適用。建議攜帶重型炸藥。</Chinese>
+        </Key>
+        <Key ID="STR_QS_Task_094_Legacy">
+            <Original>The enemy has set up an Anti-Air Battery near our base. This is a priority target, soldiers! It has extremely long range! Get over there and take it out at all cost. Aircraft should use terrain to hide from enemy radar. This objective is not accurately marked. While it is re-arming (30 seconds), it will not be able to lock on at long range. Bringing heavy explosives is advised.</Original>
+            <Chinesesimp>敌方在我方基地附近建立了一个大型防空阵地。该阵地为最优先目标！ 防空阵地射程很远，对我方所有空中单位都造成了严重威胁，立即前往其所在区域不惜一切代价摧毁阵地。 防空阵地装填完毕后会一直处于攻击状态，建议飞行员利用地形掩护，避开敌方雷达探测。 在重新装填(30秒)时，敌军防空设备无法攻击。 建议携带炸药将其摧毁。</Chinesesimp>
+            <Chinese>敵方在我方基地附近建立了一個大型防空陣地。該陣地為最優先目標！ 防空陣地射程很遠，對我方所有空中單位都造成了嚴重威脅，立即前往其所在區域不惜一切代價摧毀陣地。 防空陣地裝填完畢後會一直處於攻擊狀態，建議飛行員利用地形掩護，避開敵方雷達偵測。 在重新裝填(30秒)時，敵軍防空裝置無法攻擊。 建議攜帶炸藥將其摧毀。</Chinese>
         </Key>
         <Key ID="STR_QS_Task_095">
             <Original>Anti-Air Battery</Original>

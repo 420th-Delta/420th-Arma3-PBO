@@ -195,3 +195,4 @@ if (!((toLowerANSI _jetSelect) in ['o_plane_fighter_02_stealth_f'])) then {
 	};
 };
 (missionNamespace getVariable 'QS_enemyCasArray2') pushBack _jetActual;
+[_jetActual] call QS_fnc_airDefenseRegister;

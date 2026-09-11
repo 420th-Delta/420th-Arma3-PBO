@@ -35,7 +35,7 @@ with uiNamespace do {
     _title ctrlCommit 0;
 
     private _force = _display ctrlCreate ["RscButtonMenu", -1, _group];
-    _force ctrlSetPosition ([0.1, 0.14, 0.8, 0.11] call _scaleToGroup);
+    _force ctrlSetPosition ([0.1, 0.12, 0.8, 0.1] call _scaleToGroup);
     _force ctrlSetText "FORCE SIDE MISSION";
     _force ctrlCommit 0;
     _force ctrlAddEventHandler ["ButtonClick", {
@@ -44,7 +44,7 @@ with uiNamespace do {
     }];
 
     private _pause = _display ctrlCreate ["RscButtonMenu", -1, _group];
-    _pause ctrlSetPosition ([0.1, 0.32, 0.8, 0.11] call _scaleToGroup);
+    _pause ctrlSetPosition ([0.1, 0.25, 0.8, 0.1] call _scaleToGroup);
     _pause ctrlSetText "PAUSE SIDE MISSIONS";
     _pause ctrlCommit 0;
     _pause ctrlAddEventHandler ["ButtonClick", {
@@ -53,7 +53,7 @@ with uiNamespace do {
     }];
 
     private _cycle = _display ctrlCreate ["RscButtonMenu", -1, _group];
-    _cycle ctrlSetPosition ([0.1, 0.5, 0.8, 0.11] call _scaleToGroup);
+    _cycle ctrlSetPosition ([0.1, 0.38, 0.8, 0.1] call _scaleToGroup);
     _cycle ctrlSetText "CYCLE SIDE MISSION";
     _cycle ctrlCommit 0;
     _cycle ctrlAddEventHandler ["ButtonClick", {
@@ -61,8 +61,26 @@ with uiNamespace do {
         closeDialog 1;
     }];
 
+    {
+        _x params ['_label','_action','_y'];
+        private _button = _display ctrlCreate ['RscButtonMenu',-1,_group];
+        _button ctrlSetPosition ([0.1,_y,0.8,0.1] call _scaleToGroup);
+        _button ctrlSetText _label;
+        _button setVariable ['TGC_priorityAA_action',_action];
+        _button ctrlCommit 0;
+        _button ctrlAddEventHandler ['ButtonClick', {
+            params ['_button'];
+            [_button getVariable 'TGC_priorityAA_action'] remoteExec ['TGC_fnc_manageSideMissions',2,false];
+            closeDialog 1;
+        }];
+    } forEach [
+        ['PAUSE PRIORITY AA','AA_PAUSE',0.51],
+        ['RESUME PRIORITY AA','AA_RESUME',0.64],
+        ['END PRIORITY AA','AA_ABORT',0.77]
+    ];
+
     private _back = _display ctrlCreate ["RscButtonMenu", -1, _group];
-    _back ctrlSetPosition ([0.1, 0.76, 0.35, 0.1] call _scaleToGroup);
+    _back ctrlSetPosition ([0.1, 0.91, 0.35, 0.07] call _scaleToGroup);
     _back ctrlSetText "BACK";
     _back ctrlCommit 0;
     _back ctrlAddEventHandler ["ButtonClick", {

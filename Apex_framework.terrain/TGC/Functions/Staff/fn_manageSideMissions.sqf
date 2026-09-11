@@ -16,7 +16,31 @@ private _requestingPlayer = objNull;
 } forEach allPlayers;
 
 if ((isNull _requestingPlayer) || {!((getPlayerUID _requestingPlayer) in (["ALL"] call QS_fnc_whitelist))}) exitWith {};
-if (!(_action in ["CYCLE", "PAUSE"])) exitWith {};
+if (!(_action in ["CYCLE", "PAUSE", "AA_PAUSE", "AA_RESUME", "AA_ABORT"])) exitWith {};
+
+if (_action in ['AA_PAUSE','AA_RESUME','AA_ABORT']) exitWith {
+    switch _action do {
+        case 'AA_PAUSE': {
+            missionNamespace setVariable ['QS_priorityAA_paused',true,true];
+            ['systemChat',format ['%1 (staff) paused Priority AA spawning. The current objective and pending request are retained.',name _requestingPlayer]] remoteExec ['QS_fnc_remoteExecCmd',-2,false];
+        };
+        case 'AA_RESUME': {
+            missionNamespace setVariable ['QS_priorityAA_paused',false,true];
+            ['systemChat',format ['%1 (staff) resumed Priority AA spawning.',name _requestingPlayer]] remoteExec ['QS_fnc_remoteExecCmd',-2,false];
+        };
+        case 'AA_ABORT': {
+            if (!(missionNamespace getVariable ['QS_priorityAA_active',false]) && {!(missionNamespace getVariable ['QS_priorityAA_legacyActive',false])}) exitWith {
+                ['systemChat','There is no active Priority AA mission.'] remoteExec ['QS_fnc_remoteExecCmd',_owner,false];
+            };
+            if (missionNamespace getVariable ['QS_priorityAA_legacyActive',false]) then {
+                missionNamespace setVariable ['QS_smAbort',true,true];
+            } else {
+                missionNamespace setVariable ['QS_priorityAA_abort',true,false];
+            };
+            ['systemChat',format ['%1 (staff) ended the current Priority AA mission.',name _requestingPlayer]] remoteExec ['QS_fnc_remoteExecCmd',-2,false];
+        };
+    };
+};
 
 if ((missionNamespace getVariable ["QS_missionConfig_sideMissions", 1]) isNotEqualTo 1) exitWith {
     ["systemChat", "Side Missions are disabled by the server configuration."] remoteExec ["QS_fnc_remoteExecCmd", _owner, false];

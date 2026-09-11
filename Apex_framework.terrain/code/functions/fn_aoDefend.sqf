@@ -1082,7 +1082,7 @@ for '_x' from 0 to 1 step 0 do {
 				// GROUND_VEHICLE_PLACEMENT_BEGIN
 				call {
 // End Updated Code
-				_armorType = selectRandomWeighted ([_motorPool] call _fn_getAIMotorPool);
+				_armorType = selectRandomWeighted ([_motorPool] call QS_fnc_airDefenseReinforcementPool);
 // Added Code
 				if (!_foundSpawnPos) exitWith {};
 				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],TRUE,FALSE,400,{
@@ -1722,6 +1722,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
 					[_jet,'defend.airSuperiority'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
 				};
+				[_jet] call QS_fnc_airDefenseRegister;
 // Added Code
 // End Updated Code
 				_jetSpawnDelay = time + 60 + (random 60);
