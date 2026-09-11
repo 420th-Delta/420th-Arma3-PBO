@@ -20,7 +20,7 @@ The default 5 km base clearance is intended for Altis. Small terrains or coastal
 
 ## Target selection and base exclusion
 
-Mission-spawned static/mobile ground AA and enemy combat jets use this order for occupied WEST vehicles:
+Registered mission-spawned static/mobile ground AA and enemy combat jets use this order for occupied WEST vehicles:
 
 1. Airborne fixed-wing combat jets.
 2. Airborne attack helicopters, including helicopters with offensive pylons or pilot weapons.
@@ -33,6 +33,8 @@ The owner of the vehicle runs the controller. Registration and saved AI state fo
 Targets within 2 km of `QS_marker_base_marker` are excluded by default. If only protected contacts remain, the controlled crew holds fire. An owner-local firing guard also removes newly fired offensive projectiles aimed at a protected target or conflicting with the current override. A missing base marker fails closed. This is a targeting fail-safe, not a shield: it does not remove a missile already in flight when its target later enters the area, and it does not control unregistered threats or human firing.
 
 Hooks cover AO AA creation, the Priority AA battery, vehicle setup, normal and Defend reinforcement paths, and enemy CAS/Defend jets. Static radar vehicles provide sensors; they do not receive a weapon-targeting loop. No new remote-execution endpoint is added.
+
+Coverage does not include every ground-AA spawn path. The FIA HQ side mission calls `fn_smEnemyGuer.sqf`, whose mobile Tigris guards bypass registration and retain standard targeting without the controller's base protection. `fn_smEnemyInd.sqf` has the same omission, although the audit found no direct production caller. The requested minimum of AO/static Priority AA and enemy jets is covered; these mobile guard gaps remain.
 
 The Rhea can also use other vehicles' contacts. The [native datalink audit](air-defense-datalink.md) covers working transmitters, reporting settings, crew sides and sensor limits.
 
