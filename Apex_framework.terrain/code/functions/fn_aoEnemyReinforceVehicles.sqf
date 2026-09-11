@@ -84,7 +84,10 @@ private _motorPool = 0;
 if (worldName isEqualTo 'Stratis') then {
 	_motorPool = 8;
 };
-_vType = selectRandomWeighted ([_motorPool] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
+// Priority AA removes any currently active air-defense types before the
+// reinforcement vehicle is selected; retain the Phase 1 reserved placement
+// contract below so a filtered choice cannot create an untracked vehicle.
+_vType = selectRandomWeighted ([_motorPool] call QS_fnc_airDefenseReinforcementPool);
 // Added Code
 // Reserve a clear ground cell before vehicle or crew creation.
 private _slots = ['VEHICLE_SLOTS',_roadRoadValid,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vType,_vType],TRUE,FALSE,250,{

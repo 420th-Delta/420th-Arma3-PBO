@@ -15,6 +15,11 @@ ___________________________________________/*/
 
 /*/---------- CONFIG/*/
 
+params [['_anchor',objNull],['_preset','DEFAULT'],['_vehiclePositions',[]]];
+if (_preset isEqualTo 'PRIORITY_AA') exitWith {
+	[_anchor,_vehiclePositions] call QS_fnc_priorityAAGuards
+};
+
 private [
 	'_vehTypes','_vehType','_pos','_unit1','_unit2','_unit3','_flatPos',
 	'_randomPos','_enemiesArray','_infteamPatrol','_SMvehPatrol','_SMveh','_SMaaPatrol','_SMaa',

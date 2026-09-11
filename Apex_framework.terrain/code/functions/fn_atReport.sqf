@@ -26,7 +26,7 @@ private _val = 1;
 if (_inSafezone && _safezoneActive) then {
 	_val = 1.5;
 };
-if (((_playerPos distance (markerPos 'QS_marker_aoMarker')) < 1000) || {((_playerPos distance (markerPos 'QS_marker_sideMarker')) < 1000)} || {((_playerPos distance (markerPos 'QS_marker_priorityMarker')) < 1000)} || {((_playerPos distance (markerPos 'QS_marker_aoMarker_2')) < 1000)} || {((_playerPos distance (markerPos 'QS_marker_hqMarker')) < 1000)}) then {
+if (((_playerPos distance (markerPos 'QS_marker_aoMarker')) < 1000) || {(([FALSE] call QS_fnc_sideMissionPositions) findIf {(_playerPos distance _x) < 1000}) isNotEqualTo -1} || {((_playerPos distance (markerPos 'QS_marker_priorityMarker')) < 1000)} || {((_playerPos distance (markerPos 'QS_marker_aoMarker_2')) < 1000)} || {((_playerPos distance (markerPos 'QS_marker_hqMarker')) < 1000)}) then {
 	_val = 0.5;
 };
 {

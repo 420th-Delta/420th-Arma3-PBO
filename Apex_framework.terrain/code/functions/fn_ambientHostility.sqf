@@ -22,14 +22,13 @@ if (_type isEqualTo 0) exitWith {
 	_basePosition = markerPos 'QS_marker_base_marker';
 	_fobPosition = markerPos 'QS_marker_module_fob';
 	_aoPosition = missionNamespace getVariable ['QS_aoPos',[0,0,0]];
-	_smPosition = markerPos 'QS_marker_sideMarker';
 	_blacklistedPositions = [
 		[_basePosition,1000],
 		[_fobPosition,150],
 		[_aoPosition,1000],
-		[_smPosition,500],
 		[(markerPos 'QS_marker_Almyra_blacklist_area'),400]
 	];
+	_blacklistedPositions append (([FALSE] call QS_fnc_sideMissionPositions) apply {[_x,500]});
 	_knowsAbout = EAST knowsAbout _targetVehicle;
 	private _threat = 2;
 	if (_targetVehicle isKindOf 'CAManBase') then {

@@ -5211,13 +5211,14 @@ for '_z' from 0 to 1 step 0 do {
 					};
 				};
 				if ((missionNamespace getVariable 'QS_client_radioChannels_dynamic') # 1) then {
+					private _nearSideObjective = (([TRUE] call QS_fnc_sideMissionPositions) findIf {(_QS_player distance2D _x) < _QS_module_radioChannelManager_nearSecondaryRadius}) isNotEqualTo -1;
 					if (!(_QS_module_radioChannelManager_nearSecondary)) then {
-						if (((_QS_player distance2D (markerPos 'QS_marker_sideMarker')) < _QS_module_radioChannelManager_nearSecondaryRadius) || {((_QS_player distance2D (missionNamespace getVariable 'QS_evacPosition_2')) < _QS_module_radioChannelManager_nearSecondaryRadius)}) then {
+						if (_nearSideObjective) then {
 							_QS_module_radioChannelManager_nearSecondary = _true;
 							[1,_QS_module_radioChannelManager_secondaryChannel] call _fn_clientRadio;
 						};
 					} else {
-						if (((_QS_player distance2D (markerPos 'QS_marker_sideMarker')) > _QS_module_radioChannelManager_nearSecondaryRadius) && ((_QS_player distance2D (missionNamespace getVariable 'QS_evacPosition_2')) > _QS_module_radioChannelManager_nearSecondaryRadius)) then {
+						if (!_nearSideObjective) then {
 							_QS_module_radioChannelManager_nearSecondary = _false;
 							[0,_QS_module_radioChannelManager_secondaryChannel] call _fn_clientRadio;
 						};

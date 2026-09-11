@@ -50,7 +50,7 @@ if (_position in ['cargo','gunner','commander']) then {
 					};
 				};
 			} else {
-				if (((_vehicle distance2D (markerPos 'QS_marker_aoMarker')) < 2000) || {((_vehicle distance2D (markerPos 'QS_marker_sideMarker')) < 2000)} || {((_vehicle distance2D (markerPos 'QS_marker_priorityMarker')) < 2000)} || {((_vehicle distance2D (markerPos 'QS_marker_aoMarker_2')) < 2000)} || {((_vehicle distance2D (markerPos 'QS_marker_hqMarker')) < 1000)} || {((_vehicle distance2D (missionNamespace getVariable 'QS_evacPosition_1')) < 1500)}) then {
+				if (((_vehicle distance2D (markerPos 'QS_marker_aoMarker')) < 2000) || {(([FALSE] call QS_fnc_sideMissionPositions) findIf {(_vehicle distance2D _x) < 2000}) isNotEqualTo -1} || {((_vehicle distance2D (markerPos 'QS_marker_priorityMarker')) < 2000)} || {((_vehicle distance2D (markerPos 'QS_marker_aoMarker_2')) < 2000)} || {((_vehicle distance2D (markerPos 'QS_marker_hqMarker')) < 1000)} || {((_vehicle distance2D (missionNamespace getVariable 'QS_evacPosition_1')) < 1500)}) then {
 					private _loadedAtBase = _driver getVariable ['QS_IA_PP_loadedAtBase',[]];
 					if (_unit in _loadedAtBase) then {
 						_val = 1;

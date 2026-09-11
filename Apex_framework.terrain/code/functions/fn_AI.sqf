@@ -4696,7 +4696,7 @@ for '_x' from 0 to 1 step 0 do {
 							};
 							if (alive _QS_module_enemyCas_plane) then {
 								if (alive (currentPilot _QS_module_enemyCas_plane)) then {
-									if (_QS_allPlayers isNotEqualTo []) then {
+									if ((_QS_allPlayers isNotEqualTo []) && {!(_QS_module_enemyCas_plane getVariable ['QS_airDefense_registered',FALSE]) || {!(missionNamespace getVariable ['QS_missionConfig_airDefense_enabled',TRUE])}}) then {
 										{
 											if ((vehicle _x) isKindOf 'Plane') then {
 												if (_x isEqualTo (currentPilot (vehicle _x))) then {
