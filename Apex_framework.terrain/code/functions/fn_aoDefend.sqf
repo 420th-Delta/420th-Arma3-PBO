@@ -660,7 +660,7 @@ for '_x' from 0 to 1 step 0 do {
 					};
 					if (_foundSpawnPos) exitWith {};
 				};
-				_armorType = selectRandomWeighted ([_motorPool] call _fn_getAIMotorPool);
+				_armorType = selectRandomWeighted ([_motorPool] call QS_fnc_airDefenseReinforcementPool);
 				private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 				_av = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],_spawnPos,[],0,'NONE'];
 				[_perfSpawn,([0,1] select (!isNull _av)),[typeOf _av,netId _av]] call QS_fnc_perfEnd;
@@ -1212,6 +1212,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
 					[_jet,'defend.airSuperiority'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
 				};
+				[_jet] call QS_fnc_airDefenseRegister;
 				_jetSpawnDelay = time + 60 + (random 60);
 			};
 		};

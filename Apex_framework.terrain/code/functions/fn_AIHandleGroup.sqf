@@ -20,6 +20,12 @@ if (
 	(isNull _grp) ||
 	(!(simulationEnabled _grpLeader))
 ) exitWith {};
+if ((units _grp findIf {
+	private _vehicle = vehicle _x;
+	(_vehicle isKindOf 'Plane') && {_vehicle getVariable ['QS_airDefense_registered',FALSE]} && {
+		(_vehicle getVariable ['QS_airDefense_rank',5]) < 5 || {_vehicle getVariable ['QS_airDefense_holding',FALSE]}
+	}
+}) >= 0) exitWith {};
 if (!(_grp getVariable ['QS_AI_GRP_SETUP',FALSE])) then {
 	_grp setVariable ['QS_AI_GRP_SETUP',TRUE,FALSE];
 	_grp setVariable ['QS_AI_GRP_rv',[(random 1),(random 1),(random 1)],FALSE];
@@ -282,7 +288,7 @@ if (
 					private _aoPos = missionNamespace getVariable 'QS_aoPos';
 					private _aoSize = (missionNamespace getVariable 'QS_aoSize') * 0.9;
 					private _hqPos = missionNamespace getVariable 'QS_hqPos';
-					private _sidePos = markerPos 'QS_marker_sideMarker';
+					private _sidePositions = [FALSE] call QS_fnc_sideMissionPositions;
 					private _targetList = [];
 					private _ratedTargetList = [];
 					private _rating = 0;
@@ -301,7 +307,7 @@ if (
 							{((_recentTargetPositions inAreaArray [_targetsIntel_position,100,100,0,FALSE]) isEqualTo [])} &&
 							{((_targetsIntel_position distance2D _basePos) > 1000)} &&
 							{((_targetsIntel_position distance2D _aoPos) > _aoSize)} &&
-							{((_targetsIntel_position distance2D _sidePos) > 600)}
+							{(_sidePositions findIf {(_targetsIntel_position distance2D _x) <= 600}) < 0}
 						) then {
 							if (_sortByRating) then {
 								_ratedTargetList pushBack [_targetsIntel_rating,_targetsIntel_position];
@@ -805,8 +811,9 @@ if (
 						_movePos = (missionNamespace getVariable 'QS_AOpos') getPos [(random 600),(random 360)];
 					} else {
 						if ((random 1) > 0.5) then {
-							if (((markerPos 'QS_marker_sideMarker') # 0) > 0) then {
-								_movePos = (markerPos 'QS_marker_sideMarker') getPos [(random 600),(random 360)];
+							private _sidePositions = [FALSE] call QS_fnc_sideMissionPositions;
+							if (_sidePositions isNotEqualTo []) then {
+								_movePos = (selectRandom _sidePositions) getPos [(random 600),(random 360)];
 							} else {
 								_movePos = [(random worldSize),(random worldSize),500];
 							};
@@ -835,8 +842,9 @@ if (
 						_movePos = (missionNamespace getVariable 'QS_AOpos') getPos [(random 600),(random 360)];
 					} else {
 						if ((random 1) > 0.5) then {
-							if (((markerPos 'QS_marker_sideMarker') # 0) > 0) then {
-								_movePos = (markerPos 'QS_marker_sideMarker') getPos [(random 600),(random 360)];
+							private _sidePositions = [FALSE] call QS_fnc_sideMissionPositions;
+							if (_sidePositions isNotEqualTo []) then {
+								_movePos = (selectRandom _sidePositions) getPos [(random 600),(random 360)];
 							} else {
 								_movePos = [(random worldSize),(random worldSize),500];
 							};
@@ -876,8 +884,9 @@ if (
 						_movePos = (missionNamespace getVariable 'QS_AOpos') getPos [(random 600),(random 360)];
 					} else {
 						if ((random 1) > 0.5) then {
-							if (((markerPos 'QS_marker_sideMarker') # 0) > 0) then {
-								_movePos = (markerPos 'QS_marker_sideMarker') getPos [(random 600),(random 360)];
+							private _sidePositions = [FALSE] call QS_fnc_sideMissionPositions;
+							if (_sidePositions isNotEqualTo []) then {
+								_movePos = (selectRandom _sidePositions) getPos [(random 600),(random 360)];
 							} else {
 								_movePos = [(random worldSize),(random worldSize),500];
 							};

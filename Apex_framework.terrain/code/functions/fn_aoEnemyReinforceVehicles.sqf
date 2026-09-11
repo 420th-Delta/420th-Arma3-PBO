@@ -84,7 +84,7 @@ private _motorPool = 0;
 if (worldName isEqualTo 'Stratis') then {
 	_motorPool = 8;
 };
-_vType = selectRandomWeighted ([_motorPool] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
+_vType = selectRandomWeighted ([_motorPool] call QS_fnc_airDefenseReinforcementPool);
 _v = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vType,_vType],_roadRoadValid,[],0,'NONE'];
 _v setVariable ['QS_dynSim_ignore',TRUE,FALSE];
 _v allowCrewInImmobile [TRUE,TRUE];

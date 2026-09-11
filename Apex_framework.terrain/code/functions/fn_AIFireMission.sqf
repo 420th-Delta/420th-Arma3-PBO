@@ -192,6 +192,25 @@ if (_type isEqualTo 2) exitWith {
 	//comment 'Plane CAS';
 	params ['','_supportProvider','_supportGroup','_targetObject','_targetPosition','_duration'];
 	_vehicle = vehicle _supportProvider;
+	private _airDefenseCASBlocked = {
+		if (!(_vehicle getVariable ['QS_airDefense_registered',FALSE]) || {!(missionNamespace getVariable ['QS_missionConfig_airDefense_enabled',TRUE])}) exitWith {FALSE};
+		private _base = markerPos 'QS_marker_base_marker';
+		private _radius = (missionNamespace getVariable ['QS_missionConfig_airDefense_baseExclusionRadius',2000]) max 0;
+		(_base isEqualTo [0,0,0]) ||
+		{(_targetPosition distance2D _base) <= _radius} ||
+		{!isNull _targetObject && {(_targetObject distance2D _base) <= _radius}} ||
+		{_vehicle getVariable ['QS_airDefense_abortCAS',FALSE]} ||
+		{(_vehicle getVariable ['QS_airDefense_rank',5]) < 4} ||
+		{_vehicle getVariable ['QS_airDefense_holding',FALSE]} ||
+		{!local _supportProvider}
+	};
+	if (_vehicle getVariable ['QS_airDefense_registered',FALSE]) then {
+		_vehicle setVariable ['QS_airDefense_abortCAS',FALSE,FALSE];
+		[_vehicle] call QS_fnc_airDefenseApply;
+	};
+	if (call _airDefenseCASBlocked) exitWith {
+		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+	};
 	_vehicle flyInHeight (200 + (random 100));
 	_vehicle forceSpeed -1;
 	_vehicle setVariable ['QS_AI_PLANE_fireMission',TRUE,FALSE];
@@ -239,7 +258,8 @@ if (_type isEqualTo 2) exitWith {
 	for '_x' from 0 to 1 step 0 do {
 		_time = time;
 		if (
-			((vehicle _supportProvider) isNotEqualTo _vehicle) ||
+			(call _airDefenseCASBlocked) ||
+			{((vehicle _supportProvider) isNotEqualTo _vehicle)} ||
 			{(!canMove _vehicle)} ||
 			{(!alive _vehicle)} ||
 			{(isNil {_supportGroup getVariable 'QS_AI_GRP_fireMission'})} ||
@@ -284,11 +304,16 @@ if (_type isEqualTo 2) exitWith {
 					}
 				];
 				uiSleep 0.01;
-				_supportProvider doSuppressiveFire (aimPos _laserTarget);
+				if (_vehicle getVariable ['QS_airDefense_registered',FALSE]) then {
+					_supportProvider doTarget _laserTarget;
+				} else {
+					_supportProvider doSuppressiveFire (aimPos _laserTarget);
+				};
 				_fireDuration = time + 5;
 				for '_x' from 0 to 1 step 0 do {
 					if (
-						(!alive _supportProvider) ||
+						(call _airDefenseCASBlocked) ||
+						{(!alive _supportProvider)} ||
 						{(!alive _vehicle)} ||
 						{(!canFire _vehicle)} ||
 						{((_vehicle aimedAtTarget [_laserTarget]) < 0.5)} ||
@@ -318,6 +343,7 @@ if (_type isEqualTo 2) exitWith {
 		['END',_vehicle,_targetObject,_targetPosition,_laserTarget] call (missionNamespace getVariable 'QS_fnc_transformDiagAirFireMission');
 	};
 	_vehicle setVariable ['QS_AI_PLANE_fireMission',FALSE,FALSE];
+	if (!isNil '_firedEvent') then {_vehicle removeEventHandler ['Fired',_firedEvent];};
 	if (!isNull _laserTarget) then {
 		deleteVehicle _laserTarget;
 		missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),FALSE];
@@ -329,8 +355,8 @@ if (_type isEqualTo 2) exitWith {
 	if (!isNull _supportGroup) then {
 		_supportGroup setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
 	};
-	_supportProvider commandWatch objNull;
-	if ((alive _vehicle) && (canMove _vehicle)) then {
+	if (local _supportProvider) then {_supportProvider commandWatch objNull;};
+	if ((alive _vehicle) && (canMove _vehicle) && {!(call _airDefenseCASBlocked)}) then {
 		_relPos = _vehicle getRelPos [(500 + (random 500)),(random 360)];
 		_relPos set [2,300];
 		_supportGroup move _relPos;

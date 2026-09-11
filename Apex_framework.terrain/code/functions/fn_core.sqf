@@ -312,6 +312,8 @@ _sideMissionActive = FALSE;
 missionNamespace setVariable ['QS_sideMissionActive',_false,_false];
 _resumeScript = TRUE;
 _currentSideMission = '';
+private _currentSideMissionName = '';
+missionNamespace setVariable ['QS_priorityAA_legacyActive',FALSE,FALSE];
 /*/
 	Old side missions (disabled but still 100% functional. add to _sideMissionList below in correct format to enable.)
 		QS_fnc_SMHQcoast
@@ -325,7 +327,6 @@ _sideMissionList = [
 	'QS_fnc_SMRescuePOW',0.2,			// Side mission function name + weighted probability of spawning ( https://community.bistudio.com/wiki/selectRandomWeighted )
 	'QS_fnc_SMsecureUrban',0.2,
 	'QS_fnc_SMEscortVehicle',0.3,
-	'QS_fnc_SMPriorityAA',0.4,
 	'QS_fnc_SMPriorityARTY',0.4,
 	'QS_fnc_SMsecureIntelUAV',0.2,
 	'QS_fnc_SMsecureIntelUnit',0.2,
@@ -1498,6 +1499,7 @@ for '_x' from 0 to 1 step 0 do {
 							};
 							_aoStartTime = diag_tickTime + 10;
 							_aoArray = [_ao] call _fn_aoPrepare;
+							['AO',_QS_AOpos,_allPlayersCount] call QS_fnc_priorityAAScheduler;
 						};
 					} else {
 						if (_isDefendLocal) then {
@@ -3017,7 +3019,11 @@ for '_x' from 0 to 1 step 0 do {
 	/*/===================================== SECONDARY MISSION/*/
 
 	if (_sideMissions) then {
+		_sideMissionListProxy = [_sideMissionList,_allPlayersCount] call QS_fnc_priorityAASidePool;
 		private _forcedSideMission = missionNamespace getVariable ['QS_forcedSideMission',''];
+		private _forceLegacyAA = (missionNamespace getVariable ['QS_priorityAA_force',FALSE]) &&
+			{_forcedSideMission isEqualTo ''} && {'QS_fnc_SMpriorityAALegacy' in _sideMissionListProxy};
+		if (_forceLegacyAA) then {_forcedSideMission = 'QS_fnc_SMpriorityAALegacy';};
 		if (!(_sideMissionActive)) then {
 			if (
 				(_timeNow > 80) &&
@@ -3038,10 +3044,19 @@ for '_x' from 0 to 1 step 0 do {
 					missionNamespace setVariable ['QS_forcedSideMissionActive',_true,_false];
 					missionNamespace setVariable ['QS_smAbort',_false,_true];
 				};
+				_currentSideMissionName = _sideMission;
+				if (_sideMission isEqualTo 'QS_fnc_SMpriorityAALegacy') then {
+					missionNamespace setVariable ['QS_priorityAA_legacyActive',TRUE,FALSE];
+					if (_forceLegacyAA) then {missionNamespace setVariable ['QS_priorityAA_force',FALSE,FALSE];};
+				};
 				_currentSideMission = 0 spawn (missionNamespace getVariable _sideMission);
 			};
 		} else {
 			if (scriptDone _currentSideMission) then {
+				if (_currentSideMissionName isEqualTo 'QS_fnc_SMpriorityAALegacy') then {
+					missionNamespace setVariable ['QS_priorityAA_legacyActive',FALSE,FALSE];
+				};
+				_currentSideMissionName = '';
 				_smDelay = time + (_sideMissionDelayFixed + (random _sideMissionDelayRandom));
 				if (missionNamespace getVariable ['QS_forcedSideMissionActive',_false]) then {
 					missionNamespace setVariable ['QS_forcedSideMissionActive',_false,_false];
@@ -3057,6 +3072,8 @@ for '_x' from 0 to 1 step 0 do {
 		};
 	};
 	
+	['TICK',[_timeNow,_allAICount,_unitCap,_allPlayersCount]] call QS_fnc_priorityAAScheduler;
+
 	/*/===== Deployment Mission module/*/
 
 	if (_deploymentMissions) then {
