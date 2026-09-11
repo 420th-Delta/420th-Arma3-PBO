@@ -53,25 +53,25 @@ A raw Git-tree comparison reports 302 changed common blobs. Of those, 131 SQF fi
 
 | Path family | Added | Content modified | Line-ending only | Absent from this mission | Covered change |
 | --- | ---: | ---: | ---: | ---: | --- |
-| <code>420th/playerprofile/**</code> | 5 | 0 | 0 | 0 | Optional database-backed profile request, queue, receive, UI, and initialization flow. |
-| <code>420th/userinputmenus/**</code> | 20 | 0 | 0 | 0 | Color picker, messages, list boxes, sliders, text/progress controls, includes, and retained license. |
-| <code>code/config/**</code> | 4 | 11 | 131 | 0 | Donator flags/textures, emotes, performance settings, security, and current mission-data catalogs. |
-| <code>code/dialogs/**</code> | 2 | 0 | 0 | 0 | PMC and Spawn Menu dialogs. |
-| <code>code/functions/**</code> | 46 | 156 | 0 | 0 | Player, AI, objectives, support, logistics, vehicle, cleanup, security, staff, and synchronization behavior. |
-| <code>code/scripts/**</code> | 1 | 1 | 0 | 0 | Manual Mega Defense plus reviewed Advanced Rappelling integration. |
-| <code>description.ext</code>, <code>mission.sqm</code>, <code>stringtable.xml</code> | 0 | 3 | 0 | 0 | Mission configuration, Altis layout, function/security registration, and localized text. |
-| <code>TGC/Functions/Channels/**</code> | 5 | 0 | 0 | 0 | Channel masks, membership, staff access, and refresh logic. |
-| <code>TGC/Functions/Curators/**</code> | 1 | 0 | 0 | 0 | Curator addon registration. |
-| <code>TGC/Functions/Damage/**</code> | 10 | 0 | 0 | 0 | Friendly-AI, player, empty-vehicle, and spawn-menu vehicle damage handling. |
-| <code>TGC/Functions/Database/**</code> | 5 | 0 | 0 | 0 | extDB3 query/strip/whitelist setup and refresh paths. |
-| <code>TGC/Functions/Drones/**</code> | 2 | 0 | 0 | 0 | UID-bound drone ownership and initialization. |
-| <code>TGC/Functions/Lasers/**</code> | 2 | 0 | 0 | 0 | Laser-instigator attribution and display handling. |
-| <code>TGC/Functions/Setting/**</code> | 1 | 0 | 0 | 0 | CBA-aware setting helper with a non-CBA fallback. |
-| <code>TGC/Functions/Staff/**</code> | 12 | 0 | 0 | 0 | Staff identity, keybinds, weather, AO/side-mission controls, and interfaces. |
-| <code>media/commissary/**</code> | 69 | 0 | 0 | 0 | Custom commissary texture catalog and local asset note. |
-| <code>media/images/{billboards,emotes,flags,general,roles,spawnMenus,uskins,vskins}/**</code> | 133 | 0 | 0 | 4 | 420th identity art, flags, emotes, role/spawn-menu images, and uniform/vehicle skins; four upstream general flags are not retained. |
-| <code>media/images/insignia/**</code> | 0 | 0 | 0 | 1 | One upstream insignia is not retained. |
-| <code>SERVER_PERFORMANCE_LOGGING.md</code> and <code>tests/**</code> | 2 | 0 | 0 | 0 | Server-performance guide and structural validation script. |
+| <code>420th/</code><br><code>playerprofile/**</code> | 5 | 0 | 0 | 0 | Optional database-backed profile request, queue, receive, UI, and initialization flow. |
+| <code>420th/</code><br><code>userinputmenus/**</code> | 20 | 0 | 0 | 0 | Color picker, messages, list boxes, sliders, text/progress controls, includes, and retained license. |
+| <code>code/</code><br><code>config/**</code> | 4 | 11 | 131 | 0 | Donator flags/textures, emotes, performance settings, security, and current mission-data catalogs. |
+| <code>code/</code><br><code>dialogs/**</code> | 2 | 0 | 0 | 0 | PMC and Spawn Menu dialogs. |
+| <code>code/</code><br><code>functions/**</code> | 46 | 156 | 0 | 0 | Player, AI, objectives, support, logistics, vehicle, cleanup, security, staff, and synchronization behavior. |
+| <code>code/</code><br><code>scripts/**</code> | 1 | 1 | 0 | 0 | Manual Mega Defense plus reviewed Advanced Rappelling integration. |
+| <code>description.ext</code><br><code>mission.sqm</code><br><code>stringtable.xml</code> | 0 | 3 | 0 | 0 | Mission configuration, Altis layout, function/security registration, and localized text. |
+| <code>TGC/Functions/</code><br><code>Channels/**</code> | 5 | 0 | 0 | 0 | Channel masks, membership, staff access, and refresh logic. |
+| <code>TGC/Functions/</code><br><code>Curators/**</code> | 1 | 0 | 0 | 0 | Curator addon registration. |
+| <code>TGC/Functions/</code><br><code>Damage/**</code> | 10 | 0 | 0 | 0 | Friendly-AI, player, empty-vehicle, and spawn-menu vehicle damage handling. |
+| <code>TGC/Functions/</code><br><code>Database/**</code> | 5 | 0 | 0 | 0 | extDB3 query/strip/whitelist setup and refresh paths. |
+| <code>TGC/Functions/</code><br><code>Drones/**</code> | 2 | 0 | 0 | 0 | UID-bound drone ownership and initialization. |
+| <code>TGC/Functions/</code><br><code>Lasers/**</code> | 2 | 0 | 0 | 0 | Laser-instigator attribution and display handling. |
+| <code>TGC/Functions/</code><br><code>Setting/**</code> | 1 | 0 | 0 | 0 | CBA-aware setting helper with a non-CBA fallback. |
+| <code>TGC/Functions/</code><br><code>Staff/**</code> | 12 | 0 | 0 | 0 | Staff identity, keybinds, weather, AO/side-mission controls, and interfaces. |
+| <code>media/</code><br><code>commissary/**</code> | 69 | 0 | 0 | 0 | Custom commissary texture catalog and local asset note. |
+| <code>media/images/</code><br><code>{billboards,emotes,flags,general,roles,</code><br><code>spawnMenus,uskins,vskins}/**</code> | 133 | 0 | 0 | 4 | 420th identity art, flags, emotes, role/spawn-menu images, and uniform/vehicle skins; four upstream general flags are not retained. |
+| <code>media/images/</code><br><code>insignia/**</code> | 0 | 0 | 0 | 1 | One upstream insignia is not retained. |
+| <code>SERVER_PERFORMANCE_</code><br><code>LOGGING.md</code> and <code>tests/**</code> | 2 | 0 | 0 | 0 | Server-performance guide and structural validation script. |
 | <code>documentation/**</code> | 0 | 0 | 0 | 30 | Quiksilver setup/admin/reference text not copied into this mission tree. |
 | <code>SQM/**</code> | 0 | 0 | 0 | 26 | Quiksilver alternate-terrain and backup <code>mission.sqm</code> variants omitted from this Altis-focused tree. |
 | **Mission-tree total** | **320** | **171** | **131** | **61** | **All source-path differences at the documented revision.** |
