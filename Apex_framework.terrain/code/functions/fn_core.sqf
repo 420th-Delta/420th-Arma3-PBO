@@ -415,7 +415,9 @@ _QS_module_customMission_played = FALSE;
 /* Legacy Code as of 9.9.2026 */
 //|	['QS_customAO_GT_active',FALSE,TRUE]
 // Updated Code
-	['QS_customAO_GT_active',FALSE,TRUE]
+	['QS_customAO_GT_active',FALSE,TRUE],
+	['QS_kavalaRevive_script',scriptNull,FALSE],
+	['QS_kavalaRevive_active',FALSE,TRUE]
 // End Updated Code
 ];
 if (_QS_module_customMissions_list isEqualTo []) then {
@@ -619,6 +621,30 @@ private _fn_cleanupHolderCargo = {
 private _fn_cleanupHolderDeadline = {
     params ['_now','_deadline','_previousCargo','_cargo'];
     if (_previousCargo isNotEqualTo _cargo) then {_now + 30} else {_deadline}
+};
+private _fn_cleanupKavalaSafe = {
+    params ['_object'];
+    private _objects = [_object,vehicle _object];
+    _objects append (attachedObjects _object);
+    private _parent = attachedTo _object;
+    if (!isNull _parent) then {_objects pushBack _parent;};
+    ((_objects findIf {
+        isPlayer _x || {captive _x} || {_x getVariable ['QS_cleanup_protected',FALSE]} ||
+        {((crew _x) findIf {isPlayer _x || {captive _x}}) >= 0} ||
+        {!isNull (isVehicleCargo _x)} || {!isNull (ropeAttachedTo _x)} ||
+        {(ropes _x) isNotEqualTo []} || {(getVehicleCargo _x) isNotEqualTo []}
+    }) < 0) && {
+        isNull (attachedTo _object)
+    } && {
+        ((allPlayers select {!(_x isKindOf 'HeadlessClient_F')}) inAreaArray [_object,150,150,0,FALSE]) isEqualTo []
+    }
+};
+private _fn_cleanupRestoreTerrain = {
+    params ['_object',['_scope',[]]];
+    if (_scope isNotEqualTo [] && {(missionNamespace getVariable [_scope # 0,-1]) isNotEqualTo (_scope # 1)}) exitWith {TRUE};
+    if (((allPlayers select {!(_x isKindOf 'HeadlessClient_F')}) inAreaArray [_object,100,100,0,FALSE]) isNotEqualTo []) exitWith {FALSE};
+    _object hideObjectGlobal FALSE;
+    TRUE
 };
 // CLEANUP_REGRESSION_HELPERS_END
 // POLICY: a landed aircraft counts; a flyover does not. Downed ground players
@@ -3350,6 +3376,12 @@ for '_x' from 0 to 1 step 0 do {
 	};
 	/*/===== CUSTOM MISSION MODULE/*/
 // Added Code
+	// Restore ordinary role handling if a Kavala script stops unexpectedly.
+	if ((missionNamespace getVariable ['QS_kavalaRevive_active',FALSE]) &&
+		{scriptDone (missionNamespace getVariable ['QS_kavalaRevive_script',scriptNull])}) then {
+		missionNamespace setVariable ['QS_kavalaRevive_active',FALSE,TRUE];
+		missionNamespace setVariable ['QS_kavalaRevive_script',scriptNull,FALSE];
+	};
 // End Updated Code
 
 /* Legacy Code as of 9.9.2026 */
@@ -3363,7 +3395,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|					if (((_timeNow > _QS_module_customMissions_delay) && (_allPlayersCount <= 36) && (_allPlayersCount >= 4)) || {(missionNamespace getVariable 'QS_customAO_trigger')}) then {
 // Updated Code
-					if (((_timeNow > _QS_module_customMissions_delay) && (_allPlayersCount <= 36) && (_allPlayersCount >= 4)) || {(missionNamespace getVariable 'QS_customAO_trigger')}) then {
+					if (((_timeNow > _QS_module_customMissions_delay) && (_allPlayersCount >= 4) && {(_allPlayersCount <= 36) || {_QS_worldName isEqualTo 'Altis'}}) || {(missionNamespace getVariable 'QS_customAO_trigger')}) then {
 // End Updated Code
 						if (_QS_module_customMissions_list isNotEqualTo []) then {
 							if (missionNamespace getVariable 'QS_customAO_trigger') then {
@@ -4287,6 +4319,23 @@ for '_x' from 0 to 1 step 0 do {
 												_QS_deleteThis = _true;
 											};
 										};
+										if (_QS_instructions isEqualTo 'KAVALA_DISCREET') then {
+											isNil {
+												if ([_QS_obj] call _fn_cleanupKavalaSafe) then {
+													if (!([1,0,_QS_obj] call _fn_serverObjectsRecycler)) then {
+														private _deleteCrew = _QS_obj isKindOf 'CAManBase' && {!isNull objectParent _QS_obj};
+														private _perfDelete = [['core.cleanup.deleteVehicle','core.cleanup.deleteVehicleCrew'] select _deleteCrew,1] call QS_fnc_perfBegin;
+														if (_deleteCrew) then {
+															(objectParent _QS_obj) deleteVehicleCrew _QS_obj;
+														} else {deleteVehicle _QS_obj;};
+														[_perfDelete,-1] call QS_fnc_perfEnd;
+														_perfDeleteRequests = _perfDeleteRequests + 1;
+														missionNamespace setVariable ['QS_analytics_entities_deleted',1 + (missionNamespace getVariable ['QS_analytics_entities_deleted',0]),FALSE];
+													};
+													(missionNamespace getVariable 'QS_garbageCollector') set [_forEachIndex,FALSE];
+												};
+											};
+										};
 										if (_QS_instructions isEqualTo 'DELAYED_FORCED') then {
 											if (_timeNow > _QS_timeDelete) then {
 												_QS_attemptRecycle = _true;
@@ -4374,9 +4423,10 @@ for '_x' from 0 to 1 step 0 do {
 // End Updated Code
 										};
 										if (_QS_instructions isEqualTo 'UNHIDE_DISCREET') then {
-							if ((_allPlayers inAreaArray [_QS_objWorldPos,100,100,0,_false]) isEqualTo []) then {
-								_QS_obj hideObjectGlobal _false;
-								(missionNamespace getVariable 'QS_garbageCollector') set [_forEachIndex,_false];
+							isNil {
+								if ([_QS_obj,_x param [3,[]]] call _fn_cleanupRestoreTerrain) then {
+									(missionNamespace getVariable 'QS_garbageCollector') set [_forEachIndex,_false];
+								};
 							};
 										};
 										if (_QS_deleteThis) then {
