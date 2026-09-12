@@ -11,7 +11,7 @@ This branch adds a CSAT SAM battery and independent Priority AA scheduling, base
 | SAM battery | One S-750 Rhea launcher and one Cronus radar inside the compound, with two more Rheas randomly placed outside the walls. The exterior launcher count is configurable from 0 to 2. |
 | Guards | Two mobile Tigrises, one Varsuk tank, and the usual infantry count distribution: 24-48 Vipers. Vehicle crews use Viper equipment. |
 | Ammunition and completion | All Rhea launchers replenish their missiles indefinitely while the objective is active, after a 15-30 second resupply delay. Destroy the radar and every Rhea to complete the mission. |
-| Target priorities | Registered threats prioritize airborne WEST jets, then attack helicopters, transport helicopters, eligible surface vehicles, and finally native AI behavior. Weapon, sensor and lock requirements still apply; see the coverage gap below. |
+| Target priorities | Registered threats prioritize airborne WEST jets, then attack helicopters, transport helicopters, eligible surface vehicles, and finally native AI behavior. Weapon, sensor and lock requirements still apply; see controller coverage below. |
 | Base protection | Configurable target exclusion around the spawn base, defaulting to 2 km, with an owner-local firing fail-safe. It does not remove missiles already in flight when their targets enter the area. |
 | Mobile AA reinforcements | At or above the population threshold, Tigris and Nyx AA selection weights default to twice their original values. Wave timing and unit caps stay unchanged. |
 | Placement | Enhanced batteries use a terrain search around the current AO, initially 1.2-3.5 km away, with a hard minimum base clearance defaulting to 5 km. Placement is deferred if no valid site is found. |
@@ -25,11 +25,11 @@ The dedicated mission retains the familiar tasks, map markers, notifications, ex
 
 Server settings can be overridden in `@Apex_cfg\parameters.sqf`. See [Priority AA and air-defense configuration](docs/priority-aa.md) for every setting and [Rhea contact-sharing findings](docs/air-defense-datalink.md) for sensor conditions and evidence.
 
-## Known targeting coverage gap
+## Targeting coverage
 
-The controller covers AO/static Priority AA, enemy CAS/Defend jets, normal/Defend reinforcement AA and EAST side-mission guards. This meets the requested minimum targeting coverage, but does **not** cover every ground-AA spawn path.
+The controller covers AO/static Priority AA, enemy CAS/Defend jets, normal/Defend reinforcement AA, EAST side-mission guards, FIA HQ mobile Tigrises and the legacy Independent side-mission mobile Tigrises.
 
-The FIA HQ side mission's mobile Tigris guards, created by `fn_smEnemyGuer.sqf`, bypass registration and retain standard targeting. `fn_smEnemyInd.sqf` has the same omission, although the audit found no direct production caller. These vehicles also lack the controller's base-targeting fail-safe. This gap remains in the branch.
+`fn_smEnemyGuer.sqf` and `fn_smEnemyInd.sqf` now register each mobile Tigris immediately after its AI crew is created, so both receive owner-local targeting and the base-targeting fail-safe. The Independent route has no direct production caller today, but remains covered against future reactivation by the focused static registration check.
 
 ## Validation
 

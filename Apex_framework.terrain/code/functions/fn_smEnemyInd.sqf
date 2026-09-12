@@ -110,6 +110,7 @@ if ((count allPlayers) > 25) then {
 		_randomPos = ['RADIUS',_pos,300,'LAND',[],FALSE,[],[],TRUE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 		_SMaa = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _aaType,_aaType],_randomPos,[],0,'NONE'];
 		_grp = createVehicleCrew _SMaa;
+		[_SMaa] call QS_fnc_airDefenseRegister;
 		(missionNamespace getVariable 'QS_AI_vehicles') pushBack _SMaa;
 		_SMaa lock 3;
 		_SMaa addEventHandler ['GetOut',(missionNamespace getVariable 'QS_fnc_AIXDismountDisabled')];
