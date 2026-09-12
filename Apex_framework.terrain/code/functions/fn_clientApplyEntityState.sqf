@@ -14,10 +14,24 @@ params [
 	['_entity',objNull,[objNull]],
 	['_featureType',-1,[0]],
 	['_face','',['']],
-	['_spawnMenuHandlers',FALSE,[FALSE]]
+	['_spawnMenuHandlers',FALSE,[FALSE]],
+	['_houseVectors',[],[[]]]
 ];
 
 if (isNull _entity) exitWith {};
+
+if (
+	(_entity isKindOf 'House') &&
+	{!isSimpleObject _entity} &&
+	{(count _houseVectors) isEqualTo 2} &&
+	{(_houseVectors findIf {
+		!(_x isEqualType []) ||
+		{(count _x) isNotEqualTo 3} ||
+		{(_x findIf {!(_x isEqualType 0) || {!finite _x}}) isNotEqualTo -1}
+	}) isEqualTo -1}
+) then {
+	_entity setVectorDirAndUp _houseVectors;
+};
 
 if (_featureType in [0,1,2]) then {
 	_entity setFeatureType _featureType;
