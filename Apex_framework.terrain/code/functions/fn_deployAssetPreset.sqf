@@ -108,40 +108,70 @@ if (_preset isEqualTo 5) then {
 		};
 	};
 };
+private _preset6MappedType = '';
+if (_preset isEqualTo 6) then {
+	private _preset6Definitions = [
+		['land_cargo10_blue_f','b_sam_system_03_f'],
+		['land_cargo20_light_blue_f','b_sam_system_02_f'],
+		['land_cargo20_cyan_f','b_aaa_system_01_f'],
+		['land_cargo20_blue_f','b_sam_system_01_f']
+	];
+	private _preset6DeployMap = createHashMap;
+	private _preset6PackMap = createHashMap;
+	{
+		_x params ['_containerType','_turretType'];
+		_preset6DeployMap set [_containerType,_turretType];
+		private _resolvedTurretType = QS_core_vehicles_map getOrDefault [_turretType,_turretType];
+		_preset6PackMap set [toLowerANSI _resolvedTurretType,_containerType];
+	} forEach _preset6Definitions;
+	private _observedType = toLowerANSI (typeOf _vehicle);
+	_preset6MappedType = if (_deploy) then {
+		_preset6DeployMap getOrDefault [_observedType,'']
+	} else {
+		_preset6PackMap getOrDefault [_observedType,'']
+	};
+};
+if ((_preset isEqualTo 6) && {_preset6MappedType isEqualTo ''}) exitWith {_vehicle};
 if (_preset isEqualTo 6) then {
 	//comment 'SAM 1 - B_SAM_System_03_F';
 	if (_deploy) then {
 		_posi = getPosASL _vehicle;
 		_vectors = [vectorDir _vehicle,vectorUp _vehicle];
 		_customDN = _vehicle getVariable ['QS_ST_customDN',''];
+		_spawnedBy = _vehicle getVariable ['QS_spawnMenu_spawnedBy',''];
+		_spawnedSide = _vehicle getVariable ['TGC_vehicle_side',sideUnknown];
+		_spawnedRespawnable = _vehicle getVariable ['QS_RD_vehicleRespawnable',FALSE];
 		_oldVehicle = _vehicle;
 		_oldType = typeOf _vehicle;
 		_oldVehicle setPosASL [0,0,0];
 		deleteVehicle _oldVehicle;
-		if (_presetClass isEqualTo '') then {
-			_presetClass = 'b_sam_system_03_f';
-		};
-		_class = QS_core_vehicles_map getOrDefault [_presetClass,'b_sam_system_03_f'];
+		_presetClass = _preset6MappedType;
+		_class = QS_core_vehicles_map getOrDefault [_presetClass,_presetClass];
+		private _classLower = toLowerANSI _class;
 		_vehicle = createVehicle [_class,[0,0,0]];
 		_vehicle allowDamage (unitIsUav _vehicle);
 		_vehicle enableSimulationGlobal FALSE;_vehicle spawn {uiSleep 1; _this enableSimulationGlobal TRUE; };
 		_vehicle setVectorDirAndUp _vectors;
 		_vehicle setPosASL _posi;
 		_vehicle enableDynamicSimulation FALSE;
-		_vehicle setTurretLimits [[0],-360, 360,30,90];
+		if (_classLower isEqualTo 'b_sam_system_03_f') then {
+			_vehicle setTurretLimits [[0],-360,360,30,90];
+		};
 		_grp = createVehicleCrew _vehicle;
 		_grp setBehaviourStrong 'COMBAT';
 		(crew _vehicle) doWatch ((_vehicle getRelPos [500,0]) vectorAdd [0,0,500]);
 		{
 			_x setSkill 1;
 		} forEach (units _grp);
-		_vehicle addEventHandler [
-		'Fired',
-		{
-			params ['','','','','','','_projectile',''];
-			[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
-		}
-		];
+		if (_classLower in ['b_sam_system_01_f','b_sam_system_02_f','b_sam_system_03_f']) then {
+			_vehicle addEventHandler [
+				'Fired',
+				{
+					params ['','','','','','','_projectile',''];
+					[_projectile,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_clientTrackProjectile');
+				}
+			];
+		};
 		_vehicle addEventHandler [
 			'Deleted',
 			{
@@ -172,7 +202,25 @@ if (_preset isEqualTo 6) then {
 		if (_customDN isNotEqualTo '') then {
 			_vehicle setVariable ['QS_ST_customDN',_customDN,TRUE];
 		};
+		if (_spawnedBy isNotEqualTo '') then {
+			if (!isNil 'QS_fnc_spawnMenuManagedVehicleInit') then {
+				[_vehicle,_spawnedBy,_spawnedSide] call QS_fnc_spawnMenuManagedVehicleInit;
+			} else {
+				_vehicle setVariable ['QS_spawnMenu_spawnedBy',_spawnedBy,TRUE];
+				_vehicle setVariable ['QS_RD_vehicleRespawnable',_spawnedRespawnable,TRUE];
+				_vehicle setVariable ['TGC_vehicle_side',_spawnedSide,TRUE];
+				(missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]]) pushBackUnique _vehicle;
+			};
+		};
 		[_vehicle] call QS_fnc_vSetup;
+		if (_classLower in ['b_aaa_system_01_f','b_sam_system_01_f','b_sam_system_02_f']) then {
+			{
+				_vehicle setObjectTextureGlobal [_forEachIndex,_x];
+			} forEach (getArray ((configOf _vehicle) >> 'TextureSources' >> 'Green' >> 'textures'));
+		};
+		if (unitIsUav _vehicle) then {
+			_vehicle setAutonomous TRUE;
+		};
 		_vehicle setVehicleRadar 1;
 		_vehicle setVehicleReceiveRemoteTargets TRUE;
 		_vehicle setVehicleReportRemoteTargets TRUE;
@@ -182,14 +230,23 @@ if (_preset isEqualTo 6) then {
 		_posi = getPosASL _vehicle;
 		_vectors = [vectorDir _vehicle,vectorUp _vehicle];
 		_customDN = _vehicle getVariable ['QS_ST_customDN',''];
+		_spawnedBy = _vehicle getVariable ['QS_spawnMenu_spawnedBy',''];
+		_spawnedSide = _vehicle getVariable ['TGC_vehicle_side',sideUnknown];
+		_spawnedRespawnable = _vehicle getVariable ['QS_RD_vehicleRespawnable',FALSE];
 		_oldVehicle = _vehicle;
-		_oldType = _vehicle getVariable ['QS_deploy_type0',typeOf _vehicle];
+		_oldType = _preset6MappedType;
 		_oldVehicle setPosASL [0,0,0];
 		deleteVehicleCrew _oldVehicle;
 		deleteVehicle _oldVehicle;
 		_vehicle = createVehicle [_oldType,[0,0,0]];
 		_vehicle allowDamage FALSE;
 		_vehicle enableSimulationGlobal FALSE;_vehicle spawn {uiSleep 1; _this enableSimulationGlobal TRUE; };
+		if (_spawnedBy isNotEqualTo '') then {
+			_vehicle setVariable ['QS_spawnMenu_spawnedBy',_spawnedBy,TRUE];
+			_vehicle setVariable ['QS_RD_vehicleRespawnable',_spawnedRespawnable,TRUE];
+			_vehicle setVariable ['TGC_vehicle_side',_spawnedSide,TRUE];
+			(missionNamespace getVariable ['QS_spawnMenu_spawnedEntities',[]]) pushBackUnique _vehicle;
+		};
 		[_vehicle] call QS_fnc_vSetup;
 		_vehicle setVectorDirAndUp _vectors;
 		_vehicle setPosASL _posi;

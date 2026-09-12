@@ -45,6 +45,39 @@ if (
 	_entity setVariable ['QS_logistics',TRUE,TRUE];
 	_entity setVariable ['QS_ST_showDisplayName',TRUE,TRUE];
 };
+private _setupAirDefenseContainer = {
+	params ['_container','_turretClass'];
+	private _displayName = getText (configFile >> 'CfgVehicles' >> _turretClass >> 'displayName');
+	{
+		_container setVariable _x;
+	} forEach [
+		['QS_importance',1,FALSE],
+		['QS_logistics_deployParams',[5,300,5,300,-1,5,300],TRUE],
+		['QS_deploy_preset',6,TRUE],
+		['QS_logistics_deployable',TRUE,TRUE],
+		['QS_spawnMenu_dragCarryOverride',TRUE,TRUE],
+		['QS_RD_draggable',TRUE,TRUE],
+		['QS_logistics_draggable',TRUE,TRUE],
+		['QS_logistics_dragDisabled',FALSE,TRUE],
+		['QS_logistics_immovable',FALSE,TRUE],
+		['QS_ST_customDN',_displayName,TRUE],
+		['QS_ST_showDisplayName',TRUE,TRUE]
+	];
+	if (local _container) then {
+		_container setMass 2500;
+	} else {
+		['setMass',_container,2500] remoteExec ['QS_fnc_remoteExecCmd',_container,FALSE];
+	};
+};
+if (_entityType isEqualTo 'land_cargo20_light_blue_f') exitWith {
+	[_entity,'b_sam_system_02_f'] call _setupAirDefenseContainer;
+};
+if (_entityType isEqualTo 'land_cargo20_cyan_f') exitWith {
+	[_entity,'b_aaa_system_01_f'] call _setupAirDefenseContainer;
+};
+if (_entityType isEqualTo 'land_cargo20_blue_f') exitWith {
+	[_entity,'b_sam_system_01_f'] call _setupAirDefenseContainer;
+};
 if (['cargo20',_entityType] call QS_fnc_inString) then {
 	if ((getMass _entity) > 5000) then {
 		if (local _entity) then {

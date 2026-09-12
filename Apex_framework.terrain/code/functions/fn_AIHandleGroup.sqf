@@ -20,6 +20,14 @@ if (
 	(isNull _grp) ||
 	(!(simulationEnabled _grpLeader))
 ) exitWith {};
+// Registered combat-air groups are owned by the Phase 2 controller while it
+// has a priority target or a protected-base hold.
+if ((units _grp findIf {
+	private _vehicle = vehicle _x;
+	(_vehicle isKindOf 'Plane') && {_vehicle getVariable ['QS_airDefense_registered',FALSE]} && {
+		(_vehicle getVariable ['QS_airDefense_rank',5]) < 5 || {_vehicle getVariable ['QS_airDefense_holding',FALSE]}
+	}
+}) >= 0) exitWith {};
 // Added Code
 // PRIMARY AO: route only tagged, current-AO groups to their defensive orders.
 // The server or HC that owns this group issues movement through the same scheduler.
@@ -326,7 +334,7 @@ if (
 					private _aoPos = missionNamespace getVariable 'QS_aoPos';
 					private _aoSize = (missionNamespace getVariable 'QS_aoSize') * 0.9;
 					private _hqPos = missionNamespace getVariable 'QS_hqPos';
-					private _sidePos = markerPos 'QS_marker_sideMarker';
+					private _sidePositions = [FALSE] call QS_fnc_sideMissionPositions;
 					private _targetList = [];
 					private _ratedTargetList = [];
 					private _rating = 0;
@@ -357,7 +365,7 @@ if (
 								{!captive _targetsIntel_target} && {(lifeState _targetsIntel_target) in ['HEALTHY','INJURED']}
 							} else {(_targetsIntel_position distance2D _aoPos) > _aoSize}} &&
 // End Updated Code
-							{((_targetsIntel_position distance2D _sidePos) > 600)}
+							{(_sidePositions findIf {(_targetsIntel_position distance2D _x) <= 600}) < 0}
 						) then {
 							if (_sortByRating) then {
 								_ratedTargetList pushBack [_targetsIntel_rating,_targetsIntel_position];

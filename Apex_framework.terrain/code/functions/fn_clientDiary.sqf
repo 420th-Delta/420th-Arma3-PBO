@@ -483,7 +483,7 @@ player createDiaryRecord [
 		<br/><br/>2. CAS may freely engage these targets without ground coordination: Fixed-wing Aircraft.
 		<br/><br/>3. Do not engage any objectives and/or enemies without being called in on that specific target (See rule 1).
 		<br/><br/>4. Do not ram targets and/or objectives.
-		<br/><br/>5. Do not fly near (1km) marked objectives unless necessary to complete a mission.
+		<br/><br/>5. Aircraft should use terrain to hide from enemy radar near objectives.
 		<br/><br/>6. Must be on Teamspeak, in Pilot channel and communicable.
 		<br/><br/><br/>Failure to comply may result in administrative action without warning, up to and including permanent removal from CAS whitelist.
 		"

@@ -1,0 +1,43 @@
+version=54;
+binarizationWanted=0;
+sourceName="420th Priority AA Validation";
+addons[]={"A3_Characters_F_BLUFOR"};
+randomSeed=9112026;
+class ScenarioData { author="420th"; disabledAI=0; saving=0; };
+class Mission {
+    class Intel {
+        timeOfChanges=1800;
+        startWeather=0; startWind=0; startWaves=0;
+        forecastWeather=0; forecastWind=0; forecastWaves=0;
+        year=2035; month=6; day=24; hour=12; minute=0;
+    };
+    class Entities {
+        items=2;
+        class Item0 {
+            dataType="Group";
+            side="West";
+            class Entities {
+                items=1;
+                class Item0 {
+                    dataType="Object";
+                    class PositionInfo { position[]={14500,0,16500}; };
+                    side="West";
+                    flags=7;
+                    class Attributes { isPlayer=1; isPlayable=1; skill=0.6; };
+                    id=1;
+                    type="B_Soldier_F";
+                };
+            };
+            class Attributes {};
+            id=0;
+        };
+        class Item1 {
+            dataType="Logic";
+            class PositionInfo { position[]={15010,5,15010}; };
+            name="headlessclient";
+            isPlayable=1;
+            id=2;
+            type="HeadlessClient_F";
+        };
+    };
+};

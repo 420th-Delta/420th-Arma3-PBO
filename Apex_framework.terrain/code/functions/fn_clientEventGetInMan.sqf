@@ -146,7 +146,7 @@ if (player getUnitTrait 'QS_trait_fighterPilot') then {
 							'2. CAS may freely engage these targets without ground coordination: Fixed-wing Aircraft.',
 							'3. Do not engage any objectives and/or enemies without being called in on that specific target (See rule 1).',
 							'4. Do not ram targets and/or objectives.',
-							'5. Do not fly near (1km) marked objectives unless necessary to complete a specific mission.',
+							'5. Aircraft should use terrain to hide from enemy radar near objectives.',
 							'6. Must be on Teamspeak, in Pilot channel and communicable.',
 							'Failure to comply may result in administrative action without warning, up to and including permanent removal from CAS whitelist.'
 						];
