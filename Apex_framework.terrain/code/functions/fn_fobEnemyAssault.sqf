@@ -29,22 +29,29 @@ _QS_array = [];
 _pos = _this # 0;
 _base = markerPos 'QS_marker_base_marker';
 _foundSpawnPos = FALSE;
-while {!_foundSpawnPos} do {
-	_spawnPosDefault = [_pos,500,850,5,0,0.5,0] call (missionNamespace getVariable 'QS_fnc_findSafePos');
-	if (_spawnPosDefault isNotEqualTo []) then {
-		if ((allPlayers inAreaArray [_spawnPosDefault,350,350,0,FALSE]) isEqualTo []) then {
-			if ((_spawnPosDefault distance2D _base) > 1200) then {
-				_foundSpawnPos = TRUE;
-			};
-		};
-	};
+private _fn_position = {
+	params ['_point'];
+	_point isNotEqualTo [] && {(_point distance2D _base) > 1200} &&
+	{(allPlayers inAreaArray [_point,350,350,0,FALSE]) isEqualTo []}
 };
+for '_attempt' from 1 to 50 do {
+	_spawnPosDefault = [_pos,500,850,5,0,0.5,0] call (missionNamespace getVariable 'QS_fnc_findSafePos');
+	if ([_spawnPosDefault] call _fn_position) exitWith {_foundSpawnPos = TRUE;};
+	if (canSuspend) then {uiSleep 0.02;};
+};
+if (!_foundSpawnPos) exitWith {0};
 
 /*/================================================ SELECT + SPAWN UNITS/*/
 
 _infTypes = ['fob_assault_1'] call QS_data_listUnits;
 _infType = selectRandomWeighted _infTypes;
-_reinforceGroup = [_spawnPosDefault,(random 360),EAST,_infType,FALSE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+_reinforceGroup = [_spawnPosDefault,(random 360),EAST,_infType,FALSE,grpNull,FALSE,TRUE,_fn_position,350] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+// Added Code
+// GROUND_REJECTION_GUARD_BEGIN
+// No admitted group means no waypoint work and zero added assault units.
+if (isNull _reinforceGroup || {(units _reinforceGroup) isEqualTo []}) exitWith {0};
+// GROUND_REJECTION_GUARD_END
+// End Updated Code
 _reinforceGroup setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
 /*/================================================ MANAGE UNITS/*/
 

@@ -204,10 +204,24 @@ if (_interBuildingPatrols > 0) then {
 		if (_usedBuildingPositions isNotEqualTo []) then {
 			_spawnPosition = selectRandom _usedBuildingPositions;
 			_enemyGrp = createGroup [EAST,TRUE];
+// Added Code
+			private _slots = ['SLOTS',_spawnPosition,_enemyTeamSize,random 360,'O_Soldier_F',TRUE,FALSE,-1,{
+			params ['_point']; (!(_spawnPosition inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
+// End Updated Code
 			for '_j' from 0 to (_enemyTeamSize - 1) step 1 do {
+// Added Code
+				if (_slots isEqualTo []) exitWith {};
+// End Updated Code
 				_enemyUnitType = selectRandomWeighted _unitTypes;
-				_enemyUnit = _enemyGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _enemyUnitType,_enemyUnitType],_spawnPosition,[],25,'NONE'];
-				_enemyUnit setVehiclePosition [(getPosWorld _enemyUnit),[],10,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|				_enemyUnit = _enemyGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _enemyUnitType,_enemyUnitType],_spawnPosition,[],25,'NONE'];
+//|				_enemyUnit setVehiclePosition [(getPosWorld _enemyUnit),[],10,'NONE'];
+// Updated Code
+				_enemyUnit = _enemyGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _enemyUnitType,_enemyUnitType],_slots # _j,[],0,'NONE'];
+				_enemyUnit setPosATL (_slots # _j);
+// End Updated Code
 				{
 					_enemyUnit enableAIFeature [_x,FALSE];
 				} forEach ['COVER','AUTOCOMBAT'];
@@ -267,10 +281,24 @@ if (_areaPatrols > 0) then {
 		};
 		if ((count _patrolRoute) > 1) then {
 			_enemyGrp = createGroup [EAST,TRUE];
+// Added Code
+			private _slots = ['SLOTS',(_patrolRoute # 0),_enemyTeamSize,random 360,'O_Soldier_F',TRUE,FALSE,-1,{
+			params ['_point']; (!((_patrolRoute # 0) inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
+// End Updated Code
 			for '_j' from 0 to (_enemyTeamSize - 1) step 1 do {
+// Added Code
+				if (_slots isEqualTo []) exitWith {};
+// End Updated Code
 				_enemyUnitType = selectRandomWeighted _unitTypes;
-				_enemyUnit = _enemyGrp createUnit [_enemyUnitType,(_patrolRoute # 0),[],25,'NONE'];
-				_enemyUnit setVehiclePosition [(getPosASL _enemyUnit),[],10,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|				_enemyUnit = _enemyGrp createUnit [_enemyUnitType,(_patrolRoute # 0),[],25,'NONE'];
+//|				_enemyUnit setVehiclePosition [(getPosASL _enemyUnit),[],10,'NONE'];
+// Updated Code
+				_enemyUnit = _enemyGrp createUnit [_enemyUnitType,_slots # _j,[],0,'NONE'];
+				_enemyUnit setPosATL (_slots # _j);
+// End Updated Code
 				{
 					_enemyUnit enableAIFeature [_x,FALSE];
 				} forEach ['COVER','AUTOCOMBAT'];
@@ -346,18 +374,33 @@ if (_armedVehicleCount > 0) then {
 				if ((count _patrolRoute) >= 3) exitWith {};
 			};
 			if ((count _patrolRoute) > 1) then {
+// Added Code
+				// GROUND_VEHICLE_PLACEMENT_BEGIN
+				call {
+// End Updated Code
 				_enemyGrp = createGroup [EAST,TRUE];
 				_spawnPos = _patrolRoute # 0;
 				if (!isNull (roadAt _spawnPos)) then {
 					_spawnDirection = _spawnPos getDir ((roadsConnectedTo (roadAt _spawnPos)) # 0);
 				};
 				_vehicleType = selectRandomWeighted ([4] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
+// Added Code
+				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,_spawnDirection,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,-1,{
+					params ['_point']; (!(_spawnPos inPolygon _aoPolygon) || {_point inPolygon _aoPolygon})
+				}] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],(_spawnPos vectorAdd [0,0,5]),[],0,'NONE'];
 				if (_spawnDirection isNotEqualTo 0) then {
 					_vehicle setDir _spawnDirection;
 				};
 				_vehicle setVectorUp (surfaceNormal _spawnPos);
-				_vehicle setVehiclePosition [_spawnPos,[],0,'CAN_COLLIDE'];
+/* Legacy Code as of 9.9.2026 */
+//|				_vehicle setVehiclePosition [_spawnPos,[],0,'CAN_COLLIDE'];
+// Updated Code
+				_vehicle setPosATL _spawnPos;
+// End Updated Code
 				_vehicle lock 3;
 				(missionNamespace getVariable 'QS_AI_vehicles') pushBack _vehicle;
 				_vehicle allowCrewInImmobile [TRUE,TRUE];
@@ -443,6 +486,10 @@ if (_armedVehicleCount > 0) then {
 				_enemyGrp setVariable ['QS_AI_GRP_PATROLINDEX',0,QS_system_AI_owners];
 				_enemyGrp setVariable ['QS_AI_GRP',TRUE,QS_system_AI_owners];
 				_enemyGrp setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
+// Added Code
+				};
+				// GROUND_VEHICLE_PLACEMENT_END
+// End Updated Code
 			};
 		};
 	};

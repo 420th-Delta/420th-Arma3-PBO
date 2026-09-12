@@ -14,6 +14,12 @@ Description:
 __________________________________________________/*/
 
 params ['_grp','_pos','_maxDist',['_QS_new',FALSE]];
+// Added Code
+// GROUND_REJECTION_GUARD_BEGIN
+// A rejected outdoor footprint has no patrol members to inspect or task.
+if (isNull _grp || {(units _grp) isEqualTo []}) exitWith {FALSE};
+// GROUND_REJECTION_GUARD_END
+// End Updated Code
 private _isWaterPatrol = FALSE;
 private _waterMode = 0;
 private _grpVehicle = objectParent (leader _grp);

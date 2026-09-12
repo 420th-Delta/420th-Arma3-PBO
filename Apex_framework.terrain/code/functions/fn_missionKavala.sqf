@@ -1041,6 +1041,13 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _aaUnits) < _aaPatrolThresh) then {
 				if (({(alive _x)} count _aaUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _aaPatrolCenter getPos [(random _aaPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{
+					params ['_point']; (_point distance2D _aaPatrolCenter) <= _aaPatrolRadius
+				}] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _aaUnitTypes;
 				_unit = _aaGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1067,6 +1074,13 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _sniperUnits) < _aaPatrolThresh) then {
 				if (({(alive _x)} count _sniperUnits) >= _aaPatrolThresh) exitWith {};
 				_spawnPos = _sniperPatrolCenter getPos [(random _sniperPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{
+					params ['_point']; (_point distance2D _sniperPatrolCenter) <= _sniperPatrolRadius
+				}] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _sniperUnitTypes;
 				_unit = _sniperGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];
@@ -1093,6 +1107,13 @@ for '_x' from 0 to 1 step 0 do {
 			if (({(alive _x)} count _atUnits) < _atPatrolThresh) then {
 				if (({(alive _x)} count _atUnits) >= _atPatrolThresh) exitWith {};
 				_spawnPos = _atPatrolCenter getPos [(random _atPatrolRadius),(random 360)];
+// Added Code
+				private _slots = ['SLOTS',_spawnPos,1,random 360,'O_Soldier_F',FALSE,FALSE,-1,{
+					params ['_point']; (_point distance2D _atPatrolCenter) <= _atPatrolRadius
+				}] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+// End Updated Code
 				_type = selectRandom _atUnitTypes;
 				_unit = _atGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _type,_type],[0,0,0],[],0,'NONE'];
 				_unit setVariable ['QS_curator_disableEditability',TRUE,FALSE];

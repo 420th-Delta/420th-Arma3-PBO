@@ -38,6 +38,14 @@ if (_type in ['CLASSIC','SC']) exitWith {
 		_iterations = _iterations + 1;
 	};
 	if (_iterations > 300) exitWith {};
+	private _slots = ['SLOTS',_position1,_total - _quantity,random 360,'O_Soldier_F',TRUE,FALSE,250,{
+		params ['_point'];
+		(_point distance2D _centerPos) < 1500 &&
+		{['BLACKLIST',_point] call QS_fnc_findRandomPos} &&
+		{((_point nearRoads 25) select {roadsConnectedTo _x isNotEqualTo []}) isEqualTo []} &&
+		{([AGLToASL _point,_checkVisibleDistance,_playersOnGround,[WEST,CIVILIAN,SIDEFRIENDLY],0,0] call QS_fnc_isPosVisible) <= 0.1}
+	}] call QS_fnc_spawnGroup;
+	if (_slots isEqualTo []) exitWith {[]};
 	private _unit = objNull;
 	private _grp = _viperGroup;
 	if (isNull _grp) then {
@@ -46,7 +54,7 @@ if (_type in ['CLASSIC','SC']) exitWith {
 	private _unitType = '';
 	for '_x' from 0 to ((_total - _quantity) - 1) step 1 do {
 		_unitType = selectRandomWeighted _unitTypes;
-		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_position1,[],0,'NONE'];
+		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_slots # _x,[],0,'NONE'];
 		_unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 		_unit setVehiclePosition [(getPosWorld _unit),[],0,'NONE'];
 		_unit setAnimSpeedCoef 1.15;

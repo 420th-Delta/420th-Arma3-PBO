@@ -236,54 +236,116 @@ if (_playerCount > 30) then {_maxRadialPatrolInfantry = 40;};
 if (_playerCount > 40) then {_maxRadialPatrolInfantry = 48;};
 if (_playerCount > 50) then {_maxRadialPatrolInfantry = 56;};
 _arrayInfPatrols = [];
-for '_x' from 0 to 1 step 0 do {
+/* Legacy Code as of 9.9.2026 */
+//|for '_x' from 0 to 1 step 0 do {
+// Updated Code
+// SC_INFANTRY_ADMISSION_BEGIN
+// Failed full-footprint requests try another native candidate. Stop after
+// 24 attempts so an obstructed/occupied sector cannot stall initialization.
+for '_radialAttempt' from 1 to 24 do {
+// End Updated Code
 	if (_spawnedRadialPatrolInfantry >= _maxRadialPatrolInfantry) exitWith {};
+// Added Code
+	if (_radialAttempt > 1 && {canSuspend}) then {uiSleep 0.02;};
+// End Updated Code
 	_randomPos = ['RADIUS',_centerPos,_centerRadius,'LAND',[1.5,0,0.5,3,0,FALSE,objNull],TRUE,[],[],TRUE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 	_infantryGroupType = selectRandomWeighted _infantryGroupTypes;
-	_grp = [_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
-	[(units _grp),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
-	{
-		[_x] call (missionNamespace getVariable 'QS_fnc_setCollectible');
-		_x setVehiclePosition [(getPosWorld _x),[],0,'CAN_COLLIDE'];
-		_x setVariable ['QS_AI_UNIT_enabled',TRUE,FALSE];
-		_spawnedRadialPatrolInfantry = _spawnedRadialPatrolInfantry + 1;
-		_x allowDamage FALSE;
-		_x call (missionNamespace getVariable 'QS_fnc_unitSetup');
-		0 = _arrayInfPatrols pushBack _x;
-		0 = _entityArray pushBack _x;
-	} forEach (units _grp);
-	comment 'Radial positions';
-	_radialStart = round (random 360);
-	_radialOffset = _centerRadius * (0.4 + (random 0.7));
-	_radialPatrolPositions = [];
-	_patrolPosition = _centerPos getPos [_radialOffset,_radialStart];
-	if (!surfaceIsWater _patrolPosition) then {
-		_radialPatrolPositions pushBack _patrolPosition;
-	};
-	for '_x' from 0 to 6 step 1 do {
-		_radialStart = _radialStart + _radialIncrement;
+	_grp = [_randomPos,(random 360),_side,_infantryGroupType,FALSE,grpNull,TRUE,TRUE,{
+		params ['_point']; (_point distance2D _centerPos) <= _centerRadius && {['BLACKLIST',_point] call QS_fnc_findRandomPos}
+	}] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+/* Legacy Code as of 9.9.2026 */
+//|	[(units _grp),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
+//|	{
+//|		[_x] call (missionNamespace getVariable 'QS_fnc_setCollectible');
+//|		_x setVehiclePosition [(getPosWorld _x),[],0,'CAN_COLLIDE'];
+//|		_x setVariable ['QS_AI_UNIT_enabled',TRUE,FALSE];
+//|		_spawnedRadialPatrolInfantry = _spawnedRadialPatrolInfantry + 1;
+//|		_x allowDamage FALSE;
+//|		_x call (missionNamespace getVariable 'QS_fnc_unitSetup');
+//|		0 = _arrayInfPatrols pushBack _x;
+//|		0 = _entityArray pushBack _x;
+//|	} forEach (units _grp);
+//|	comment 'Radial positions';
+//|	_radialStart = round (random 360);
+//|	_radialOffset = _centerRadius * (0.4 + (random 0.7));
+//|	_radialPatrolPositions = [];
+//|	_patrolPosition = _centerPos getPos [_radialOffset,_radialStart];
+//|	if (!surfaceIsWater _patrolPosition) then {
+//|		_radialPatrolPositions pushBack _patrolPosition;
+//|	};
+//|	for '_x' from 0 to 6 step 1 do {
+//|		_radialStart = _radialStart + _radialIncrement;
+// Updated Code
+	if (!isNull _grp) then {
+		[(units _grp),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
+		{
+			[_x] call (missionNamespace getVariable 'QS_fnc_setCollectible');
+			_x setVehiclePosition [(getPosWorld _x),[],0,'CAN_COLLIDE'];
+			_x setVariable ['QS_AI_UNIT_enabled',TRUE,FALSE];
+			_spawnedRadialPatrolInfantry = _spawnedRadialPatrolInfantry + 1;
+			_x allowDamage FALSE;
+			_x call (missionNamespace getVariable 'QS_fnc_unitSetup');
+			0 = _arrayInfPatrols pushBack _x;
+			0 = _entityArray pushBack _x;
+		} forEach (units _grp);
+		comment 'Radial positions';
+		_radialStart = round (random 360);
+		_radialOffset = _centerRadius * (0.4 + (random 0.7));
+		_radialPatrolPositions = [];
+// End Updated Code
 		_patrolPosition = _centerPos getPos [_radialOffset,_radialStart];
 		if (!surfaceIsWater _patrolPosition) then {
 			_radialPatrolPositions pushBack _patrolPosition;
 		};
+// Added Code
+		for '_x' from 0 to 6 step 1 do {
+			_radialStart = _radialStart + _radialIncrement;
+			_patrolPosition = _centerPos getPos [_radialOffset,_radialStart];
+			if (!surfaceIsWater _patrolPosition) then {
+				_radialPatrolPositions pushBack _patrolPosition;
+			};
+		};
+		if (_radialPatrolPositions isNotEqualTo []) then {
+			_radialPatrolPositions = _radialPatrolPositions call (missionNamespace getVariable 'QS_fnc_arrayShuffle');
+			comment 'Initial movement';
+			_grp move (_radialPatrolPositions # 0);
+			_grp setFormDir (_randomPos getDir (_radialPatrolPositions # 0));
+		};
+		_grp setSpeedMode 'NORMAL';
+		_grp setBehaviour 'SAFE';
+		_grp setCombatMode 'YELLOW';
+		_grp setFormation 'WEDGE';
+		_grp setVariable ['QS_AI_GRP',TRUE,QS_system_AI_owners];
+		_grp setVariable ['QS_AI_GRP_CONFIG',['SC','INF_PATROL_RADIAL',(count (units _grp))],QS_system_AI_owners];
+		_grp setVariable ['QS_AI_GRP_DATA',[],QS_system_AI_owners];
+		_grp setVariable ['QS_AI_GRP_TASK',['PATROL',_radialPatrolPositions,serverTime,-1],QS_system_AI_owners];
+		_grp setVariable ['QS_AI_GRP_PATROLINDEX',0,QS_system_AI_owners];
+		_grp setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
+// End Updated Code
 	};
-	if (_radialPatrolPositions isNotEqualTo []) then {
-		_radialPatrolPositions = _radialPatrolPositions call (missionNamespace getVariable 'QS_fnc_arrayShuffle');
-		comment 'Initial movement';
-		_grp move (_radialPatrolPositions # 0);
-		_grp setFormDir (_randomPos getDir (_radialPatrolPositions # 0));
-	};
-	_grp setSpeedMode 'NORMAL';
-	_grp setBehaviour 'SAFE';
-	_grp setCombatMode 'YELLOW';
-	_grp setFormation 'WEDGE';
-	_grp setVariable ['QS_AI_GRP',TRUE,QS_system_AI_owners];
-	_grp setVariable ['QS_AI_GRP_CONFIG',['SC','INF_PATROL_RADIAL',(count (units _grp))],QS_system_AI_owners];
-	_grp setVariable ['QS_AI_GRP_DATA',[],QS_system_AI_owners];
-	_grp setVariable ['QS_AI_GRP_TASK',['PATROL',_radialPatrolPositions,serverTime,-1],QS_system_AI_owners];
-	_grp setVariable ['QS_AI_GRP_PATROLINDEX',0,QS_system_AI_owners];
-	_grp setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|	if (_radialPatrolPositions isNotEqualTo []) then {
+//|		_radialPatrolPositions = _radialPatrolPositions call (missionNamespace getVariable 'QS_fnc_arrayShuffle');
+//|		comment 'Initial movement';
+//|		_grp move (_radialPatrolPositions # 0);
+//|		_grp setFormDir (_randomPos getDir (_radialPatrolPositions # 0));
+//|	};
+//|	_grp setSpeedMode 'NORMAL';
+//|	_grp setBehaviour 'SAFE';
+//|	_grp setCombatMode 'YELLOW';
+//|	_grp setFormation 'WEDGE';
+//|	_grp setVariable ['QS_AI_GRP',TRUE,QS_system_AI_owners];
+//|	_grp setVariable ['QS_AI_GRP_CONFIG',['SC','INF_PATROL_RADIAL',(count (units _grp))],QS_system_AI_owners];
+//|	_grp setVariable ['QS_AI_GRP_DATA',[],QS_system_AI_owners];
+//|	_grp setVariable ['QS_AI_GRP_TASK',['PATROL',_radialPatrolPositions,serverTime,-1],QS_system_AI_owners];
+//|	_grp setVariable ['QS_AI_GRP_PATROLINDEX',0,QS_system_AI_owners];
+//|	_grp setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
+// Updated Code
+// End Updated Code
 };
+// Added Code
+// SC_INFANTRY_ADMISSION_END
+// End Updated Code
 
 _arrayVehicles = [];
 
@@ -413,9 +475,9 @@ if (_allowVehicles) then {
 	private _supportEntities = [];
 	private _supportElement = [];
 	private _supportEntity = objNull;
-	_supportData pushBack ['REPAIR',TRUE,[_roadsValidPositions]];
+	_supportData pushBack ['REPAIR',TRUE,[_roadsValidPositions,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	if ((random 1) > 0.5) then {
-		_supportData pushBack ['MEDICAL',TRUE,[_roadsValidPositions]];
+		_supportData pushBack ['MEDICAL',TRUE,[_roadsValidPositions,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	};
 	{
 		_supportElement = _x;

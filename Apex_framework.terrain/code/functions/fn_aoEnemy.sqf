@@ -153,7 +153,11 @@ for '_x' from 0 to (_grpCount - 1) step 1 do {
 	};
 	_randomPos = ['RADIUS',_centerPos,([_aoSize,_aoSize * 0.85] select ((random 1) > 0.5)),'LAND',[1.5,-1,0.5,3,0,FALSE,objNull],TRUE,_bestPlaces,[],FALSE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 	if ((_randomPos distance2D _centerPos) < (_aoSize * 1.5)) then {
-		_patrolGroup = [_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+		_patrolGroup = [_randomPos,(random 360),EAST,(selectRandomWeighted _infTypes),FALSE,grpNull,TRUE,TRUE,{
+			params ['_point']; (_point distance2D _centerPos) < (_aoSize * 1.5) && {['BLACKLIST',_point] call QS_fnc_findRandomPos}
+		}] call (missionNamespace getVariable 'QS_fnc_spawnGroup');
+		call {
+		if (isNull _patrolGroup || {units _patrolGroup isEqualTo []}) exitWith {};
 		[_patrolGroup,_randomPos,200,TRUE] call (missionNamespace getVariable 'QS_fnc_taskPatrol');		//125
 		[(units _patrolGroup),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
 		{
@@ -201,6 +205,7 @@ for '_x' from 0 to (_grpCount - 1) step 1 do {
 		_patrolGroup setVariable ['QS_AI_GRP_CONFIG',['GENERAL','INFANTRY',(count (units _patrolGroup))],QS_system_AI_owners];
 		_patrolGroup setVariable ['QS_AI_GRP_DATA',[TRUE,serverTime],QS_system_AI_owners];
 		_patrolGroup setVariable ['QS_AI_GRP_HC',[0,-1],QS_system_AI_owners];
+		};
 	} else {
 		diag_log format ['***** AO ENEMY * INFANTRY PATROL INVALID POSITION * %1 *****',_randomPos];
 	};
@@ -499,6 +504,7 @@ private _AOveh = objNull;
 private _AOvehGroup = grpNull;
 private _AOvehType = '';
 for '_x' from 0 to (_vehCount - 1) step 1 do {
+	call {
 	_AOvehGroup = createGroup [EAST,TRUE];
 	if (_allowVehicles) then {
 		_randomPos = selectRandom _roadPositionsValid;
@@ -506,6 +512,11 @@ for '_x' from 0 to (_vehCount - 1) step 1 do {
 		_randomPos = [_centerPos,0,_aoSize,2.5,0,0.4,0] call (missionNamespace getVariable 'QS_fnc_findSafePos');
 	};
 	_AOvehType = selectRandomWeighted ([_motorPool] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
+	private _slots = ['VEHICLE_SLOTS',_randomPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _AOvehType,_AOvehType],TRUE,FALSE,-1,{
+		params ['_point']; (_point distance2D _centerPos) <= _centerRadius
+	}] call QS_fnc_spawnGroup;
+	if (_slots isEqualTo []) exitWith {deleteGroup _AOvehGroup;};
+	_randomPos = _slots # 0;
 	private _perfSpawn = ['aoEnemy.createVehicle',1] call QS_fnc_perfBegin;
 	_AOveh = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _AOvehType,_AOvehType],(_randomPos vectorAdd [0,0,0.25]),[],0,'NONE'];
 	[_perfSpawn,([0,1] select (!isNull _AOveh)),[typeOf _AOveh,netId _AOveh]] call QS_fnc_perfEnd;
@@ -571,6 +582,7 @@ for '_x' from 0 to (_vehCount - 1) step 1 do {
 	_AOvehGroup setVariable ['QS_AI_GRP',TRUE,QS_system_AI_owners];
 	_AOvehGroup setVariable ['QS_AI_GRP_CONFIG',['GENERAL','VEHICLE',(count (units _AOvehGroup)),_AOveh],QS_system_AI_owners];
 	_AOvehGroup setVariable ['QS_AI_GRP_DATA',[TRUE,serverTime],QS_system_AI_owners];
+	};
 };
 
 /*/===== Spawning Support vehicle/*/
@@ -580,9 +592,9 @@ if (_allowVehicles) then {
 	private _supportEntities = [];
 	private _supportElement = [];
 	private _supportEntity = objNull;
-	_supportData pushBack ['REPAIR',TRUE,[_roadPositionsValid]];
+	_supportData pushBack ['REPAIR',TRUE,[_roadPositionsValid,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	if ((random 1) > 0.5) then {
-		_supportData pushBack ['MEDICAL',TRUE,[_roadPositionsValid]];
+		_supportData pushBack ['MEDICAL',TRUE,[_roadPositionsValid,{params ['_point']; (_point distance2D _centerPos) <= _centerRadius}]];
 	};
 	{
 		_supportElement = _x;
