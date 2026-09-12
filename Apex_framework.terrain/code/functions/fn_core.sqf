@@ -1515,6 +1515,8 @@ for '_x' from 0 to 1 step 0 do {
 	_timeNow = time;
 	_QS_diagTickTimeNow = diag_tickTime;
 // Added Code
+	// Mortar sections use the core's existing scheduled maintenance pass.
+	['TICK'] call QS_fnc_mortarSupport;
 	// HOUSEKEEPING_TICK_BEGIN
 	// At most 128 dropped holders and 16 crates per normal three-second pass.
 	// Removing a batch before processing preserves items queued by mission events.
@@ -1994,6 +1996,7 @@ for '_x' from 0 to 1 step 0 do {
 							missionNamespace setVariable ['QS_primaryPressure_running',FALSE,TRUE];
 							missionNamespace setVariable ['QS_primaryPressure_fireCheck',0,FALSE];
 							if (!isNil 'QS_fnc_aoPressure') then {['ARTY_TICK'] call QS_fnc_aoPressure;};
+							if (!isNil 'QS_fnc_artillerySupport') then {['END','PRIMARY',missionNamespace getVariable ['QS_primaryPressure_epoch',0]] call QS_fnc_artillerySupport;};
 							// The AI module owns its roster and performs STOP once during deinit.
 							// Keep that state intact so no returned entities or private scripts are lost.
 						};
