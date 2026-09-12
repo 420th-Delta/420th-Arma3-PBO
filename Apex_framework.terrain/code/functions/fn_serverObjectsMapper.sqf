@@ -109,14 +109,14 @@ private _mappedThisBatch = 0;
 			_newObj = [2,0,_type] call (missionNamespace getVariable 'QS_fnc_serverObjectsRecycler');
 			if (isNull _newObj) then {
 				private _perfCreate = ['serverObjectsMapper.createVehicle',1,[_type]] call QS_fnc_perfBegin;
-				_newObj = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type],[(random -1000),(random -1000),(1000 + (random 1000))],[],0,'CAN_COLLIDE'];
+				_newObj = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type],(if (((QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type]) isKindOf 'House') && {!surfaceIsWater _newPos}) then {_newPos} else {[(random -1000),(random -1000),(1000 + (random 1000))]}),[],0,'CAN_COLLIDE'];
 				[_perfCreate,([0,1] select (!isNull _newObj))] call QS_fnc_perfEnd;
 			} else {
 				missionNamespace setVariable ['QS_analytics_entities_recycled',((missionNamespace getVariable ['QS_analytics_entities_recycled',0]) + 1),FALSE];
 			};
 		} else {
 			private _perfCreate = ['serverObjectsMapper.createVehicle',1,[_type]] call QS_fnc_perfBegin;
-			_newObj = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type],[(random -1000),(random -1000),(1000 + (random 1000))],[],0,'CAN_COLLIDE'];
+			_newObj = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type],(if (((QS_core_vehicles_map getOrDefault [toLowerANSI _type,_type]) isKindOf 'House') && {!surfaceIsWater _newPos}) then {_newPos} else {[(random -1000),(random -1000),(1000 + (random 1000))]}),[],0,'CAN_COLLIDE'];
 			[_perfCreate,([0,1] select (!isNull _newObj))] call QS_fnc_perfEnd;
 		};
 		_newObj setDir (_azi + _azimuth);
@@ -142,8 +142,16 @@ private _mappedThisBatch = 0;
 			};
 		};
 	};
+	private _mappedHouse = _newObj;
 	if (_code isNotEqualTo {}) then {
 		_newObj = [_newObj] call _code;
+	};
+	// Preserve callback changes in the existing entity-bound client snapshot.
+	if ((_mappedHouse isEqualType objNull) && {!isNull _mappedHouse} &&
+		{!isSimpleObject _mappedHouse} && {_mappedHouse isKindOf 'House'} &&
+		{!surfaceIsWater (getPosWorld _mappedHouse)}) then {
+		_mappedHouse setVariable ['QS_client_houseVectors',[vectorDir _mappedHouse,vectorUp _mappedHouse],FALSE];
+		[_mappedHouse] call QS_fnc_serverPublishEntityState;
 	};
 	if (_newObj isEqualType objNull) then {
 		0 = _newObjs pushBack _newObj;
