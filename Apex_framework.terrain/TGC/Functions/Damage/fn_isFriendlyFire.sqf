@@ -10,6 +10,34 @@ Author:
     thegamecracks
 
 */
+if ((_this param [0, objNull]) isEqualTo 'ATTACKER') exitWith {
+    _this params ['', ['_source', objNull], ['_instigator', objNull], ['_victim', objNull]];
+    if (!isNull _victim && {_source isEqualTo _victim}) exitWith {_instigator};
+    if (!isNull _instigator && {!isNull _source} &&
+        {(vehicle _instigator) isEqualTo (vehicle _source)}) exitWith {_instigator};
+    if (!isNull _source && {_source isKindOf 'CAManBase'}) exitWith {_source};
+
+    private _attacker = _instigator;
+    if (isPlayer _instigator && {!isNull _source}) then {
+        private _controlled = remoteControlled _instigator;
+        if (!isNull _controlled && {(vehicle _controlled) isEqualTo (vehicle _source)}) then {
+            _attacker = _controlled;
+        } else {
+            private _crew = crew (vehicle _source);
+            private _index = _crew findIf {
+                (remoteControlled _x) isEqualTo _instigator ||
+                {(_x getVariable ['bis_fnc_moduleRemoteControl_owner', objNull]) isEqualTo _instigator}
+            };
+            if (_index >= 0) then {_attacker = _crew # _index;};
+        };
+    };
+    if (isNull _attacker && {!isNull _source}) then {
+        _attacker = effectiveCommander (vehicle _source);
+        if (isNull _attacker) then {_attacker = _source;};
+    };
+    _attacker
+};
+
 params ["_unit", "", "", "_source", "_projectile", "", "_instigator"];
 
 private _getSide = {

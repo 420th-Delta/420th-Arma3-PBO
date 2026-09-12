@@ -25,12 +25,17 @@ _worldSize = worldSize;
 _pilotType = "O_Helipilot_F";
 _side = EAST;
 _arrayHelicopters = [];
-_grp = createGroup [_side,TRUE];
+_grp = grpNull;
 _playerCount = count allPlayers;
-for '_x' from 0 to 1 step 0 do {
-	_randomPos = [(random _worldSize),(random _worldSize),1000];
-	if ((allPlayers inAreaArray [_randomPos,2000,2000,0,FALSE]) isEqualTo []) exitWith {};
+// A bounded entry search avoids holding the AI loop when players cover the map.
+_randomPos = [];
+for '_attempt' from 1 to 24 do {
+	private _candidate = [(random _worldSize),(random _worldSize),1000];
+	if ((allPlayers inAreaArray [_candidate,2000,2000,0,FALSE]) isEqualTo []) exitWith {_randomPos = _candidate;};
 };
+if (_randomPos isEqualTo []) exitWith {[]};
+_grp = createGroup [_side,TRUE];
+if (isNull _grp) exitWith {[]};
 if (_playerCount > 20) then {
 	if (_playerCount > 40) then {
 		if (_worldName in ['Tanoa','Enoch']) then {
@@ -76,7 +81,11 @@ if (_playerCount > 20) then {
 		];
 	};
 };
-_air = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _airType,_airType],(_randomPos vectorAdd [0,0,1000]),[],0,'FLY'];
+// Keep creation in one unscheduled block so a teardown cannot leave a partial patrol.
+isNil {
+	_air = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _airType,_airType],(_randomPos vectorAdd [0,0,1000]),[],0,'FLY'];
+};
+if (isNull _air) exitWith {deleteGroup _grp; []};
 [_air,(selectRandomWeighted [2,0.5,3,0.5]),[]] call (missionNamespace getVariable 'QS_fnc_vehicleLoadouts');
 _air engineOn TRUE;
 _air addEventHandler ['GetOut',{(_this # 2) setDamage 1;}];
@@ -90,26 +99,34 @@ clearBackpackCargoGlobal _air;
 _air setPos (_randomPos vectorAdd [0,0,300]);
 _air enableRopeAttach FALSE;
 [_air,2] remoteExecCall ['QS_fnc_serverSetEntityFeatureType',2,FALSE];
-_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _pilotType,_pilotType],_randomPos,[],0,'NONE'];
+isNil {
+	_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _pilotType,_pilotType],_randomPos,[],0,'NONE'];
+};
 _unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 _unit assignAsDriver _air;
 _unit moveInDriver _air;
 removeAllWeapons _unit;
 if (!((toLowerANSI _airType) in ['o_heli_light_02_v2_f','o_heli_light_02_dynamicloadout_f'])) then {
-	_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _pilotType,_pilotType],_randomPos,[],0,'NONE'];
+	isNil {
+		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _pilotType,_pilotType],_randomPos,[],0,'NONE'];
+	};
 	_unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 	_unit assignAsTurret [_air,[0]];
 	_unit moveInTurret [_air,[0]];
 };
 _air setVehiclePosition [(getPosWorld _air),[],0,'FLY'];
 if ((toLowerANSI _airType) in ['i_heli_light_03_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f']) then {
-	_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_soldier_ar_f','o_soldier_ar_f'],[0,0,0],[],0,'NONE'];
+	isNil {
+		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_soldier_ar_f','o_soldier_ar_f'],[0,0,0],[],0,'NONE'];
+	};
 	_unit addBackpack 'B_AssaultPack_blk';
 	[_unit,'MMG_01_hex_ARCO_LP_F',4] call (missionNamespace getVariable 'QS_fnc_addWeapon');
 	_unit addPrimaryWeaponItem 'optic_lrps';
 	_unit moveInCargo [_air,0];
 	_unit selectWeapon (primaryWeapon _unit);
-	_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_soldier_ar_f','o_soldier_ar_f'],[0,0,0],[],0,'NONE'];
+	isNil {
+		_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI 'o_soldier_ar_f','o_soldier_ar_f'],[0,0,0],[],0,'NONE'];
+	};
 	_unit addBackpack 'B_AssaultPack_blk';
 	[_unit,'MMG_01_hex_ARCO_LP_F',4] call (missionNamespace getVariable 'QS_fnc_addWeapon');
 	_unit addPrimaryWeaponItem 'optic_lrps';

@@ -322,6 +322,15 @@ params [
 	['_useUnits',[]],
 	['_manageGroup',FALSE]
 ];
+// Added Code
+// Default insertion cargo must not introduce a large Viper squad on a small
+// server. Existing supplied passengers are retained; only new class selection
+// changes. The dedicated/manual specialist paths own rare low-pop Viper rolls.
+if (_side isEqualTo EAST && {({isPlayer _x && {!(_x isKindOf 'HeadlessClient_F')}} count allPlayers) < 25} &&
+	{(_unitTypes findIf {_x isEqualType '' && {((toLowerANSI _x) find 'o_v_soldier') >= 0}}) >= 0}) then {
+	_unitTypes = ['O_Soldier_TL_F','O_Soldier_AR_F','O_Soldier_F','O_medic_F'];
+};
+// End Updated Code
 missionNamespace setVariable ['QS_AI_insertHeli_helis',((missionNamespace getVariable 'QS_AI_insertHeli_helis') select {(alive _x)}),FALSE];
 if (_heliType isEqualType []) then {
 	_heliType = selectRandomWeighted _heliType;
@@ -381,11 +390,57 @@ for '_x' from 0 to 99 step 1 do {
 if (!(_foundHLZ)) exitWith {};
 _HLZ set [2,0];
 private _array = [];
+// Added Code
+private _fn_activity = {[
+	+(missionNamespace getVariable ['QS_aoPos',[0,0,0]]),
+	missionNamespace getVariable ['QS_classic_AI_active',FALSE],
+	missionNamespace getVariable ['QS_primaryPressure_running',FALSE],
+	missionNamespace getVariable ['QS_primaryPressure_epoch',-1],
+	missionNamespace getVariable ['QS_defendActive',FALSE],
+	missionNamespace getVariable ['QS_defendControl_active',FALSE],
+	missionNamespace getVariable ['QS_defendControl_epoch',-1],
+	missionNamespace getVariable ['QS_customAO_GT_active',FALSE]
+]};
+private _activity = call _fn_activity;
+private _lease = 1 + (missionNamespace getVariable ['QS_heliInsert_serial',0]);
+missionNamespace setVariable ['QS_heliInsert_serial',_lease];
+
+// End Updated Code
 _heli = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _heliType,_heliType],_mapEdgePosition,[],500,'FLY'];
+// Added Code
+if (isNull _heli) exitWith {};
+_heli setVariable ['QS_heliInsert_activity',_activity];
+_heli setVariable ['QS_heliInsert_lease',_lease];
+_heli setVariable ['QS_heliInsert_expires',diag_tickTime + 900];
+_heli setVariable ['QS_heliInsert_closed',FALSE];
+_heli setVariable ['QS_heliInsert_units',[]];
+_heli setVariable ['QS_heliInsert_current',{
+    params ['_heli'];
+    alive _heli && {alive (driver _heli)} && {canMove _heli} &&
+    {!(_heli getVariable ['QS_heliInsert_closed',TRUE])} &&
+    {diag_tickTime < (_heli getVariable ['QS_heliInsert_expires',0])} &&
+    {(_heli getVariable ['QS_heliInsert_activity',[]]) isEqualTo ([
+	+(missionNamespace getVariable ['QS_aoPos',[0,0,0]]),
+	missionNamespace getVariable ['QS_classic_AI_active',FALSE],
+	missionNamespace getVariable ['QS_primaryPressure_running',FALSE],
+	missionNamespace getVariable ['QS_primaryPressure_epoch',-1],
+	missionNamespace getVariable ['QS_defendActive',FALSE],
+	missionNamespace getVariable ['QS_defendControl_active',FALSE],
+	missionNamespace getVariable ['QS_defendControl_epoch',-1],
+	missionNamespace getVariable ['QS_customAO_GT_active',FALSE]
+] )}
+}];
+// End Updated Code
 _heli setVariable ['QS_dynSim_ignore',TRUE,TRUE];
 _heli enableDynamicSimulation FALSE;
 _heliGroup = createGroup [EAST,TRUE];
+// Added Code
+if (isNull _heliGroup) exitWith {deleteVehicle _heli;};
+// End Updated Code
 _heliPilot = _heliGroup createUnit [(QS_core_units_map getOrDefault ['o_helipilot_f','o_helipilot_f']),(getPosWorld _heli),[],0,'NONE'];
+// Added Code
+if (isNull _heliPilot) exitWith {deleteVehicle _heli; deleteGroup _heliGroup;};
+// End Updated Code
 _heliGroup addVehicle _heli;
 _heliPilot assignAsDriver _heli;
 _heliPilot moveInDriver _heli;
@@ -512,12 +567,23 @@ _wp setWaypointType 'MOVE';		/*/ 'TR UNLOAD' /*/
 _wp setWaypointSpeed 'NORMAL';
 _wp setWaypointBehaviour 'CARELESS';
 _wp setWaypointCombatMode 'BLUE';
-_heliGroup addEventHandler [
+/* Legacy Code as of 9.9.2026 */
+//|_heliGroup addEventHandler [
+// Updated Code
+private _landingEH = _heliGroup addEventHandler [
+// End Updated Code
 	'WaypointComplete',
 	{
 		params ['_group','_waypointIndex'];
 		_group removeEventHandler [_thisEvent,_thisEventHandler];
-		[leader _group] spawn (missionNamespace getVariable 'QS_fnc_AIXHeliInsertLanding');
+/* Legacy Code as of 9.9.2026 */
+//|		[leader _group] spawn (missionNamespace getVariable 'QS_fnc_AIXHeliInsertLanding');
+// Updated Code
+		private _heli = vehicle (leader _group);
+		if ([_heli] call (_heli getVariable ['QS_heliInsert_current',{FALSE}])) then {
+			_heli setVariable ['QS_heliInsert_landing',([leader _group] spawn (missionNamespace getVariable 'QS_fnc_AIXHeliInsertLanding'))];
+		};
+// End Updated Code
 	}
 ];
 private _supportGroup = grpNull;
@@ -623,14 +689,70 @@ if (_useSupport) then {
 		];
 		_heli setVariable ['QS_heliInsert_supportHeli',_supportHeli,FALSE];
 		_heli setVariable ['QS_heliInsert_supportGroup',_supportGroup,FALSE];
-		_timeDelete = time + 900;
-		{
-			if (_x isEqualType objNull) then {
-				0 = (missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'DELAYED_DISCREET',_timeDelete];
-			};
-		} forEach _array;
+/* Legacy Code as of 9.9.2026 */
+//|		_timeDelete = time + 900;
+//|		{
+//|			if (_x isEqualType objNull) then {
+//|				0 = (missionNamespace getVariable 'QS_garbageCollector') pushBack [_x,'DELAYED_DISCREET',_timeDelete];
+//|			};
+//|		} forEach _array;
+// Updated Code
+		// The insertion lifetime queues this roster once when it closes.
+// End Updated Code
 	};
 };
+// Added Code
+// One bounded lifetime per native insertion. Waypoint completion alone cannot
+// clean up a disabled transport or prevent a late delivery into the next AO.
+{_x setVariable ['QS_heliInsert_lease',_lease];} forEach _array;
+[_heli,_helipad,_heliGroup,_landingEH,+_array,_lease] spawn {
+    params ['_heli','_helipad','_heliGroup','_landingEH','_owned','_lease'];
+    scriptName 'QS Native Insertion Cleanup';
+    private _current = _heli getVariable ['QS_heliInsert_current',{FALSE}];
+    waitUntil {uiSleep 1; !([_heli] call _current)};
+    if ((_heli getVariable ['QS_heliInsert_lease',-1]) isEqualTo _lease) then {_heli setVariable ['QS_heliInsert_closed',TRUE];};
+    _heliGroup removeEventHandler ['WaypointComplete',_landingEH];
+    private _departureEH = _heli getVariable ['QS_heliInsert_departureEH',-1];
+    if (_departureEH >= 0) then {_heliGroup removeEventHandler ['WaypointComplete',_departureEH];};
+    private _landing = _heli getVariable ['QS_heliInsert_landing',scriptNull];
+    if (!scriptDone _landing) then {terminate _landing;};
+    // Completed passengers already belong to the native ground reinforcement
+    // roster. Only an unfinished delivery is returned by this worker.
+    if (_heli getVariable ['QS_heliInsert_building',FALSE]) then {
+        _owned append (_heli getVariable ['QS_heliInsert_units',[]]);
+    };
+    deleteVehicle _helipad;
+    _owned = _owned select {!isNull _x && {_x isNotEqualTo _helipad} && {(_x getVariable ['QS_heliInsert_lease',-1]) isEqualTo _lease}};
+    // An expired or cancelled delivery leaves on native flight orders. Timers
+    // never destroy a flyable helicopter in front of the insertion force.
+    {
+        if (_x isKindOf 'Helicopter' && {alive _x} && {canMove _x} && {alive (driver _x)} &&
+            {((crew _x) findIf {isPlayer _x || {captive _x} || {!isNull (remoteControlled _x)} || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}}) < 0}) then {
+            private _pilot = driver _x;
+            private _group = group _pilot;
+            private _exit = _heli getVariable ['QS_heli_spawnPosition',getPosATL _x];
+            if ((_x distance2D _exit) < 500) then {
+                _exit = _x getPos [2000,(missionNamespace getVariable ['QS_aoPos',[0,0,0]]) getDir _x];
+            };
+            private _waypoints = waypoints _group;
+            reverse _waypoints;
+            {deleteWaypoint _x;} forEach _waypoints;
+            _group setBehaviour 'CARELESS'; _group setCombatMode 'BLUE'; _group setSpeedMode 'FULL';
+            _x land 'NONE'; _x flyInHeight [120,TRUE];
+            _pilot doMove _exit; _group move _exit;
+        };
+    } forEach _owned;
+    {
+        if (!isPlayer _x && {!captive _x} && {((crew (vehicle _x)) findIf {isPlayer _x || {captive _x} || {!isNull (remoteControlled _x)} || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}}) < 0}) then {
+            private _airborne = (vehicle _x) isKindOf 'Air';
+            (missionNamespace getVariable 'QS_garbageCollector') pushBackUnique [_x,['NOW_DISCREET','DELAYED_DISCREET'] select _airborne,[0,time + 180] select _airborne];
+        };
+    } forEach _owned;
+    missionNamespace setVariable ['QS_AI_insertHeli_helis',
+        (missionNamespace getVariable ['QS_AI_insertHeli_helis',[]]) select {!isNull _x && {!(_x in _owned)}},FALSE];
+};
+
+// End Updated Code
 if ((_manageGroup) && (_spawnUnits)) then {
 	//comment 'Monitor';
 	_timeout = time + 900;

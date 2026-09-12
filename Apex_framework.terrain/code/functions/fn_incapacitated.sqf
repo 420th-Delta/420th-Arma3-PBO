@@ -14,6 +14,11 @@ Description:
 ______________________________________________/*/
 
 params ['_unit','_selectionName','_damage','_source','_projectile','_hitPartIndex','_instigator','_hitPoint','_directHit'];
+// Added Code
+// Read the public mission state for each casualty, including new joins and respawns.
+// Snapshot before vehicle-exit waits; never change or restore a player's role traits.
+private _kavalaRevive = missionNamespace getVariable ['QS_kavalaRevive_active',FALSE];
+// End Updated Code
 
 private _getCombatSide = {
 	params ['_entity'];
@@ -26,34 +31,49 @@ private _getCombatSide = {
 	_entitySide
 };
 
-// A remote-controlled AI keeps its own combat side even if Arma reports the
-// controlling player's body as the instigator.
-private _attacker = _instigator;
-private _remoteControlledAttacker = objNull;
-private _sourceVehicle = vehicle _source;
-private _attackerCandidates = [_source];
-if (!isNull _sourceVehicle) then {
-	_attackerCandidates append (crew _sourceVehicle);
-};
-{
-	private _remoteOwner = remoteControlled _x;
-	if (isNull _remoteOwner) then {
-		_remoteOwner = _x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull];
+/* Legacy Code as of 9.9.2026 */
+//|// A remote-controlled AI keeps its own combat side even if Arma reports the
+//|// controlling player's body as the instigator.
+//|private _attacker = _instigator;
+//|private _remoteControlledAttacker = objNull;
+//|private _sourceVehicle = vehicle _source;
+//|private _attackerCandidates = [_source];
+//|if (!isNull _sourceVehicle) then {
+//|	_attackerCandidates append (crew _sourceVehicle);
+// Updated Code
+// Share combat-side attribution with damage scaling and Robocop warnings.
+private _attacker = ['ATTACKER',_source,_instigator,_unit] call TGC_fnc_isFriendlyFire;
+private _controller = objNull;
+if (!isNull _attacker) then {
+	_controller = remoteControlled _attacker;
+	if (!isPlayer _controller) then {
+		_controller = _attacker getVariable ['bis_fnc_moduleRemoteControl_owner',objNull];
 	};
-	if (
-		(!isNull _x) &&
-		{isPlayer _remoteOwner}
-	) exitWith {
-		_remoteControlledAttacker = _x;
-	};
-} forEach _attackerCandidates;
-if (!isNull _remoteControlledAttacker) then {
-	_attacker = _remoteControlledAttacker;
+// End Updated Code
 };
-if (isNull _attacker && {!isNull _source}) then {
-	private _sourceController = effectiveCommander _source;
-	_attacker = [_source,_sourceController] select (!isNull _sourceController);
-};
+/* Legacy Code as of 9.9.2026 */
+//|{
+//|	private _remoteOwner = remoteControlled _x;
+//|	if (isNull _remoteOwner) then {
+//|		_remoteOwner = _x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull];
+//|	};
+//|	if (
+//|		(!isNull _x) &&
+//|		{isPlayer _remoteOwner}
+//|	) exitWith {
+//|		_remoteControlledAttacker = _x;
+//|	};
+//|} forEach _attackerCandidates;
+//|if (!isNull _remoteControlledAttacker) then {
+//|	_attacker = _remoteControlledAttacker;
+//|};
+//|if (isNull _attacker && {!isNull _source}) then {
+//|	private _sourceController = effectiveCommander _source;
+//|	_attacker = [_source,_sourceController] select (!isNull _sourceController);
+//|};
+// Updated Code
+private _remoteControlledAttacker = [objNull,_attacker] select (isPlayer _controller);
+// End Updated Code
 
 private _unitSide = [_unit] call _getCombatSide;
 if (_unitSide isEqualTo sideUnknown) then {
@@ -109,7 +129,12 @@ if (!isNull _objectParent) then {
 };
 if (
 	(
-		((_unit getVariable ['QS_unit_role','rifleman']) isNotEqualTo 'staff') &&
+/* Legacy Code as of 9.9.2026 */
+//|		((_unit getVariable ['QS_unit_role','rifleman']) isNotEqualTo 'staff') &&
+// Updated Code
+		!((_unit getVariable ['QS_unit_role','rifleman']) in ['staff','forward_observer','jtac','jtac_WL','mortar_gunner']) &&
+		{!_kavalaRevive} &&
+// End Updated Code
 		{
 			(_unit getUnitTrait 'QS_trait_pilot') ||
 			{(_unit getUnitTrait 'QS_trait_fighterPilot')}
@@ -155,6 +180,11 @@ if (!(captive _unit)) then {
 	_unit setCaptive TRUE;
 };
 _unit setUnconscious TRUE;
+// Added Code
+// Support roles use ordinary incapacitation even if an old pilot trait remains.
+// Incapacitation immediately removes their Support menus.
+if (hasInterface && {_unit isEqualTo player}) then {['CLIENT'] call QS_fnc_artillerySupport;};
+// End Updated Code
 private _timeNow = time;
 private _serverTime = serverTime;
 private _tickTimeNow = diag_tickTime;

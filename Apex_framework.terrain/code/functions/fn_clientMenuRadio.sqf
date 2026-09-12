@@ -14,8 +14,15 @@ Description:
 __________________________________________________________*/
 disableSerialization;
 _type = _this # 0;
+// Added Code
+private _sharedRadioChannelsEnabled = missionNamespace getVariable ['QS_radio_sharedBroadcastsEnabled',FALSE];
+private _sideChannel = [0,(missionNamespace getVariable ['QS_radioChannel_side',0])] select _sharedRadioChannelsEnabled;
+// End Updated Code
 if (_type isEqualTo 'onLoad') then {
 	_display = _this # 1;
+// Added Code
+	if (_sharedRadioChannelsEnabled) then {[] call TGC_fnc_refreshStaffChannelAccess;};
+// End Updated Code
 	setMousePosition (uiNamespace getVariable ['QS_ui_mousePosition',getMousePosition]);
 	{
 		(_x # 0) ctrlSetText (_x # 1);
@@ -26,18 +33,44 @@ if (_type isEqualTo 'onLoad') then {
 		[(_display displayCtrl 1806),localize 'STR_QS_Menu_054'],
 		[(_display displayCtrl 1807),localize 'STR_QS_Menu_055']
 	];
-	/*/CHANNEL 6 - GENERAL - 1808, 1816, 1827/*/
+/* Legacy Code as of 9.9.2026 */
+//|	/*/CHANNEL 6 - GENERAL - 1808, 1816, 1827/*/
+// Updated Code
+	// Optional Side subscription; existing Staff channel is managed separately.
+// End Updated Code
 	(_display displayCtrl 1808) ctrlSetText (localize 'STR_QS_Menu_056');
-	(_display displayCtrl 1808) ctrlSetTooltip (localize 'STR_QS_Menu_056');
-	(_display displayCtrl 1816) ctrlSetText (if (1 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
-	(_display displayCtrl 1827) cbSetChecked (1 in (missionNamespace getVariable 'QS_client_radioChannels'));
-	(_display displayCtrl 1827) ctrlSetTooltip '';
-	(_display displayCtrl 1827) ctrlEnable FALSE; // Repurposed for staff channel, do not enable this checkbox!
-	/*/
-	if (6 in (missionNamespace getVariable 'QS_radioChannels')) then {
-		(_display displayCtrl 1827) ctrlEnable TRUE;
+/* Legacy Code as of 9.9.2026 */
+//|	(_display displayCtrl 1808) ctrlSetTooltip (localize 'STR_QS_Menu_056');
+//|	(_display displayCtrl 1816) ctrlSetText (if (1 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
+//|	(_display displayCtrl 1827) cbSetChecked (1 in (missionNamespace getVariable 'QS_client_radioChannels'));
+//|	(_display displayCtrl 1827) ctrlSetTooltip '';
+//|	(_display displayCtrl 1827) ctrlEnable FALSE; // Repurposed for staff channel, do not enable this checkbox!
+//|	/*/
+//|	if (6 in (missionNamespace getVariable 'QS_radioChannels')) then {
+//|		(_display displayCtrl 1827) ctrlEnable TRUE;
+//|	};
+//|	/*/
+// Updated Code
+	if (_sharedRadioChannelsEnabled) then {
+		(_display displayCtrl 1808) ctrlSetTooltip 'Side: text and voice shared across all teams. Subscription is optional.';
+		(_display displayCtrl 1816) ctrlSetText (if (_sideChannel > 0) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
+		(_display displayCtrl 1827) cbSetChecked (_sideChannel in (missionNamespace getVariable 'QS_client_radioChannels'));
+		(_display displayCtrl 1827) ctrlSetTooltip 'Subscribe to Side text and voice across all teams';
+		(_display displayCtrl 1827) ctrlEnable (_sideChannel > 0);
+		if (_sideChannel <= 0) then {
+			(_display displayCtrl 1808) ctrlSetTooltip 'Native Side: text and voice within your team. Custom Side requires an available channel slot (Arma 3 2.22+).';
+			(_display displayCtrl 1816) ctrlSetText 'Native Side';
+			(_display displayCtrl 1827) cbSetChecked TRUE;
+			(_display displayCtrl 1827) ctrlSetTooltip 'Native Side is active. Receive subscription cannot be disabled individually.';
+		};
+	} else {
+		(_display displayCtrl 1808) ctrlSetTooltip (localize 'STR_QS_Menu_056');
+		(_display displayCtrl 1816) ctrlSetText (if (1 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
+		(_display displayCtrl 1827) cbSetChecked (1 in (missionNamespace getVariable 'QS_client_radioChannels'));
+		(_display displayCtrl 1827) ctrlSetTooltip '';
+		(_display displayCtrl 1827) ctrlEnable FALSE;
 	};
-	/*/
+// End Updated Code
 	/*/CHANNEL 7 - AIRCRAFT - 1809, 1817, 1828/*/
 	(_display displayCtrl 1809) ctrlSetText (localize 'STR_QS_Menu_061');
 	(_display displayCtrl 1809) ctrlSetTooltip (localize 'STR_QS_Menu_062');
@@ -83,12 +116,29 @@ if (_type isEqualTo 'onLoad') then {
 	(_display displayCtrl 1841) ctrlSetText (if (7 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
 	(_display displayCtrl 1833) cbSetChecked (7 in (missionNamespace getVariable 'QS_client_radioChannels'));
 	(_display displayCtrl 1833) ctrlSetTooltip '';
-	/*/CHANNEL 13 - Off-Duty - 1815, 1822, 1834/*/
+/* Legacy Code as of 9.9.2026 */
+//|	/*/CHANNEL 13 - Off-Duty - 1815, 1822, 1834/*/
+// Updated Code
+	/*/CHANNEL 13 - GENERAL - 1815, 1822, 1834/*/
+// End Updated Code
 	(_display displayCtrl 1815) ctrlSetText (localize 'STR_QS_Menu_073');
-	(_display displayCtrl 1815) ctrlSetTooltip (localize 'STR_QS_Menu_074');
+/* Legacy Code as of 9.9.2026 */
+//|	(_display displayCtrl 1815) ctrlSetTooltip (localize 'STR_QS_Menu_074');
+// Updated Code
+	(_display displayCtrl 1815) ctrlSetTooltip (if (_sharedRadioChannelsEnabled) then {'General: text for everyone; voice for admins and Zeus.'} else {localize 'STR_QS_Menu_074'});
+// End Updated Code
 	(_display displayCtrl 1822) ctrlSetText (if (8 in (missionNamespace getVariable 'QS_radioChannels')) then [{localize 'STR_QS_Menu_057'},{localize 'STR_QS_Menu_058'}]);
 	(_display displayCtrl 1834) cbSetChecked (8 in (missionNamespace getVariable 'QS_client_radioChannels'));
-	(_display displayCtrl 1834) ctrlSetTooltip '';
+/* Legacy Code as of 9.9.2026 */
+//|	(_display displayCtrl 1834) ctrlSetTooltip '';
+// Updated Code
+	if (_sharedRadioChannelsEnabled) then {
+		(_display displayCtrl 1834) ctrlSetTooltip 'Required channel. Subscription cannot be disabled.';
+		(_display displayCtrl 1834) ctrlEnable FALSE;
+	} else {
+		(_display displayCtrl 1834) ctrlSetTooltip '';
+	};
+// End Updated Code
 	/*/CHANNEL 14 - DONATORS - 1823, 1824, 1835/*/
 	_isDonator = (getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist'));
 	(_display displayCtrl 1823) ctrlSetText 'Donators';
@@ -138,21 +188,37 @@ if (_type in [
 	_display = ctrlParent _ctrl;
 	/*/6 - STAFF/*/
 	if (_type isEqualTo 'Check_1') then {
-		if (_state isEqualTo 1) then {
-			if (1 in (missionNamespace getVariable 'QS_radioChannels')) then {
-				if (!(1 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
-					[1,1] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-				};
+/* Legacy Code as of 9.9.2026 */
+//|		if (_state isEqualTo 1) then {
+//|			if (1 in (missionNamespace getVariable 'QS_radioChannels')) then {
+//|				if (!(1 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
+//|					[1,1] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+//|				};
+//|			};
+//|		} else {
+//|			if (1 in (missionNamespace getVariable 'QS_radioChannels')) then {
+//|				if (1 in (missionNamespace getVariable 'QS_client_radioChannels')) then {
+//|					[0,1] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+//|				};
+//|			};
+// Updated Code
+		if (_sharedRadioChannelsEnabled) then {
+			if (_sideChannel > 0) then {
+				missionProfileNamespace setVariable ['QS_client_radioChannel_side',_state isEqualTo 1];
+				saveMissionProfileNamespace;
+				[TRUE] call TGC_fnc_refreshStaffChannelAccess;
 			};
 		} else {
 			if (1 in (missionNamespace getVariable 'QS_radioChannels')) then {
-				if (1 in (missionNamespace getVariable 'QS_client_radioChannels')) then {
-					[0,1] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-				};
+				[([0,1] select (_state isEqualTo 1)),1] call (missionNamespace getVariable 'QS_fnc_clientRadio');
 			};
+// End Updated Code
 		};
 	};
-	/*/7 - AIRCRAFT/*/
+/* Legacy Code as of 9.9.2026 */
+//|	/*/7 - AIRCRAFT/*/
+// Updated Code
+// End Updated Code
 	if (_type isEqualTo 'Check_2') then {
 		if (_state isEqualTo 1) then {
 			if (2 in (missionNamespace getVariable 'QS_radioChannels')) then {
@@ -438,53 +504,74 @@ if (_type in [
 	};
 	/*/13 - GENERAL/*/
 	if (_type isEqualTo 'Check_8') then {
-		if (_state isEqualTo 1) then {
-			if (8 in (missionNamespace getVariable 'QS_radioChannels')) then {
-				if (!(8 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
-					[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-					missionProfileNamespace setVariable [
-						'QS_client_radioChannels_profile',
-						[
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 0),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 1),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 2),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 3),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 4),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 5),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 6),
-							TRUE,
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 8),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 9)
-						]
-					];
-					saveMissionProfileNamespace;
-				};
-			};			
+/* Legacy Code as of 9.9.2026 */
+//|		if (_state isEqualTo 1) then {
+//|			if (8 in (missionNamespace getVariable 'QS_radioChannels')) then {
+//|				if (!(8 in (missionNamespace getVariable 'QS_client_radioChannels'))) then {
+//|					[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+//|					missionProfileNamespace setVariable [
+//|						'QS_client_radioChannels_profile',
+//|						[
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 0),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 1),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 2),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 3),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 4),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 5),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 6),
+//|							TRUE,
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 8),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 9)
+//|						]
+//|					];
+//|					saveMissionProfileNamespace;
+//|				};
+//|			};
+//|		} else {
+//|			if (8 in (missionNamespace getVariable 'QS_radioChannels')) then {
+//|				if (8 in (missionNamespace getVariable 'QS_client_radioChannels')) then {
+//|					[0,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+//|					missionProfileNamespace setVariable [
+//|						'QS_client_radioChannels_profile',
+//|						[
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 0),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 1),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 2),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 3),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 4),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 5),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 6),
+//|							FALSE,
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 8),
+//|							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 9)
+//|						]
+//|					];
+//|					saveMissionProfileNamespace;
+//|				};
+//|			};
+//|		};
+// Updated Code
+		if (_sharedRadioChannelsEnabled) then {
+			// Ignore a stale checkbox event as well as preventing a UI opt-out.
+			[1,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+			(_display displayCtrl 1834) cbSetChecked (8 in (missionNamespace getVariable 'QS_client_radioChannels'));
 		} else {
-			if (8 in (missionNamespace getVariable 'QS_radioChannels')) then {
-				if (8 in (missionNamespace getVariable 'QS_client_radioChannels')) then {
-					[0,8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
-					missionProfileNamespace setVariable [
-						'QS_client_radioChannels_profile',
-						[
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 0),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 1),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 2),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 3),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 4),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 5),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 6),
-							FALSE,
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 8),
-							((missionProfileNamespace getVariable 'QS_client_radioChannels_profile') # 9)
-						]
-					];
-					saveMissionProfileNamespace;
-				};
-			};		
+			private _generalActive = 8 in (missionNamespace getVariable 'QS_radioChannels');
+			private _generalSubscribed = 8 in (missionNamespace getVariable 'QS_client_radioChannels');
+			if (_generalActive && {(_state isEqualTo 1) isNotEqualTo _generalSubscribed}) then {
+				[([0,1] select (_state isEqualTo 1)),8] call (missionNamespace getVariable 'QS_fnc_clientRadio');
+				private _profile = +(missionProfileNamespace getVariable 'QS_client_radioChannels_profile');
+				_profile set [7,_state isEqualTo 1];
+				missionProfileNamespace setVariable ['QS_client_radioChannels_profile',_profile];
+				saveMissionProfileNamespace;
+			};
 		};
+// End Updated Code
 	};
-	/*/14 - DONATORS/*/
+/* Legacy Code as of 9.9.2026 */
+//|	/*/14 - DONATORS/*/
+// Updated Code
+// End Updated Code
 	if (_type isEqualTo 'Check_9') then {
 		if (!((getPlayerUID player) in (['DONATOR'] call (missionNamespace getVariable 'QS_fnc_whitelist')))) exitWith {};
 		if (_state isEqualTo 1) then {
