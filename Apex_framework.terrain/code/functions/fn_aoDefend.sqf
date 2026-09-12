@@ -47,16 +47,37 @@ private [
 	'_fn_blacklist','_QS_worldName','_QS_worldSize','_nearRoads','_roadsValid','_validRoadSurfaces','_timeNow','_tickTimeNow','_serverTime','_taskID'
 ];
 diag_log 'Defend AO 0';
-if (time < 300) exitWith {};
+/* Legacy Code as of 9.9.2026 */
+//|if (time < 300) exitWith {};
+// Updated Code
+// MEGA_DEFENSE_ENTRY_BEGIN
+private _megaDefense = missionNamespace getVariable ['QS_megaDefense_pending',FALSE];
+if ((time < 300) && {!_megaDefense}) exitWith {};
+private _defendForce = [missionNamespace getVariable 'QS_forceDefend',1] select _megaDefense;
+// End Updated Code
 _allPlayersCount = count allPlayers;
-if ((diag_fps < 13) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
-if (((count ((units WEST) inAreaArray [(missionNamespace getVariable 'QS_HQpos'),500,500,0,FALSE,-1])) < 4) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
-if (((random 1) > 0.333) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
-if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 2) then {};
-if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 1) then {missionNamespace setVariable ['QS_forceDefend',0,TRUE];};
-if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo -1) exitWith {missionNamespace setVariable ['QS_forceDefend',0,TRUE];missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
-if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo -2) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
-if ((_allPlayersCount > 60) && ((missionNamespace getVariable 'QS_defendCount') > 3) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+/* Legacy Code as of 9.9.2026 */
+//|if ((diag_fps < 13) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+//|if (((count ((units WEST) inAreaArray [(missionNamespace getVariable 'QS_HQpos'),500,500,0,FALSE,-1])) < 4) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+//|if (((random 1) > 0.333) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+//|if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 2) then {};
+//|if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 1) then {missionNamespace setVariable ['QS_forceDefend',0,TRUE];};
+//|if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo -1) exitWith {missionNamespace setVariable ['QS_forceDefend',0,TRUE];missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+//|if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo -2) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+//|if ((_allPlayersCount > 60) && ((missionNamespace getVariable 'QS_defendCount') > 3) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+// Updated Code
+if ((diag_fps < 13) && (_defendForce isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+if (((count ((units WEST) inAreaArray [(missionNamespace getVariable 'QS_HQpos'),500,500,0,FALSE,-1])) < 4) && (_defendForce isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+// More eligible AO completions lead into Defense; force controls and safety gates remain.
+if (((random 1) > 0.666) && (_defendForce isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+if (_defendForce isEqualTo 2) then {};
+if ((_defendForce isEqualTo 1) && {!_megaDefense}) then {missionNamespace setVariable ['QS_forceDefend',0,TRUE];};
+if (_defendForce isEqualTo -1) exitWith {missionNamespace setVariable ['QS_forceDefend',0,TRUE];missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+if (_defendForce isEqualTo -2) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+if (_megaDefense) then {missionNamespace setVariable ['QS_megaDefense_pending',FALSE,FALSE];};
+// MEGA_DEFENSE_ENTRY_END
+// QS_defendCount remains a statistic, not a high-population lifetime cutoff.
+// End Updated Code
 diag_log 'Defend AO 0.5';
 {
 	missionNamespace setVariable _x;
@@ -81,6 +102,11 @@ if (worldName in ['Stratis']) then {
 	missionNamespace setVariable ['QS_hqPos',missionNamespace getVariable 'QS_aoPos'];
 };
 _centerPos = missionNamespace getVariable 'QS_HQpos';
+// Added Code
+// WIND ONLY: reset calibration for this Defense. The helper is defined in the
+// existing AI loop; an unavailable helper leaves the original drop positions.
+if (!isNil 'QS_fnc_aoPressure') then {['DROP_RESET','DEFENSE'] call QS_fnc_aoPressure;};
+// End Updated Code
 _centerPos params ['_centerPosX','_centerPosY','_centerPosZ'];
 private _allPlayers = allPlayers;
 _taskID = 'QS_IA_TASK_DEFENDHQ';
@@ -90,7 +116,20 @@ _serverTime = serverTime;
 _tickTimeNow = diag_tickTime;
 _QS_worldName = worldName;
 _QS_worldSize = worldSize;
-_duration = serverTime + 900 + (random 450);
+/* Legacy Code as of 9.9.2026 */
+//|_duration = serverTime + 900 + (random 450);
+// Updated Code
+// MEGA_DEFENSE_TIMER_BEGIN
+private _defenseStartedAt = serverTime;
+_duration = if (_megaDefense) then {_defenseStartedAt + 1800} else {_defenseStartedAt + 900 + (random 450)};
+missionNamespace setVariable ['QS_megaDefense_state',['RUNNING',_defenseStartedAt,_duration,_megaDefense,FALSE],FALSE];
+if (_megaDefense) then {
+	private _megaDefenseText = 'HQ defense ordered. Hold this position for 30 minutes.';
+	['sideChat',[WEST,'HQ'],_megaDefenseText] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+	['hint',_megaDefenseText] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+};
+// MEGA_DEFENSE_TIMER_END
+// End Updated Code
 _durationAlmostOver = _duration - 60;
 [_taskID,TRUE,_duration] call (missionNamespace getVariable 'QS_fnc_taskSetTimer');			//----- Task timer reduces suspense and tension, better to not know how long remaining? Uncomment to show timer UI
 [_taskID,['Defend','Defend 1','Defend 2']] call (missionNamespace getVariable 'QS_fnc_taskSetCustomData');
@@ -423,14 +462,302 @@ _fn_taskSetProgress = missionNamespace getVariable 'QS_fnc_taskSetProgress';
 _fn_setFlag = missionNamespace getVariable 'QS_fnc_setFlag';
 _fn_getAIMotorPool = missionNamespace getVariable 'QS_fnc_getAIMotorPool';
 
+// Added Code
+// DEFENSE_FLANK_CONTROLLER_BEGIN
+// Borrow existing assault infantry for known, persistent positions outside HQ.
+// This runs in the existing Defense loop. Spawn counts, waves and timer are unchanged.
+private _defendEpoch = 1 + (missionNamespace getVariable ['QS_defendControl_epoch',0]);
+missionNamespace setVariable ['QS_defendControl_epoch',_defendEpoch,TRUE];
+missionNamespace setVariable ['QS_defendControl_active',TRUE,TRUE];
+missionNamespace setVariable ['QS_defendControl_groundCount',0,TRUE];
+// DEFENSE_COVER_MOVE_BEGIN
+private _fn_coverMove = {
+	params ['_group','_goal'];
+	if (serverTime < (_group getVariable ['QS_AI_coverUntil',0])) then {
+		{if (serverTime >= (_x getVariable ['QS_AI_coverUntil',0])) then {_x doMove _goal;};} forEach (units _group);
+	} else {_group move _goal;};
+};
+// DEFENSE_COVER_MOVE_END
+private _flankNext = serverTime + 15;
+private _flankCamps = [];
+private _flankJobs = [];
+// DEFENSE_FLANK_POLICIES_BEGIN
+private _fn_flankQuota = {
+	params ['_groups','_players'];
+	if (_groups < 4 || {_players < 10}) exitWith {0};
+	2 min (1 max (round (_groups * 0.05))) min (_groups - 3)
+};
+private _fn_flankBand = {
+	params ['_hqDistance','_baseDistance','_sideDistance','_speed'];
+	_hqDistance >= 400 && {_hqDistance <= 2000} && {_baseDistance > 1000} &&
+		{_sideDistance > 600} && {abs _speed <= 15}
+};
+private _fn_flankLive = {
+	params ['_now','_ends','_lastSeen','_valid','_sameActivity'];
+	_valid && {_sameActivity} && {_now < _ends} && {(_now - _lastSeen) <= 90}
+};
+// DEFENSE_FLANK_POLICIES_END
+private _fn_flankRelease = {
+	params ['_job'];
+	_job params ['_group','','','','','','','','_restore'];
+	if (isNull _group) exitWith {};
+	_group setVariable ['QS_defendFlank_epoch',-1,TRUE];
+	_group setVariable ['QS_defendFlank_cooldown',serverTime + 120,FALSE];
+	_restore params ['_hcExcluded','_attack','_combat','_regroup'];
+	if (local _group && {((units _group) findIf {isPlayer _x || {captive _x} || {!isNull (remoteControlled _x)} || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}}) < 0}) then {
+		_group enableAttack _attack;
+		_group setCombatMode _combat;
+		{if (alive _x && {isNull (objectParent _x)}) then {_x doFollow (leader _group);};} forEach (units _group);
+		_group move _centerPos;
+	};
+	{(_x # 0) setVariable ['QS_AI_UNIT_regroup_disable',_x # 1,TRUE];} forEach _regroup;
+	_group setVariable ['QS_AI_GRP_HC_EXCLUDED',_hcExcluded,TRUE];
+};
+private _fn_flankReport = {
+	params ['_target'];
+	private _report = [];
+	// Shared reports are already bounded by the native intelligence service.
+	{
+		if ((vehicle (_x # 0)) isEqualTo _target && {(_x # 1) <= serverTime + 1} &&
+			{serverTime - (_x # 1) <= 60} && {(_x # 3) >= 1.5} &&
+			{(WEST getFriend (side (_x # 4))) < 0.6}) exitWith {
+			_report = [+(_x # 2),_x # 1];
+		};
+	} forEach (missionNamespace getVariable ['QS_AI_targetsIntel',[]]);
+	if (_report isEqualTo []) then {
+		// Own Defense observers can supply a last-seen position before a shared
+		// report exists. Never substitute the player's current coordinates.
+		{
+			private _known = _x targetKnowledge _target;
+			if ((_known param [0,FALSE]) && {(_x knowsAbout _target) >= 1.5} &&
+				{(_known # 2) > 0} && {time - (_known # 2) <= 60} && {(_known # 5) <= 100}) exitWith {
+				_report = [ASLToAGL (_known # 6),serverTime - (0 max (time - (_known # 2)))];
+			};
+		} forEach _flankObservers;
+	};
+	if (_report isNotEqualTo [] && {(_report # 0) isEqualTo [0,0,0] || {surfaceIsWater (_report # 0)}}) then {_report = [];};
+	_report
+};
+// SOLO_SUPPORT_STALKING_BEGIN
+// Eligibility only: these current positions never become pursuit destinations.
+// Count every living human, including incapacitated players and vehicle crews.
+private _fn_stalkPlayers = {
+	_this select {isPlayer _x && {alive _x} && {!(_x isKindOf 'HeadlessClient_F')}}
+};
+private _fn_stalkTargetAllowed = {
+	params ['_target'];
+	(_target call QS_fnc_groundTargetPriority) >= 0
+};
+// SOLO_SUPPORT_STALKING_END
+private _fn_flankTick = {
+	private _now = serverTime;
+	private _ground = _allPlayers select {
+		alive _x && {!captive _x} && {lifeState _x in ['HEALTHY','INJURED']} &&
+		{side (group _x) isEqualTo WEST} && {!((vehicle _x) isKindOf 'Air')} &&
+		{(_x distance2D _centerPos) <= 2500}
+	};
+	// Reuse this 15-second census for the owner-local covering-fire handlers.
+	if ((missionNamespace getVariable ['QS_defendControl_groundCount',-1]) isNotEqualTo count _ground) then {
+		missionNamespace setVariable ['QS_defendControl_groundCount',count _ground,TRUE];
+	};
+	private _stalkPlayers = _allPlayers call _fn_stalkPlayers;
+	private _targets = [];
+	// Human turnout still selects the quota. Only fresh observed WEST assets
+	// extend the target roster to AI/autonomous crews. No vehicle-world scan.
+	private _assets = [];
+	{
+		_x params ['_target','_seen','','_knowledge','_observer','_groundAsset'];
+		private _priority = _target call QS_fnc_groundTargetPriority;
+		if (_groundAsset && {_priority >= 0} && {_priority < 4} && {_knowledge >= 1.5} &&
+			{_seen <= _now + 1} && {_now - _seen <= 60} && {!isNull _observer} &&
+			{(WEST getFriend (side _observer)) < 0.6}) then {
+			_assets pushBack [_priority,_forEachIndex,vehicle _target];
+		};
+	} forEach (missionNamespace getVariable ['QS_AI_targetsIntel',[]]);
+	_assets sort TRUE;
+	private _candidates = _ground apply {vehicle _x};
+	{_candidates pushBackUnique (_x # 2);} forEach (_assets select [0,64]);
+	private _base = markerPos 'QS_marker_base_marker';
+	private _sidePos = markerPos 'QS_marker_sideMarker';
+	{
+		private _target = _x;
+		if ([_target,_stalkPlayers] call _fn_stalkTargetAllowed &&
+			{[_target distance2D _centerPos,_target distance2D _base,_target distance2D _sidePos,speed _target] call _fn_flankBand}) then {
+			_targets pushBackUnique _target;
+		};
+	} forEach _candidates;
+	// Live ordinary assault groups only. Crew, parachutists and other activities
+	// are not drawn into this roster. Whole squads are borrowed, never assembled.
+	private _groups = [];
+	{if (alive _x) then {_groups pushBackUnique (group _x);};} forEach _infantryArray;
+	_groups = _groups select {!isNull _x && {alive (leader _x)}};
+	private _quota = [count _groups,count _ground] call _fn_flankQuota;
+	private _flankObservers = [];
+	{
+		if (_x isKindOf 'CAManBase' && {local _x} && {alive _x} && {_x isEqualTo leader (group _x)}) then {
+			_flankObservers pushBackUnique _x;
+		};
+	} forEach _allArray;
+	_flankObservers resize ((count _flankObservers) min 32);
+	private _keep = [];
+	{
+		private _job = _x;
+		_job params ['_group','_target','_anchor','_point','_lastSeen','_ends','_bearing','_nextMove','_restore'];
+		private _valid = !isNull _group && {local _group} && {alive (leader _group)} &&
+			{_target in _targets} && {(_target distance2D _anchor) <= 75} &&
+			{((leader _group) distance2D _centerPos) <= 2200} &&
+			{((units _group) findIf {alive _x && {isPlayer _x || {captive _x} || {!isNull (remoteControlled _x)} || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])} || {!isNull (objectParent _x)}}}) < 0};
+		private _fresh = [];
+		if (_valid) then {_fresh = [_target] call _fn_flankReport;};
+		if (_fresh isNotEqualTo []) then {_point = _fresh # 0; _lastSeen = _fresh # 1;};
+		if ([ _now,_ends,_lastSeen,_valid,
+			missionNamespace getVariable ['QS_defendControl_active',FALSE] &&
+			{(missionNamespace getVariable ['QS_defendControl_epoch',-1]) isEqualTo _defendEpoch}
+		] call _fn_flankLive && {count _keep < _quota}) then {
+			if (_now >= _nextMove && {diag_fps >= 18}) then {
+				private _leader = leader _group;
+				private _mounted = !(_target isKindOf 'CAManBase');
+				private _standOff = [130,300] select _mounted;
+				private _goal = _point getPos [_standOff,_bearing];
+				private _step = (getPosATL _leader) getPos [180 min (_leader distance2D _goal),_leader getDir _goal];
+				if (!surfaceIsWater _step && {(_step distance2D _centerPos) <= 2200} &&
+					{(_step distance2D _base) > 1000} && {(_step distance2D _sidePos) > 600} &&
+					{!([getPosATL _leader,_step,25] call _fn_waterIntersect)}) then {
+					[_group,_step] call _fn_coverMove;
+					_group setFormDir (_leader getDir _point);
+				};
+				_nextMove = _now + 15;
+			};
+			_keep pushBack [_group,_target,_anchor,_point,_lastSeen,_ends,_bearing,_nextMove,_restore];
+		} else {[_job] call _fn_flankRelease;};
+	} forEach _flankJobs;
+	_flankJobs = _keep;
+	private _camps = [];
+	{
+		private _target = _x;
+		private _index = _flankCamps findIf {(_x # 0) isEqualTo _target};
+		private _camp = [_target,getPosATL _target,_now];
+		if (_index >= 0 && {(_target distance2D ((_flankCamps # _index) # 1)) <= 75}) then {_camp = _flankCamps # _index;};
+		_camps pushBack _camp;
+	} forEach _targets;
+	_flankCamps = _camps;
+	if (diag_fps < 18 || {_quota <= 0} ||
+		{(missionNamespace getVariable ['QS_defend_propulsion',2]) isEqualTo 5}) exitWith {};
+	private _ready = _flankCamps select {_now - (_x # 2) >= 45 && {private _target = _x # 0; (_flankJobs findIf {(_x # 1) isEqualTo _target}) < 0}};
+	// Highest observed asset tier first; retain the established camp dwell,
+	// range, whole-squad and AT requirements. Infantry remains last.
+	private _rankedCamps = [];
+	{_rankedCamps pushBack [(_x # 0) call QS_fnc_groundTargetPriority,_forEachIndex,_x];} forEach _ready;
+	_ready = _rankedCamps;
+	_ready sort TRUE;
+	_ready resize ((count _ready) min 8);
+	private _sent = FALSE;
+	{
+		private _camp = _x # 2;
+		_camp params ['_target','_anchor'];
+		private _report = [_target] call _fn_flankReport;
+		if (_report isNotEqualTo []) then {
+			private _choices = [];
+			{
+				private _group = _x;
+				private _men = (units _group) select {alive _x};
+				private _replace = _flankJobs findIf {(_x # 0) isEqualTo _group &&
+					{((_x # 1) call QS_fnc_groundTargetPriority) > (_target call QS_fnc_groundTargetPriority)}};
+				if ((count _flankJobs < _quota || {_replace >= 0}) && {local _group} && {count _men >= 8} && {count _men <= 12} &&
+					{((_group getVariable ['QS_AI_GRP_HC',[0,-1]]) # 0) in [0,4]} &&
+					{scriptDone (_group getVariable ['QS_AI_GRP_SCRIPT',scriptNull])} &&
+					{_now >= (_group getVariable ['QS_defendFlank_cooldown',0])} &&
+					{(_group getVariable ['QS_defendFlank_epoch',-1]) isNotEqualTo _defendEpoch || {_replace >= 0}} &&
+					{((leader _group) distance2D _centerPos) > 250} &&
+					{((leader _group) distance2D (_report # 0)) <= 1800} &&
+					{(_men findIf {isPlayer _x || {captive _x} || {!isNull (remoteControlled _x)} || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])} || {!local _x} || {!isNull (objectParent _x)} ||
+						{lifeState _x isEqualTo 'INCAPACITATED'} || {!scriptDone (_x getVariable ['QS_AI_UNIT_script',scriptNull])}}) < 0}) then {
+					private _cache = _group getVariable ['QS_defendFlank_ATCache',[0,FALSE]];
+					if (_now >= (_cache # 0)) then {
+					private _hasAT = (_men findIf {
+						secondaryWeapon _x isNotEqualTo '' && {((magazines _x) findIf {
+							private _ammo = configFile >> 'CfgAmmo' >> getText (configFile >> 'CfgMagazines' >> _x >> 'ammo');
+							toLowerANSI (getText (_ammo >> 'simulation')) in ['shotmissile','shotrocket'] && {getNumber (_ammo >> 'airLock') < 2}
+						}) >= 0}
+					}) >= 0;
+					_cache = [_now + 60,_hasAT];
+					_group setVariable ['QS_defendFlank_ATCache',_cache,FALSE];
+					};
+					private _needsAT = !(_target isKindOf 'CAManBase');
+					// No rifle-only squad is sent to surround an armored position.
+					if (!_needsAT || {_cache # 1}) then {_choices pushBack [(leader _group) distance2D (_report # 0),_group,_replace];};
+				};
+			} forEach _groups;
+			if (_choices isNotEqualTo []) then {
+				_choices sort TRUE;
+				private _group = (_choices # 0) # 1;
+				private _replace = (_choices # 0) # 2;
+				// Replace only after the higher-tier camp passed dwell, real sighting
+				// and usable-squad/AT checks. The borrowed squad count cannot grow.
+				if (_replace >= 0) then {[_flankJobs deleteAt _replace] call _fn_flankRelease;};
+				private _regroup = (units _group) apply {[_x,_x getVariable ['QS_AI_UNIT_regroup_disable',FALSE]]};
+				private _restore = [_group getVariable ['QS_AI_GRP_HC_EXCLUDED',FALSE],attackEnabled _group,combatMode _group,_regroup];
+				_group setVariable ['QS_defendFlank_epoch',_defendEpoch,TRUE];
+				_group setVariable ['QS_AI_GRP_HC_EXCLUDED',TRUE,TRUE];
+				_group enableAttack TRUE;
+				{
+					_x setVariable ['QS_AI_UNIT_regroup_disable',TRUE,TRUE];
+					_x enableAIFeature ['TARGET',TRUE]; _x enableAIFeature ['AUTOTARGET',TRUE];
+					_x doFollow (leader _group);
+				} forEach (units _group);
+				private _bearing = ((_report # 0) getDir (leader _group)) + selectRandom [-60,60];
+				_flankJobs pushBack [_group,_target,+_anchor,_report # 0,_report # 1,_now + 300,_bearing,0,_restore];
+				diag_log format ['[Defense] FLANK assigned squad=%1 target=%2 range=%3',count (units _group),typeOf _target,round (_target distance2D _centerPos)];
+				_sent = TRUE;
+			};
+		};
+		if (_sent) exitWith {};
+	} forEach _ready;
+};
+// DEFENSE_FLANK_CONTROLLER_END
+
+// DEFENSE_TARU_STATE_BEGIN
+private _taruFlights = [];
+private _taruNext = 0;
+private _taruSince = 0;
+private _taruBand = -1;
+// DEFENSE_TARU_STATE_END
+// End Updated Code
 diag_log 'Defend AO 1';
 for '_x' from 0 to 1 step 0 do {
 	_timeNow = time;
 	_tickTimeNow = diag_tickTime;
 	_serverTime = serverTime;
+// Added Code
+	// MEGA_DEFENSE_CONVERT_BEGIN
+	isNil {
+		if (missionNamespace getVariable ['QS_megaDefense_pending',FALSE]) then {
+			missionNamespace setVariable ['QS_megaDefense_pending',FALSE,FALSE];
+			if ((!_megaDefense) && {_serverTime < _duration} && {!(missionNamespace getVariable ['QS_defend_terminate',FALSE])}) then {
+				_megaDefense = TRUE;
+				_duration = _duration max (_serverTime + 1800);
+				_durationAlmostOver = _duration - 60;
+				_durationAlmostOverHint = _durationAlmostOverHint && {_serverTime >= _durationAlmostOver};
+				[_taskID,TRUE,_duration] call (missionNamespace getVariable 'QS_fnc_taskSetTimer');
+				missionNamespace setVariable ['QS_megaDefense_state',['RUNNING',_defenseStartedAt,_duration,TRUE,_extended],FALSE];
+				private _megaDefenseText = 'Defense extended. Hold HQ for another 30 minutes.';
+				['sideChat',[WEST,'HQ'],_megaDefenseText] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+				['hint',_megaDefenseText] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
+				diag_log '[Mega Defense] Active Defense extended to at least 30 minutes remaining.';
+			} else {
+				diag_log '[Mega Defense] Request expired or Defense is ending; request cleared.';
+			};
+		};
+	};
+	// MEGA_DEFENSE_CONVERT_END
+// End Updated Code
 	_allPlayers = allPlayers;
 	_allPlayersCount = count _allPlayers;
 	_allArray = _allArray select {(alive _x)};
+// Added Code
+	// A 15-second bounded pass borrows at most one whole squad at a time.
+	if (serverTime >= _flankNext) then {call _fn_flankTick; _flankNext = serverTime + 15;};
+// End Updated Code
 	if ((missionNamespace getVariable ['QS_enemyUAVSpawningEnabled',FALSE]) && {_timeNow > _uavInitialSpawnDelay}) then {
 		if (_timeNow > _uavCheckDelay) then {
 			// Maintained live cap follows the current player count.
@@ -514,19 +841,107 @@ for '_x' from 0 to 1 step 0 do {
 		_infantryArray = _infantryArray select {(alive _x)};
 		if ((count _infantryArray) < _infantryMaxSpawned) then {
 			_index = 0;
+// Added Code
+			// DEFENSE_INFANTRY_POSITION_BEGIN
+			private _foundInfantrySpawn = FALSE;
+			private _fn_infantryPosition = {
+				params ['_candidatePoint'];
+				(_candidatePoint isNotEqualTo []) &&
+				{(_allPlayers inAreaArray [_candidatePoint,_infantrySpawnDistanceFromPlayer,_infantrySpawnDistanceFromPlayer,0,FALSE]) isEqualTo []} &&
+				{(_candidatePoint distance2D _centerPos) < 1001} &&
+				{_candidatePoint call _fn_blacklist} &&
+				{!([_candidatePoint,_centerPos,25] call _fn_waterIntersect)}
+			};
+// End Updated Code
 			for '_x' from 0 to 49 step 1 do {
 				_spawnPos = [_centerPos,_infantrySpawnDistanceFixed,_infantrySpawnDistanceFixed + _infantrySpawnDistanceRandom,5,0,0.5,0] call _fn_findSafePos;
-				if (
-					(_spawnPos isNotEqualTo []) &&
-					{((_allPlayers inAreaArray [_spawnPos,_infantrySpawnDistanceFromPlayer,_infantrySpawnDistanceFromPlayer,0,FALSE]) isEqualTo [])} &&
-					{((_spawnPos distance2D _centerPos) < 1001)} &&
-					{(_spawnPos call _fn_blacklist)} &&
-					{(!([_spawnPos,_centerPos,25] call _fn_waterIntersect))}
-				) exitWith {};
+/* Legacy Code as of 9.9.2026 */
+//|				if (
+//|					(_spawnPos isNotEqualTo []) &&
+//|					{((_allPlayers inAreaArray [_spawnPos,_infantrySpawnDistanceFromPlayer,_infantrySpawnDistanceFromPlayer,0,FALSE]) isEqualTo [])} &&
+//|					{((_spawnPos distance2D _centerPos) < 1001)} &&
+//|					{(_spawnPos call _fn_blacklist)} &&
+//|					{(!([_spawnPos,_centerPos,25] call _fn_waterIntersect))}
+//|				) exitWith {};
+// Updated Code
+				if ([_spawnPos] call _fn_infantryPosition) exitWith {_foundInfantrySpawn = TRUE;};
+// End Updated Code
 			};
+// Added Code
+			// DEFENSE_INFANTRY_POSITION_END
+// End Updated Code
 			_infType = selectRandomWeighted _infTypes;
-			_direction = _spawnPos getDir _centerPos;
-			_grp = [_spawnPos,_direction,EAST,_infType,FALSE,grpNull,TRUE,TRUE] call _fn_spawnGroup;
+/* Legacy Code as of 9.9.2026 */
+//|			_direction = _spawnPos getDir _centerPos;
+//|			_grp = [_spawnPos,_direction,EAST,_infType,FALSE,grpNull,TRUE,TRUE] call _fn_spawnGroup;
+// Updated Code
+			// DEFENSE_TARU_ADMIT_BEGIN
+			call {
+			// Exhausted center searches and incomplete ground layouts retry on
+			// the normal Defense cadence; never create a partial or unsafe squad.
+			if (!_foundInfantrySpawn) exitWith {};
+			private _size = count (QS_core_groups_map getOrDefault [toLowerANSI _infType,[]]);
+			private _room = _infantryMaxSpawned - count _infantryArray;
+			if (_size <= 0 || {_size > _room}) exitWith {};
+			private _connected = {isPlayer _x && {!(_x isKindOf 'HeadlessClient_F')}} count allPlayers;
+			private _band = [0,1] select (_connected >= 20);
+			if (_band isNotEqualTo _taruBand) then {_taruSince = 0; _taruBand = _band;};
+			_taruFlights = _taruFlights select {!scriptDone (_x # 1)};
+			private _cap = [3,1] select (_connected >= 20);
+			private _ready = diag_fps >= 18 && {_room >= _size + 1} && {_tickTimeNow >= _taruNext} && {count _taruFlights < _cap};
+			if (_connected > 0 && {_connected < 20} && {_room >= _size + 1} && {diag_fps >= 18} && {!_ready}) exitWith {};
+			private _lift = ['TARU_POLICY',_connected,_taruSince,_size,_ready,random 1] call QS_fnc_AIXHeliInsert;
+			private _flight = [];
+			private _drop = +_spawnPos;
+			private _entry = [];
+			if (_lift) then {
+				// Search before spawning: the same admitted group begins aboard.
+				// No visible ground squad is teleported into an aircraft.
+				for '_attempt' from 1 to 18 do {
+					private _candidate = _centerPos getPos [700 + random 300,random 360];
+					_candidate set [2,200];
+					if ((_candidate # 0) > 50 && {(_candidate # 1) > 50} &&
+						{(_candidate # 0) < worldSize - 50} && {(_candidate # 1) < worldSize - 50} &&
+						{(_candidate distance2D (markerPos 'QS_marker_base_marker')) > 1200} &&
+						{(_allPlayers inAreaArray [_candidate,400,400,0,FALSE]) isEqualTo []} &&
+						{(_taruFlights findIf {((_x # 0) distance2D _candidate) < 150}) < 0}) exitWith {_entry = _candidate;};
+				};
+				if (_entry isNotEqualTo [] && {!surfaceIsWater _drop} &&
+					{(_allPlayers inAreaArray [_drop,50,50,0,FALSE]) isEqualTo []}) then {
+					_flight = ['TARU_CREATE',_entry,_size] call QS_fnc_AIXHeliInsert;
+				};
+			};
+			_lift = _flight isNotEqualTo [];
+			private _spawn = [_spawnPos,_entry] select _lift;
+			_direction = _spawn getDir _centerPos;
+			_grp = [[_spawn,[-1015,-1015,0]] select _lift,_direction,EAST,_infType,FALSE,grpNull,!_lift,TRUE,_fn_infantryPosition,_infantrySpawnDistanceFromPlayer] call _fn_spawnGroup;
+			if (_lift) then {
+				private _heli = _flight # 0; private _pilots = _flight # 1;
+				if (isNull _grp || {count (units _grp) isNotEqualTo _size}) then {
+					{deleteVehicle _x;} forEach (units _grp);
+					deleteVehicleCrew _heli; deleteVehicle _heli; deleteGroup _pilots;
+					_lift = FALSE;
+				} else {
+					_grp setVariable ['QS_AI_GRP_HC_EXCLUDED',TRUE,TRUE];
+					_grp setVariable ['QS_taruDelivery_busy',TRUE,TRUE];
+					{_x moveInCargo _heli;} forEach (units _grp);
+					if (((units _grp) findIf {(objectParent _x) isNotEqualTo _heli}) >= 0) exitWith {
+						{if ((objectParent _x) isEqualTo _heli) then {_heli deleteVehicleCrew _x;} else {deleteVehicle _x;};} forEach (units _grp);
+						deleteVehicleCrew _heli; deleteVehicle _heli; deleteGroup _pilots;
+						_lift = FALSE;
+					};
+					_allArray append [_heli,driver _heli];
+					// Pilot is inside the existing Defense infantry allowance too.
+					_infantryArray pushBack (driver _heli);
+					private _exit = _centerPos getPos [2200,_centerPos getDir _entry];
+					_taruFlights pushBack [_heli,['TARU_DELIVER',_heli,_grp,_drop,_exit,_centerPos,'DEFENSE',_defendEpoch] spawn QS_fnc_AIXHeliInsert];
+					_taruNext = _tickTimeNow + ([45,240] select (_connected >= 20));
+				};
+			};
+			if (isNull _grp || {units _grp isEqualTo []}) exitWith {};
+			if (_band isEqualTo 1) then {_taruSince = [_taruSince + count (units _grp),0] select _lift;};
+			// DEFENSE_TARU_ADMIT_END
+// End Updated Code
 			{
 				0 = _infantryArray pushBack _x;
 				0 = _allArray pushBack _x;
@@ -602,6 +1017,9 @@ for '_x' from 0 to 1 step 0 do {
 			} else {
 				_grp move _centerPos;
 			};
+// Added Code
+			}; // DEFENSE_TARU_ADMIT_SCOPE_END
+// End Updated Code
 		};
 		// Recheck every 6-10 seconds. Close spawn bands keep pressure high while
 		// reducing group creation, AI initialization, and network bursts.
@@ -660,7 +1078,21 @@ for '_x' from 0 to 1 step 0 do {
 					};
 					if (_foundSpawnPos) exitWith {};
 				};
+// Added Code
+				// GROUND_VEHICLE_PLACEMENT_BEGIN
+				call {
+// End Updated Code
 				_armorType = selectRandomWeighted ([_motorPool] call _fn_getAIMotorPool);
+// Added Code
+				if (!_foundSpawnPos) exitWith {};
+				private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],TRUE,FALSE,400,{
+					params ['_point'];
+					(_point distance2D _centerPos) < 1201 && {_point call _fn_blacklist} && {!([_point,_centerPos,25] call _fn_waterIntersect)}
+				}] call QS_fnc_spawnGroup;
+				if (_slots isEqualTo []) exitWith {};
+				_spawnPos = _slots # 0;
+				if (!(_spawnPos call _fn_blacklist) || {[_spawnPos,_centerPos,25] call _fn_waterIntersect}) exitWith {};
+// End Updated Code
 				private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 				_av = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _armorType,_armorType],_spawnPos,[],0,'NONE'];
 				[_perfSpawn,([0,1] select (!isNull _av)),[typeOf _av,netId _av]] call QS_fnc_perfEnd;
@@ -729,6 +1161,10 @@ for '_x' from 0 to 1 step 0 do {
 					(commander _av) doWatch _centerPos;
 				};
 				_av allowDamage TRUE;
+// Added Code
+				};
+				// GROUND_VEHICLE_PLACEMENT_END
+// End Updated Code
 			};
 			_armorCheckDelay = time + 15;
 		};
@@ -769,7 +1205,21 @@ for '_x' from 0 to 1 step 0 do {
 							};
 							if (_foundSpawnPos) exitWith {};
 						};
+// Added Code
+						// GROUND_VEHICLE_PLACEMENT_BEGIN
+						call {
+// End Updated Code
 						_groundTransportType = selectRandom _groundTransportTypes;
+// Added Code
+						if (!_foundSpawnPos) exitWith {};
+						private _slots = ['VEHICLE_SLOTS',_spawnPos,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _groundTransportType,_groundTransportType],TRUE,FALSE,400,{
+							params ['_point'];
+							(_point distance2D _centerPos) < 1201 && {_point call _fn_blacklist} && {!([_point,_centerPos,25] call _fn_waterIntersect)}
+						}] call QS_fnc_spawnGroup;
+						if (_slots isEqualTo []) exitWith {};
+						_spawnPos = _slots # 0;
+						if (!(_spawnPos call _fn_blacklist) || {[_spawnPos,_centerPos,25] call _fn_waterIntersect}) exitWith {};
+// End Updated Code
 						private _perfSpawn = ['aoDefend.createVehicle',1] call QS_fnc_perfBegin;
 						_v = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _groundTransportType,_groundTransportType],_spawnPos,[],0,'NONE'];
 						[_perfSpawn,([0,1] select (!isNull _v)),[typeOf _v,netId _v]] call QS_fnc_perfEnd;
@@ -891,6 +1341,10 @@ for '_x' from 0 to 1 step 0 do {
 						[(units _grp2),1] call _fn_setAISkill;
 						_groundTransportSpawned = _groundTransportSpawned + 1;
 						_groundTransportSpawnDelay = time + 15 + (random 10);
+// Added Code
+						};
+						// GROUND_VEHICLE_PLACEMENT_END
+// End Updated Code
 					};
 				};
 			};
@@ -982,7 +1436,11 @@ for '_x' from 0 to 1 step 0 do {
 		private _propulsionMode = missionNamespace getVariable ['QS_defend_propulsion',2];
 		if (_propulsionMode isEqualTo 1) then {
 			{
-				if (alive _x) then {
+/* Legacy Code as of 9.9.2026 */
+//|				if (alive _x) then {
+// Updated Code
+				if (alive _x && {!((group _x) getVariable ['QS_taruDelivery_busy',FALSE])} && {serverTime >= (_x getVariable ['QS_AI_coverUntil',0])} && {((group _x) getVariable ['QS_defendFlank_epoch',-1]) isNotEqualTo _defendEpoch}) then {
+// End Updated Code
 					if ((vehicle _x) isKindOf 'CAManBase') then {
 						_unit = _x;
 						_unitGroup = group _unit;
@@ -991,7 +1449,11 @@ for '_x' from 0 to 1 step 0 do {
 							if (_unit isEqualTo _groupLeader) then {
 								if (((random 1) > 0.5) || {(weaponLowered _unit)}) then {
 									if (((vectorMagnitude (velocity _groupLeader)) * 3.6) < 2) then {
-										_unitGroup move (selectRandom _hqBuildingPositions);
+/* Legacy Code as of 9.9.2026 */
+//|										_unitGroup move (selectRandom _hqBuildingPositions);
+// Updated Code
+										[_unitGroup,(selectRandom _hqBuildingPositions)] call _fn_coverMove;
+// End Updated Code
 									};
 								};
 							};
@@ -1019,7 +1481,11 @@ for '_x' from 0 to 1 step 0 do {
 										if ((missionNamespace getVariable ['QS_debug_test',1]) isEqualTo 1) then {
 											_unit commandMove _moveToPos;
 										} else {
-											_unitGroup move _moveToPos;
+/* Legacy Code as of 9.9.2026 */
+//|											_unitGroup move _moveToPos;
+// Updated Code
+											[_unitGroup,_moveToPos] call _fn_coverMove;
+// End Updated Code
 										};
 									} else {
 										_unit doMove _moveToPos;
@@ -1036,7 +1502,11 @@ for '_x' from 0 to 1 step 0 do {
 				if (_paratrooperArray isNotEqualTo []) then {
 					{
 						_unit = _x;
-						if ((getSuppression _unit) < 0.5) then {
+/* Legacy Code as of 9.9.2026 */
+//|						if ((getSuppression _unit) < 0.5) then {
+// Updated Code
+						if ((getSuppression _unit) < 0.5 && {serverTime >= (_unit getVariable ['QS_AI_coverUntil',0])}) then {
+// End Updated Code
 							doStop _unit;
 							_unit doMove (selectRandom _hqBuildingPositions);
 						};
@@ -1046,7 +1516,11 @@ for '_x' from 0 to 1 step 0 do {
 		};
 		if (_propulsionMode isEqualTo 2) then {
 			{
-				if (alive _x) then {
+/* Legacy Code as of 9.9.2026 */
+//|				if (alive _x) then {
+// Updated Code
+				if (alive _x && {!((group _x) getVariable ['QS_taruDelivery_busy',FALSE])} && {serverTime >= (_x getVariable ['QS_AI_coverUntil',0])} && {((group _x) getVariable ['QS_defendFlank_epoch',-1]) isNotEqualTo _defendEpoch}) then {
+// End Updated Code
 					if ((vehicle _x) isKindOf 'CAManBase') then {
 						_unit = _x;
 						_unitGroup = group _unit;
@@ -1054,20 +1528,36 @@ for '_x' from 0 to 1 step 0 do {
 						if ((_groupLeader distance2D _centerPos) > 25) then {
 							if (_unit isEqualTo _groupLeader) then {
 								if ((random 1) > 0.5) then {
-									_unitGroup move [(_centerPosX + (6 - (random 12))),(_centerPosY + (6 - (random 12))),_centerPosZ];
+/* Legacy Code as of 9.9.2026 */
+//|									_unitGroup move [(_centerPosX + (6 - (random 12))),(_centerPosY + (6 - (random 12))),_centerPosZ];
+// Updated Code
+									[_unitGroup,[(_centerPosX + (6 - (random 12))),(_centerPosY + (6 - (random 12))),_centerPosZ]] call _fn_coverMove;
+// End Updated Code
 								};
 							};
 						};
 					};
 				};
 				uiSleep 0.025;
-			} count _allArray;
+/* Legacy Code as of 9.9.2026 */
+//|			} count _allArray;
+// Updated Code
+			} count (_allArray select {
+				// Mode 2 only orders leaders. Avoid a scheduled sleep for every
+				// rifleman, vehicle and crew member that cannot receive this order.
+				_x isKindOf 'CAManBase' && {isNull (objectParent _x)} && {_x isEqualTo leader (group _x)}
+			});
+// End Updated Code
 			if (_paratrooperArray isNotEqualTo []) then {
 				_paratrooperArray = _paratrooperArray select {(alive _x)};
 				if (_paratrooperArray isNotEqualTo []) then {
 					{
 						_unit = _x;
-						if ((getSuppression _unit) < 0.5) then {
+/* Legacy Code as of 9.9.2026 */
+//|						if ((getSuppression _unit) < 0.5) then {
+// Updated Code
+						if ((getSuppression _unit) < 0.5 && {serverTime >= (_unit getVariable ['QS_AI_coverUntil',0])}) then {
+// End Updated Code
 							doStop _unit;
 							_unit doMove (selectRandom _hqBuildingPositions);
 						};
@@ -1077,7 +1567,11 @@ for '_x' from 0 to 1 step 0 do {
 		};
 		if (_propulsionMode isEqualTo 3) then {
 			{
-				if (alive _x) then {
+/* Legacy Code as of 9.9.2026 */
+//|				if (alive _x) then {
+// Updated Code
+				if (alive _x && {!((group _x) getVariable ['QS_taruDelivery_busy',FALSE])} && {serverTime >= (_x getVariable ['QS_AI_coverUntil',0])} && {((group _x) getVariable ['QS_defendFlank_epoch',-1]) isNotEqualTo _defendEpoch}) then {
+// End Updated Code
 					if ((vehicle _x) isKindOf 'CAManBase') then {
 						_unit = _x;
 						doStop _unit;
@@ -1091,7 +1585,11 @@ for '_x' from 0 to 1 step 0 do {
 				if (_paratrooperArray isNotEqualTo []) then {
 					{
 						_unit = _x;
-						if ((getSuppression _unit) < 0.5) then {
+/* Legacy Code as of 9.9.2026 */
+//|						if ((getSuppression _unit) < 0.5) then {
+// Updated Code
+						if ((getSuppression _unit) < 0.5 && {serverTime >= (_unit getVariable ['QS_AI_coverUntil',0])}) then {
+// End Updated Code
 							doStop _unit;
 							_unit doMove (selectRandom _hqBuildingPositions);
 						};
@@ -1101,10 +1599,18 @@ for '_x' from 0 to 1 step 0 do {
 		};
 		if (_propulsionMode isEqualTo 4) then {
 			{
-				if (alive _x) then {
+/* Legacy Code as of 9.9.2026 */
+//|				if (alive _x) then {
+// Updated Code
+				if (alive _x && {!((group _x) getVariable ['QS_taruDelivery_busy',FALSE])} && {serverTime >= (_x getVariable ['QS_AI_coverUntil',0])} && {((group _x) getVariable ['QS_defendFlank_epoch',-1]) isNotEqualTo _defendEpoch}) then {
+// End Updated Code
 					if ((vehicle _x) isKindOf 'CAManBase') then {
 						_unit = _x;
-						if ((getSuppression _unit) < 0.5) then {
+/* Legacy Code as of 9.9.2026 */
+//|						if ((getSuppression _unit) < 0.5) then {
+// Updated Code
+						if ((getSuppression _unit) < 0.5 && {serverTime >= (_unit getVariable ['QS_AI_coverUntil',0])}) then {
+// End Updated Code
 							doStop _unit;
 							_unit doMove [(_centerPosX + (6 - (random 12))),(_centerPosY + (6 - (random 12))),_centerPosZ];
 						};
@@ -1117,7 +1623,11 @@ for '_x' from 0 to 1 step 0 do {
 				if (_paratrooperArray isNotEqualTo []) then {
 					{
 						_unit = _x;
-						if ((getSuppression _unit) < 0.5) then {
+/* Legacy Code as of 9.9.2026 */
+//|						if ((getSuppression _unit) < 0.5) then {
+// Updated Code
+						if ((getSuppression _unit) < 0.5 && {serverTime >= (_unit getVariable ['QS_AI_coverUntil',0])}) then {
+// End Updated Code
 							doStop _unit;
 							_unit doMove (selectRandom _hqBuildingPositions);
 						};
@@ -1212,6 +1722,8 @@ for '_x' from 0 to 1 step 0 do {
 				if (!isNil {missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet'}) then {
 					[_jet,'defend.airSuperiority'] call (missionNamespace getVariable 'QS_fnc_transformDiagRegisterEnemyJet');
 				};
+// Added Code
+// End Updated Code
 				_jetSpawnDelay = time + 60 + (random 60);
 			};
 		};
@@ -1258,6 +1770,8 @@ for '_x' from 0 to 1 step 0 do {
 					_x call _fn_unitSetup;
 					0 = _allArray pushBack _x;
 				} count (units _grp);
+// Added Code
+// End Updated Code
 				_helicoptersToSpawn = _helicoptersToSpawn - 1;
 				_helicopterInitialDelay = time + 15 + (random 15);
 			};
@@ -1345,7 +1859,15 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				//_paratrooper enableAIFeature ['AUTOCOMBAT',FALSE];
 				_paratrooper enableAIFeature ['COVER',FALSE];
+// Added Code
+				// Preserve the intended landing point, offset only the airborne spawn.
+				private _dropTarget = +_spawnPos;
+				if (!isNil 'QS_fnc_aoPressure') then {_spawnPos = ['DROP_SPAWN',_spawnPos,150,_grp] call QS_fnc_aoPressure;};
+// End Updated Code
 				_paratrooper setPos _spawnPos;
+// Added Code
+				if (!isNil 'QS_fnc_aoPressure') then {['DROP_TRACK',_paratrooper,_dropTarget,_spawnPos] call QS_fnc_aoPressure;};
+// End Updated Code
 			};
 			_grp move (selectRandom _hqBuildingPositions);
 			_grp enableAttack TRUE;
@@ -1375,7 +1897,15 @@ for '_x' from 0 to 1 step 0 do {
 					if ((backpack _paratrooper) isNotEqualTo QS_core_classNames_parachute) then {
 						_paratrooper addBackpack QS_core_classNames_parachute;
 					};
-					_paratrooper setPos _spawnPos;
+/* Legacy Code as of 9.9.2026 */
+//|					_paratrooper setPos _spawnPos;
+// Updated Code
+					// Preserve the intended landing point, offset only the airborne spawn.
+				private _dropTarget = +_spawnPos;
+				if (!isNil 'QS_fnc_aoPressure') then {_spawnPos = ['DROP_SPAWN',_spawnPos,150,_grp] call QS_fnc_aoPressure;};
+				_paratrooper setPos _spawnPos;
+				if (!isNil 'QS_fnc_aoPressure') then {['DROP_TRACK',_paratrooper,_dropTarget,_spawnPos] call QS_fnc_aoPressure;};
+// End Updated Code
 				};
 				_grp move (selectRandom _hqBuildingPositions);
 				_grp enableAttack TRUE;
@@ -1447,20 +1977,33 @@ for '_x' from 0 to 1 step 0 do {
 		};
 	};
 	
+// Added Code
+	// MEGA_DEFENSE_TIMEOUT_BEGIN
+// End Updated Code
 	if (serverTime > _duration) then {
-		if (!(missionNamespace getVariable ['QS_defend_blockTimeout',FALSE])) then {
+/* Legacy Code as of 9.9.2026 */
+//|		if (!(missionNamespace getVariable ['QS_defend_blockTimeout',FALSE])) then {
+// Updated Code
+		if (_megaDefense || {!(missionNamespace getVariable ['QS_defend_blockTimeout',FALSE])}) then {
+// End Updated Code
 			_exitSuccess = TRUE;
 		} else {
 			if (!(_blockMessageShown)) then {
 				_extended = TRUE;
 				missionNamespace setVariable ['QS_defend_blockTimeout',FALSE,FALSE];
 				_duration = serverTime + 600 + (random 600);
+// Added Code
+				missionNamespace setVariable ['QS_megaDefense_state',['RUNNING',_defenseStartedAt,_duration,_megaDefense,_extended],FALSE];
+// End Updated Code
 				//[_taskID,TRUE,_duration] call (missionNamespace getVariable 'QS_fnc_taskSetTimer');
 				_blockMessageShown = TRUE;
 				['sideChat',[WEST,'HQ'],_blockMessage] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 			};
 		};
 	};
+// Added Code
+	// MEGA_DEFENSE_TIMEOUT_END
+// End Updated Code
 
 	if (_timeNow > _checkHeldInitialDelay) then {
 		if (_timeNow > _checkHeldDelay) then {
@@ -1535,6 +2078,16 @@ for '_x' from 0 to 1 step 0 do {
 	};
 	sleep 1.5;
 };
+// Added Code
+// MEGA_DEFENSE_CLOSING_BEGIN
+missionNamespace setVariable ['QS_megaDefense_state',['CLOSING',_defenseStartedAt,_duration,_megaDefense,_extended],FALSE];
+missionNamespace setVariable ['QS_megaDefense_pending',FALSE,FALSE];
+// MEGA_DEFENSE_CLOSING_END
+// Release ownership before the native cleanup waits and deletes this roster.
+missionNamespace setVariable ['QS_defendControl_active',FALSE,TRUE];
+{[_x] call _fn_flankRelease;} forEach _flankJobs;
+_flankJobs = [];
+// End Updated Code
 missionNamespace setVariable ['QS_defend_blockTimeout',FALSE,FALSE];
 _currentStats set [2,(count allPlayers)];
 _currentStats set [3,([(missionNamespace getVariable 'QS_HQpos'),300,[WEST],allPlayers,1] call (missionNamespace getVariable 'QS_fnc_serverDetector'))];
@@ -1596,3 +2149,8 @@ diag_log 'Defend AO 2';
 	['QS_system_restartEnabled',TRUE,FALSE],
 	['QS_defendActive',FALSE,TRUE]
 ];
+// Added Code
+// MEGA_DEFENSE_CLEAR_BEGIN
+missionNamespace setVariable ['QS_megaDefense_state',[],FALSE];
+// MEGA_DEFENSE_CLEAR_END
+// End Updated Code

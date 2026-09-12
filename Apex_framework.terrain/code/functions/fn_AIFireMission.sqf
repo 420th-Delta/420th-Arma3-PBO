@@ -17,7 +17,14 @@ params ['_type'];
 if (_type isEqualTo 0) exitWith {
 	scriptName 'QS AI FIRE MISSION - ARTY';
 	//comment 'Artillery';
-	params ['','_grpLeader','_firePosition','_fireShells','_fireRounds'];
+	params ['','_grpLeader','_firePosition','_fireShells','_fireRounds',['_primaryTuning',[]]];
+	// Primary mortar requests carry their active AO epoch and the population
+	// salvo size. Other fire-mission types retain their native behavior.
+	private _primaryMortar = (count _primaryTuning) >= 2 &&
+		{(_primaryTuning # 0) isEqualTo (missionNamespace getVariable ['QS_primaryPressure_epoch',-1])} &&
+		{missionNamespace getVariable ['QS_primaryPressure_running',FALSE]} &&
+		{!(missionNamespace getVariable ['QS_defendActive',FALSE])} &&
+		{(vehicle _grpLeader) isKindOf 'StaticMortar'};
 	_vehicle = vehicle _grpLeader;
 	_vehicle setVehicleAmmo 1;
 	_grp = group _grpLeader;
@@ -29,6 +36,12 @@ if (_type isEqualTo 0) exitWith {
 		_fireRounds = round (_fireRounds * 2);
 	};
 	private _radius = 90;
+	if (_primaryMortar) then {
+		// Apply after the native concentration rule: four shells below 20
+		// nearby ground players and six at 20+, with a fixed six-shell cap.
+		_fireRounds = 1 max (6 min (_primaryTuning # 1));
+		_radius = 45;
+	};
 	private _firstShell = TRUE;
 	_grpLeader doWatch [(_firePosition # 0),(_firePosition # 1),(1000 + (random 1000))];
 	uiSleep (3 + (random 5));
@@ -37,6 +50,7 @@ if (_type isEqualTo 0) exitWith {
 			if ((!alive _vehicle) || {(!alive _grpLeader)} || {(isNull (objectParent _grpLeader))}) exitWith {};
 			_grpLeader doArtilleryFire [(_firePosition getPos [(_radius * (sqrt (random 1))),(random 360)]),_fireShells,1];
 			_radius = _radius * (random [0.7,0.75,1]);
+			if (_primaryMortar) then {_radius = 25 max _radius;};
 			if (_firstShell) then {
 				_firstShell = FALSE;
 				uiSleep (_sleep_1 + (random _sleep_1));

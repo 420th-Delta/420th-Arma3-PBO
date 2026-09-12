@@ -15,6 +15,11 @@ __________________________________________________/*/
 
 params ['_unit','_weapon','','','','','_projectile'];
 _unit removeEventHandler [_thisEvent,_thisEventHandler];
+// Added Code
+// FiredMan has its own scope; resolve its actual group locally.
+private _grp = group _unit;
+if (!local _unit || {!alive _unit} || {_unit getVariable ['QS_AI_coverManaged',FALSE]}) exitWith {};
+// End Updated Code
 if (
 	(_weapon in ['Throw','Put']) ||
 	{(!scriptDone (_grp getVariable ['QS_AI_GRP_SCRIPT',scriptNull]))} ||
