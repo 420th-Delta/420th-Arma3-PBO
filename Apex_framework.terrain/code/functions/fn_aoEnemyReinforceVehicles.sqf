@@ -84,9 +84,8 @@ private _motorPool = 0;
 if (worldName isEqualTo 'Stratis') then {
 	_motorPool = 8;
 };
-// Priority AA removes any currently active air-defense types before the
-// reinforcement vehicle is selected; retain the Phase 1 reserved placement
-// contract below so a filtered choice cannot create an untracked vehicle.
+// Apply Phase 2's population-scaled AA weights before selecting the vehicle.
+// Retain the Phase 1 reserved-placement contract below.
 _vType = selectRandomWeighted ([_motorPool] call QS_fnc_airDefenseReinforcementPool);
 // Added Code
 // Reserve a clear ground cell before vehicle or crew creation.

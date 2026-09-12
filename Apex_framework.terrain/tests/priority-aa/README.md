@@ -22,12 +22,15 @@ Cases use the native engine and real vehicle configurations:
 - `datalink_camera.sqf` (optional, `-Cases datalink_camera -TimeoutSeconds 320`): focuses that survey on Neophron, UAV and Kajman sensors. The diagnostic phase explicitly aims native pilot/turret cameras at the target's position, without creating sensor contacts or requiring a positive finding. Native configuration errors remain visible to the harness in both survey cases.
 - `datalink_emitter.sqf` (optional, `-Cases datalink_emitter -TimeoutSeconds 320`): the same five sources against a real flying NATO F/A-181 with radar emitting. Sources are positioned ahead of the emitting jet and face it, inside both forward sensor cones. Logs radar-warning threats separately from target contacts and Rhea launches; also records Cheetah/Xian native configuration without engagement trials.
 
-The fixture also compiles all changed production SQF files. Run the repository's existing static checks separately:
+The fixture also compiles all changed production SQF files. Run the static checks separately:
 
 ```powershell
+node Apex_framework.terrain/tests/priority-aa/validate-registration.cjs
 node Apex_framework.terrain/tests/validate-server-performance.cjs
 git diff --check
 ```
+
+`validate-registration.cjs` verifies that FIA HQ and legacy Independent side-mission Tigrises register after their crews are created, that the Tigris remains an eligible controller class, and that the registration function remains compiled. It is a focused source-level regression guard; historical side-mission execution still needs an engine run when those routes change.
 
 Graphical UI, opposed air combat, production mods and live-server performance are outside this isolated fixture's coverage.
 
