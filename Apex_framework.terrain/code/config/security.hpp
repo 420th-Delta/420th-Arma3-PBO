@@ -211,6 +211,12 @@ class CfgRemoteExec {
 		class BIS_fnc_setTaskLocal {jip = 1;};
 		class BIS_fnc_sharedObjectives {};
 		class BIS_fnc_showNotification {allowedTargets = 1;};
+// Added Code
+		// Requests/cancellations go to server; client menu/pings only accept server messages.
+		class QS_fnc_artillerySupport {allowedTargets = 0; jip = 0;};
+		// Requests/receipts go to the server; placement/extraction only accept the server as sender.
+		class QS_fnc_mortarSupport {allowedTargets = 0; jip = 0;};
+// End Updated Code
 		class QS_fnc_remoteExec {allowedTargets = 0;};
 		class QS_fnc_remoteExecCmd {allowedTargets = 0;};
 		class QS_fnc_finishCargoChildUnload {allowedTargets = 0;};

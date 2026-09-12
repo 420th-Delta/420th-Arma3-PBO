@@ -103,6 +103,9 @@ if (worldName in ['Stratis']) then {
 };
 _centerPos = missionNamespace getVariable 'QS_HQpos';
 // Added Code
+// A Defense that passed the native start gates owns a fresh support allowance.
+private _artilleryDefenseKey = missionNamespace getVariable ['QS_defendCount',0];
+['START','DEFENSE',_artilleryDefenseKey] call QS_fnc_artillerySupport;
 // WIND ONLY: reset calibration for this Defense. The helper is defined in the
 // existing AI loop; an unavailable helper leaves the original drop positions.
 if (!isNil 'QS_fnc_aoPressure') then {['DROP_RESET','DEFENSE'] call QS_fnc_aoPressure;};
@@ -545,8 +548,19 @@ private _fn_stalkPlayers = {
 	_this select {isPlayer _x && {alive _x} && {!(_x isKindOf 'HeadlessClient_F')}}
 };
 private _fn_stalkTargetAllowed = {
-	params ['_target'];
-	(_target call QS_fnc_groundTargetPriority) >= 0
+	params ['_target','_players'];
+	private _priority = _target call QS_fnc_groundTargetPriority;
+	if (_priority < 0) exitWith {FALSE};
+	if (_priority < 4) exitWith {TRUE};
+	private _members = if (_target isKindOf 'CAManBase') then {[_target]} else {crew _target};
+	(_members findIf {
+		private _unit = _x;
+		_unit in _players && {
+			!((_unit getVariable ['QS_unit_role','']) in ['jtac','jtac_WL','forward_observer','mortar_gunner']) || {
+				(_players findIf {_x isNotEqualTo _unit && {(_x distance2D _unit) <= 500}}) >= 0
+			}
+		}
+	}) >= 0
 };
 // SOLO_SUPPORT_STALKING_END
 private _fn_flankTick = {
@@ -2084,6 +2098,8 @@ for '_x' from 0 to 1 step 0 do {
 missionNamespace setVariable ['QS_megaDefense_state',['CLOSING',_defenseStartedAt,_duration,_megaDefense,_extended],FALSE];
 missionNamespace setVariable ['QS_megaDefense_pending',FALSE,FALSE];
 // MEGA_DEFENSE_CLOSING_END
+// Close the Defense allowance on success, failure, or an admin cancellation.
+['END','DEFENSE',_artilleryDefenseKey] call QS_fnc_artillerySupport;
 // Release ownership before the native cleanup waits and deletes this roster.
 missionNamespace setVariable ['QS_defendControl_active',FALSE,TRUE];
 {[_x] call _fn_flankRelease;} forEach _flankJobs;
