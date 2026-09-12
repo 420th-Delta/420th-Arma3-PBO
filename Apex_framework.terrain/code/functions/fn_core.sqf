@@ -3387,7 +3387,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|	if ((_QS_module_customMissions) || {(missionNamespace getVariable 'QS_customAO_trigger')}) then {
 // Updated Code
-	if ((_QS_module_customMissions) || {(missionNamespace getVariable 'QS_customAO_trigger')}) then {
+	if ((_QS_module_customMissions) || {(missionNamespace getVariable 'QS_customAO_trigger')} || {(missionNamespace getVariable 'QS_customAO_active')}) then {
 // End Updated Code
 		if (!(missionNamespace getVariable 'QS_customAO_active')) then {
 			if ((!(_QS_module_customMission_played)) || {(missionNamespace getVariable 'QS_customAO_trigger')}) then {
