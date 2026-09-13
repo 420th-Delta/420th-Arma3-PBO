@@ -1,1 +1,1 @@
-Mission file for the 420th Delta Classic Invade & Annex server
+Mission file for 420th Delta Invade & Annex.
