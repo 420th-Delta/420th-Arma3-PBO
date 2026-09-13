@@ -75,14 +75,37 @@ addMissionEventHandler ["Draw3D", {
     if (count _laserTargets < 1) exitWith {};
 
     private _side = side group focusOn;
-    private _laserInstigators = [_side] call TGC_fnc_findLaserInstigators;
+/* Legacy Code as of 9.9.2026 */
+//|    private _laserInstigators = [_side] call TGC_fnc_findLaserInstigators;
+// Updated Code
+    // Only owner labels need a short cache; sensor targets and icon positions
+    // still update every draw. Changing the observer, vehicle or side refreshes it.
+    private _observer = focusOn;
+    private _now = diag_tickTime;
+    private _labelCache = localNamespace getVariable ["TGC_laserTarget_labelCache",[]];
+    if (
+        (count _labelCache isNotEqualTo 5) ||
+        {(_labelCache # 0) isNotEqualTo _side} ||
+        {(_labelCache # 1) isNotEqualTo _observer} ||
+        {(_labelCache # 2) isNotEqualTo _vehicle} ||
+        {_now >= (_labelCache # 3)}
+    ) then {
+        _labelCache = [_side,_observer,_vehicle,_now + 0.25,[_side] call TGC_fnc_findLaserInstigators];
+        localNamespace setVariable ["TGC_laserTarget_labelCache",_labelCache];
+    };
+    private _laserInstigators = _labelCache # 4;
+// End Updated Code
     {
         private _isTarget = cursorTarget isEqualTo _x;
         private _distance = focusOn distanceSqr _x;
         private _size = linearConversion [2500, 6250000, _distance, 1, 0.5, true];
 
-        _laserInstigators
-            get netId _x
+/* Legacy Code as of 9.9.2026 */
+//|        _laserInstigators
+//|            get netId _x
+// Updated Code
+        (_laserInstigators getOrDefault [netId _x,[objNull,objNull]])
+// End Updated Code
             params [["_vehicle", objNull], ["_instigator", objNull]];
         if (_vehicle isEqualTo _instigator) then {_vehicle = objNull};
 

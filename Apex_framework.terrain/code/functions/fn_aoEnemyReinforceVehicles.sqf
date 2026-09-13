@@ -85,6 +85,15 @@ if (worldName isEqualTo 'Stratis') then {
 	_motorPool = 8;
 };
 _vType = selectRandomWeighted ([_motorPool] call (missionNamespace getVariable 'QS_fnc_getAIMotorPool'));
+// Added Code
+// Reserve a clear ground cell before vehicle or crew creation.
+private _slots = ['VEHICLE_SLOTS',_roadRoadValid,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vType,_vType],TRUE,FALSE,250,{
+	params ['_point']; _point call _fn_blacklist && {(_point distance2D _baseMarker) > 500} && {!([_point,_pos,25] call QS_fnc_waterIntersect)}
+}] call QS_fnc_spawnGroup;
+if (_slots isEqualTo []) exitWith {deleteGroup _reinforceGroup; []};
+_roadRoadValid = _slots # 0;
+if (!(_roadRoadValid call _fn_blacklist) || {(_roadRoadValid distance2D _baseMarker) <= 500} || {[_roadRoadValid,_pos,25] call QS_fnc_waterIntersect}) exitWith {deleteGroup _reinforceGroup; []};
+// End Updated Code
 _v = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vType,_vType],_roadRoadValid,[],0,'NONE'];
 _v setVariable ['QS_dynSim_ignore',TRUE,FALSE];
 _v allowCrewInImmobile [TRUE,TRUE];

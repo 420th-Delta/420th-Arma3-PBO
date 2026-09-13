@@ -20,6 +20,46 @@ if (
 	(isNull _grp) ||
 	(!(simulationEnabled _grpLeader))
 ) exitWith {};
+// Added Code
+// PRIMARY AO: route only tagged, current-AO groups to their defensive orders.
+// The server or HC that owns this group issues movement through the same scheduler.
+// All other groups continue through the original handler below; no extra loop is added.
+// The shrinking allowance gates Primary artillery requests and execution. Defense and
+// other support providers retain the original path; mortar tuning is passed explicitly.
+private _primaryAO = !isNil 'QS_fnc_aoPressure' && {['CONTEXT',_grpLeader] call QS_fnc_aoPressure};
+private _primaryArtilleryAllowed = !_primaryAO || {['ARTY_ALLOWED',_grpLeader] call QS_fnc_aoPressure};
+if (!_primaryArtilleryAllowed) then {
+	private _support = _grp getVariable ['QS_AI_GRP_CONFIG',[]];
+	if ((_support param [0,'']) isEqualTo 'SUPPORT' && {(_support param [1,'']) in ['MORTAR','ARTILLERY']}) then {
+		_grp setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+	};
+};
+// Pending mortar requests can age while waiting for an opportunity. Never
+// execute an old location merely because a later window has opened.
+if (_primaryAO) then {
+	private _config = _grp getVariable ['QS_AI_GRP_CONFIG',[]];
+	private _fire = _grp getVariable ['QS_AI_GRP_fireMission',[]];
+	if ((_config param [1,'']) isEqualTo 'MORTAR' && {(count _fire) >= 4} && {serverTime > (_fire # 3)}) then {
+		_grp setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
+	};
+};
+// Native patrols keep their route; other Primary assignments own movement.
+private _primaryMovement = FALSE;
+private _pressureTask = _grp getVariable ['QS_primaryPressure_task',[]];
+if (
+	local _grp && {(count _pressureTask) >= 7} &&
+	{missionNamespace getVariable ['QS_primaryPressure_running',FALSE]} &&
+	{!(missionNamespace getVariable ['QS_defendActive',FALSE])} &&
+	{(_pressureTask # 0) isEqualTo (missionNamespace getVariable ['QS_primaryPressure_epoch',-1])}
+) then {
+	['GROUP',_grp,_uiTime,_fps] call QS_fnc_aoPressure;
+	_primaryMovement = (_pressureTask # 4) isNotEqualTo 'PATROL';
+};
+if (_primaryMovement) exitWith {};
+// Defense's existing loop owns a borrowed squad's movement for this activity.
+if (local _grp && {missionNamespace getVariable ['QS_defendControl_active',FALSE]} &&
+	{(_grp getVariable ['QS_defendFlank_epoch',-1]) isEqualTo (missionNamespace getVariable ['QS_defendControl_epoch',0])}) exitWith {};
+// End Updated Code
 if (!(_grp getVariable ['QS_AI_GRP_SETUP',FALSE])) then {
 	_grp setVariable ['QS_AI_GRP_SETUP',TRUE,FALSE];
 	_grp setVariable ['QS_AI_GRP_rv',[(random 1),(random 1),(random 1)],FALSE];
@@ -269,7 +309,11 @@ if (
 	{(((lifeState _grpLeader) in ['HEALTHY','INJURED']) && _grpIsReady)}
 )  then {
 	if (_currentConfig_major isEqualTo 'COMMAND') then {
-		if (_currentConfig_minor isEqualTo 'CLASSIC') then {
+/* Legacy Code as of 9.9.2026 */
+//|		if (_currentConfig_minor isEqualTo 'CLASSIC') then {
+// Updated Code
+		if (_currentConfig_minor isEqualTo 'CLASSIC' && {_primaryArtilleryAllowed} && {!_primaryAO || {['ARTY_READY'] call QS_fnc_aoPressure}}) then {
+// End Updated Code
 			// Commander support request
 			if (_uiTime > (_grp getVariable ['QS_AI_cmd_suppReq_cool',-1])) then {
 				_grp setVariable ['QS_AI_cmd_suppReq_cool',_uiTime + (5 + (random 5)),QS_system_AI_owners];
@@ -293,14 +337,26 @@ if (
 						_targetsIntel params ['_targetsIntel_target','_targetsIntel_spotTime','_targetsIntel_position','_targetsIntel_knowsabout','','_targetsIntel_grounded','_targetsIntel_rating'];
 						if (
 							(alive _targetsIntel_target) &&
-							{((_uiTime - _targetsIntel_spotTime) < 120)} &&
+/* Legacy Code as of 9.9.2026 */
+//|							{((_uiTime - _targetsIntel_spotTime) < 120)} &&
+// Updated Code
+							{((_uiTime - _targetsIntel_spotTime) < ([120,30] select _primaryAO))} &&
+// End Updated Code
 							{(_targetsIntel_knowsabout > 3)} &&
 							{(_targetsIntel_grounded)} &&
 							{(!([_targetsIntel_target] call (missionNamespace getVariable 'QS_fnc_getVehicleStealth')))} &&
 							{(!surfaceIsWater _targetsIntel_position)} &&
 							{((_recentTargetPositions inAreaArray [_targetsIntel_position,100,100,0,FALSE]) isEqualTo [])} &&
 							{((_targetsIntel_position distance2D _basePos) > 1000)} &&
-							{((_targetsIntel_position distance2D _aoPos) > _aoSize)} &&
+/* Legacy Code as of 9.9.2026 */
+//|							{((_targetsIntel_position distance2D _aoPos) > _aoSize)} &&
+// Updated Code
+							{if (_primaryAO) then {
+								(_targetsIntel_position distance2D _aoPos) < ((missionNamespace getVariable 'QS_aoSize') + 500) &&
+								{_targetsIntel_target isKindOf 'CAManBase'} && {isNull (objectParent _targetsIntel_target)} &&
+								{!captive _targetsIntel_target} && {(lifeState _targetsIntel_target) in ['HEALTHY','INJURED']}
+							} else {(_targetsIntel_position distance2D _aoPos) > _aoSize}} &&
+// End Updated Code
 							{((_targetsIntel_position distance2D _sidePos) > 600)}
 						) then {
 							if (_sortByRating) then {
@@ -343,9 +399,29 @@ if (
 									(isNil {_supportGroup getVariable 'QS_AI_GRP_MTR_cooldown'}) &&
 									(_targetPosition inRangeOfArtillery [[_supportProvider],((magazines (vehicle _supportProvider)) # 0)])
 								) then {
-									(missionNamespace getVariable ['QS_AI_cmdr_recentSuppPositions',[]]) pushBack [_targetPosition,serverTime + (60 + (random 300))];
+/* Legacy Code as of 9.9.2026 */
+//|									(missionNamespace getVariable ['QS_AI_cmdr_recentSuppPositions',[]]) pushBack [_targetPosition,serverTime + (60 + (random 300))];
+// Updated Code
+									private _repeatDelay = 60 + random 300;
+									if (_primaryAO) then {_repeatDelay = 90 + random 90;};
+									(missionNamespace getVariable ['QS_AI_cmdr_recentSuppPositions',[]]) pushBack [_targetPosition,serverTime + _repeatDelay];
+// End Updated Code
 									(format ['%2 %1',mapGridPosition _targetPosition,localize 'STR_QS_Chat_078']) remoteExec ['systemChat',-2];
-									_supportGroup setVariable ['QS_AI_GRP_fireMission',[(_targetPosition getPos [random 50,random 360]),((magazines (vehicle _supportProvider)) # 0),(round (4 + (random 4))),(serverTime + 90)],QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|									_supportGroup setVariable ['QS_AI_GRP_fireMission',[(_targetPosition getPos [random 50,random 360]),((magazines (vehicle _supportProvider)) # 0),(round (4 + (random 4))),(serverTime + 90)],QS_system_AI_owners];
+// Updated Code
+									if (_primaryAO) then {
+										// Carry the known position and its timestamp into final admission.
+										private _intel = missionNamespace getVariable ['QS_AI_targetsIntel',[]];
+										private _index = _intel findIf {(_x # 2) isEqualTo _targetPosition && {serverTime - (_x # 1) <= 30}};
+										if (_index >= 0) then {
+											private _report = _intel # _index;
+											_supportGroup setVariable ['QS_AI_GRP_fireMission',[+_targetPosition,((magazines (vehicle _supportProvider)) # 0),6,serverTime + 30,[_report # 0,+_targetPosition,_report # 1]],QS_system_AI_owners];
+										};
+									} else {
+										_supportGroup setVariable ['QS_AI_GRP_fireMission',[(_targetPosition getPos [random 50,random 360]),((magazines (vehicle _supportProvider)) # 0),(round (4 + (random 4))),(serverTime + 90)],QS_system_AI_owners];
+									};
+// End Updated Code
 									_exit = TRUE;
 								};
 							};
@@ -659,7 +735,11 @@ if (
 		};
 	};
 	if (_currentConfig_major isEqualTo 'SUPPORT') then {
-		if (_currentConfig_minor isEqualTo 'MORTAR') then {
+/* Legacy Code as of 9.9.2026 */
+//|		if (_currentConfig_minor isEqualTo 'MORTAR') then {
+// Updated Code
+		if (_currentConfig_minor isEqualTo 'MORTAR' && {_primaryArtilleryAllowed}) then {
+// End Updated Code
 			if (alive _grpLeader) then {
 				if ((vehicle _grpLeader) isEqualTo (_currentConfig # 2)) then {
 					if (!(_currentData # 0)) then {
@@ -674,9 +754,16 @@ if (
 								_grp setVariable ['QS_AI_GRP_MTR_cooldown',nil,QS_system_AI_owners];
 							};
 						} else {
-							if (!isNil {_grp getVariable 'QS_AI_GRP_fireMission'}) then {
+/* Legacy Code as of 9.9.2026 */
+//|							if (!isNil {_grp getVariable 'QS_AI_GRP_fireMission'}) then {
+// Updated Code
+							if (!isNil {_grp getVariable 'QS_AI_GRP_fireMission'} && {!_primaryAO || {['ARTY_READY'] call QS_fnc_aoPressure}}) then {
+// End Updated Code
 								_fireMission = _grp getVariable 'QS_AI_GRP_fireMission';
 								_fireMission params ['_firePosition','_fireShells','_fireRounds'];
+// Added Code
+								private _didFire = FALSE;
+// End Updated Code
 								_allPlayerCount = count allPlayers;
 								private _cooldown = 0;
 								if (_allPlayerCount < 20) then {
@@ -688,24 +775,63 @@ if (
 								if (_allPlayerCount >= 40) then {
 									_cooldown = 60 + (random 60);
 								};
+// Added Code
+								// Moderate Primary-only increase. Small ground forces retain the
+								// original longer cooldown; the Primary salvo is bounded at admission.
+								if (_primaryAO) then {
+									private _ground = missionNamespace getVariable ['QS_primaryPressure_groundCount',0];
+									if (_ground < 20) then {_cooldown = 360 + random 360;};
+									if (_ground >= 20) then {_cooldown = 75 + random 45;};
+									if (_ground >= 40) then {_cooldown = 60 + random 30;};
+								};
+// End Updated Code
 								if (_firePosition inRangeOfArtillery [[_grpLeader],_fireShells]) then {
-									_grp setVariable ['QS_AI_GRP_DATA',[FALSE,(_uiTime + _cooldown)],FALSE];
-									if (isDedicated) then {
-										[0,_grpLeader,_firePosition,_fireShells,_fireRounds] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
-										missionNamespace setVariable ['QS_AI_scripts_fireMissions',((missionNamespace getVariable 'QS_AI_scripts_fireMissions') + [serverTime + 60]),QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|									_grp setVariable ['QS_AI_GRP_DATA',[FALSE,(_uiTime + _cooldown)],FALSE];
+//|									if (isDedicated) then {
+//|										[0,_grpLeader,_firePosition,_fireShells,_fireRounds] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
+//|										missionNamespace setVariable ['QS_AI_scripts_fireMissions',((missionNamespace getVariable 'QS_AI_scripts_fireMissions') + [serverTime + 60]),QS_system_AI_owners];
+// Updated Code
+									if (!_primaryAO) then {_grp setVariable ['QS_AI_GRP_DATA',[FALSE,(_uiTime + _cooldown)],FALSE];};
+									if (_primaryAO) then {
+										if (['ARTY_START',[0,_grpLeader,_firePosition,_fireShells,_fireRounds,_fireMission param [4,[]]]] call QS_fnc_aoPressure) then {
+											_didFire = TRUE;
+											_grp setVariable ['QS_AI_GRP_DATA',[FALSE,(_uiTime + _cooldown)],FALSE];
+											missionNamespace setVariable ['QS_AI_scripts_fireMissions',((missionNamespace getVariable 'QS_AI_scripts_fireMissions') + [serverTime + 60]),QS_system_AI_owners];
+										};
+// End Updated Code
 									} else {
-										[99,[0,_grpLeader,_firePosition,_fireShells,_fireRounds],(serverTime + 60)] remoteExec ['QS_fnc_remoteExec',2,FALSE];
+/* Legacy Code as of 9.9.2026 */
+//|										[99,[0,_grpLeader,_firePosition,_fireShells,_fireRounds],(serverTime + 60)] remoteExec ['QS_fnc_remoteExec',2,FALSE];
+// Updated Code
+										if (isDedicated) then {
+											[0,_grpLeader,_firePosition,_fireShells,_fireRounds] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
+											missionNamespace setVariable ['QS_AI_scripts_fireMissions',((missionNamespace getVariable 'QS_AI_scripts_fireMissions') + [serverTime + 60]),QS_system_AI_owners];
+										} else {
+											[99,[0,_grpLeader,_firePosition,_fireShells,_fireRounds],(serverTime + 60)] remoteExec ['QS_fnc_remoteExec',2,FALSE];
+										};
+// End Updated Code
 									};
 								};
 								_grp setVariable ['QS_AI_GRP_fireMission',nil,QS_system_AI_owners];
-								_grp setVariable ['QS_AI_GRP_MTR_cooldown',(serverTime + _cooldown),QS_system_AI_owners];
+/* Legacy Code as of 9.9.2026 */
+//|								_grp setVariable ['QS_AI_GRP_MTR_cooldown',(serverTime + _cooldown),QS_system_AI_owners];
+// Updated Code
+								// A stale/unsafe Primary request spends neither an allowance slot
+								// nor a gunner cooldown. The next fresh request can still use the window.
+								if (!_primaryAO || {_didFire}) then {_grp setVariable ['QS_AI_GRP_MTR_cooldown',(serverTime + _cooldown),QS_system_AI_owners];};
+// End Updated Code
 							};
 						};
 					};
 				};
 			};
 		};
-		if (_currentConfig_minor isEqualTo 'ARTILLERY') then {
+/* Legacy Code as of 9.9.2026 */
+//|		if (_currentConfig_minor isEqualTo 'ARTILLERY') then {
+// Updated Code
+		if (_currentConfig_minor isEqualTo 'ARTILLERY' && {_primaryArtilleryAllowed}) then {
+// End Updated Code
 			if (alive _grpLeader) then {
 				if ((vehicle _grpLeader) isEqualTo (_currentConfig # 2)) then {
 					if (!(_currentData # 0)) then {
@@ -714,18 +840,80 @@ if (
 							(_currentConfig # 2) setVehicleAmmo 1;
 						};
 					};
-					if ((_grp getVariable 'QS_AI_GRP_DATA') # 0) then {
-						_firePosition = [13,EAST,TRUE,(_currentConfig # 2),((magazines (_currentConfig # 2)) # 0)] call (missionNamespace getVariable 'QS_fnc_AIGetKnownEnemies');
+/* Legacy Code as of 9.9.2026 */
+//|					if ((_grp getVariable 'QS_AI_GRP_DATA') # 0) then {
+//|						_firePosition = [13,EAST,TRUE,(_currentConfig # 2),((magazines (_currentConfig # 2)) # 0)] call (missionNamespace getVariable 'QS_fnc_AIGetKnownEnemies');
+// Updated Code
+					if (((_grp getVariable 'QS_AI_GRP_DATA') # 0) && {!_primaryAO || {['ARTY_READY'] call QS_fnc_aoPressure}}) then {
+						// GROUND_SUPPORT_COMMANDER_PICK_BEGIN
+						private _fn_groundCommanderPick = {
+						    params ['_reports','_provider','_shells','_now'];
+						    private _best = [0,0,0]; private _bestTier = 5; private _nearest = 1e10;
+						    private _seen = []; private _friendlies = units EAST; private _ranked = [];
+						    if (isNil 'QS_fnc_groundTargetPriority') exitWith {_best};
+						    {
+						        private _asset = vehicle (_x # 2);
+						        private _observer = _x # 4;
+						        private _tier = _asset call QS_fnc_groundTargetPriority;
+						        if (_tier >= 0 && {alive _observer} && {isTouchingGround _asset} && {_asset isKindOf 'CAManBase' || {((vectorMagnitude (velocity _asset)) * 3.6) < 30}}) then {
+						            _ranked pushBack [_tier,_forEachIndex,_asset,_observer];
+						        };
+						    } forEach _reports;
+						    _ranked sort TRUE;
+						    {
+						        _x params ['_tier','','_asset','_observer'];
+						        if (!(_asset in _seen)) then {
+						            private _knowledge = _observer targetKnowledge _asset;
+						            private _age = _now - (_knowledge # 2);
+						            private _point = _knowledge # 6;
+						            if ((_knowledge # 0) && {(_knowledge # 2) >= 0} && {_age >= 0} && {_age < 30} && {_point isNotEqualTo [0,0,0]} && {!surfaceIsWater _point} && {(_point distance2D (markerPos 'QS_marker_base_marker')) > 1000}) then {
+						                _seen pushBack _asset;
+						                private _gridData = (mapGridPosition _point) call QS_fnc_gridToPos;
+						                private _gridCenter = [((_gridData # 0) # 0) + (((_gridData # 1) # 0) / 2),((_gridData # 0) # 1) + (((_gridData # 1) # 1) / 2),0];
+						                if ((count (_friendlies inAreaArray [_gridCenter,50,50,0,FALSE,-1])) <= 4 &&
+						                    {_gridCenter inRangeOfArtillery [[gunner _provider],_shells]} &&
+						                    {((missionNamespace getVariable ['QS_AI_fireMissions',[]]) findIf {((_x # 0) distance2D _gridCenter) < (_x # 1)}) < 0}) then {
+						                    private _distance = _gridCenter distance2D _provider;
+						                    if (_tier < _bestTier || {_tier isEqualTo _bestTier && {_distance < _nearest}}) then {
+						                        _best = _gridCenter; _bestTier = _tier; _nearest = _distance;
+						                    };
+						                };
+						            };
+						        };
+						    } forEach (_ranked select [0,192]);
+						    _best
+						};
+						// GROUND_SUPPORT_COMMANDER_PICK_END
+						_firePosition = [missionNamespace getVariable ['QS_AI_targetsKnowledge_EAST',[]],(_currentConfig # 2),((magazines (_currentConfig # 2)) # 0),time] call _fn_groundCommanderPick;
+// End Updated Code
 						if (_firePosition isNotEqualTo [0,0,0]) then {
-							(_currentConfig # 2) setVehicleAmmo 1;
-							_smokePos = _firePosition getPos [(random 15),(random 360)];
-							_smokePos set [2,0.25];
-							_smokeShell = createVehicle ['SmokeShellRed',_smokePos,[],0,'NONE'];
-							_smokeShell setVehiclePosition [(getPosWorld _smokeShell),[],0,'NONE'];
-							_smokeShell setPosATL [((getPosWorld _smokeShell) # 0),((getPosWorld _smokeShell) # 1),50];
-							(missionNamespace getVariable 'QS_garbageCollector') pushBack [_smokeShell,'DELAYED_FORCED',(time + 60)];
-							missionNamespace setVariable ['QS_AI_fireMissions',((missionNamespace getVariable 'QS_AI_fireMissions') + [[_firePosition,50,(serverTime + 45)]]),QS_system_AI_owners];
-							[0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
+							private _fireArgs = [0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))];
+							private _accepted = TRUE;
+/* Legacy Code as of 9.9.2026 */
+//|							[0,_grpLeader,_firePosition,((magazines (_currentConfig # 2)) # 0),(round (2 + (random 6)))] spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');
+// Updated Code
+							// Keep admission and its visible bookkeeping ahead of the spawned firing
+							// worker. The outer unscheduled block prevents scheduler preemption after
+							// ARTY_START accepts but before smoke/exclusion publication completes.
+							isNil {
+								if (_primaryAO) then {
+									_accepted = ['ARTY_START',_fireArgs] call QS_fnc_aoPressure;
+								};
+								// Do not advertise, reserve or replenish a Primary shot that the
+								// pressure controller rejected during its atomic admission recheck.
+								if (_accepted) then {
+									(_currentConfig # 2) setVehicleAmmo 1;
+									_smokePos = _firePosition getPos [(random 15),(random 360)];
+									_smokePos set [2,0.25];
+									_smokeShell = createVehicle ['SmokeShellRed',_smokePos,[],0,'NONE'];
+									_smokeShell setVehiclePosition [(getPosWorld _smokeShell),[],0,'NONE'];
+									_smokeShell setPosATL [((getPosWorld _smokeShell) # 0),((getPosWorld _smokeShell) # 1),50];
+									(missionNamespace getVariable 'QS_garbageCollector') pushBack [_smokeShell,'DELAYED_FORCED',(time + 60)];
+									missionNamespace setVariable ['QS_AI_fireMissions',((missionNamespace getVariable 'QS_AI_fireMissions') + [[_firePosition,50,(serverTime + 45)]]),QS_system_AI_owners];
+									if (!_primaryAO) then {_fireArgs spawn (missionNamespace getVariable 'QS_fnc_AIFireMission');};
+								};
+							};
+// End Updated Code
 						};
 					};
 				};

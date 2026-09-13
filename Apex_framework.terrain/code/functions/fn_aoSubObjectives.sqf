@@ -44,9 +44,24 @@ if (_type isEqualTo 0) exitWith {
 			'_objectiveOnCompleted',
 			'_objectiveOnFailed'
 		];
-		if (_objectiveState isEqualTo 0) then {
+/* Legacy Code as of 9.9.2026 */
+//|		if (_objectiveState isEqualTo 0) then {
+// Updated Code
+		// PRIMARY AO: re-evaluate ENEMYPOP even after a successful low-count check.
+		// The original one-time result could remain complete when fresh troops arrived.
+		// Destroyed strategic objectives keep their normal permanent completion state.
+		if ((_objectiveState isEqualTo 0) || {_subType isEqualTo 'ENEMYPOP' && {missionNamespace getVariable ['QS_primaryPressure_forAO',FALSE]}}) then {
+// End Updated Code
 			_objectiveReturn = _objectiveArguments call _objectiveCode;
-			if (_objectiveReturn isNotEqualTo _objectiveState) then {
+/* Legacy Code as of 9.9.2026 */
+//|			if (_objectiveReturn isNotEqualTo _objectiveState) then {
+// Updated Code
+			// Use the fresh result during this evaluation pass as well as storing it.
+			// Completion cannot rely on the previous pass while reinforcements arrive.
+			private _previousState = _objectiveState;
+			_objectiveState = _objectiveReturn;
+			if (_objectiveReturn isNotEqualTo _previousState) then {
+// End Updated Code
 				_objectivesData_update = TRUE;
 				_objectiveData set [1,_objectiveReturn];
 				_subObjectiveData set [_forEachIndex,_objectiveData];
@@ -82,6 +97,14 @@ if (_type isEqualTo 1) exitWith {
 		_objectiveArguments = [_pos,_aoSize,(missionNamespace getVariable 'QS_fnc_serverDetector'),10];
 		_objectiveCode = {
 			params ['_aoPos','_aoRadius','_detector','_threshold'];
+// Added Code
+			// CLEAR requires every strategic objective, no pending insertion, and
+			// fewer than ten eligible Primary ground enemies continuously for 15 s.
+			// Count the Primary roster plus nearby hostile guards; approaching Primary units outside the marker count too.
+			if (missionNamespace getVariable ['QS_primaryPressure_forAO',FALSE]) exitWith {
+				[0,1] select (['CLEAR',_aoPos,_aoRadius,_threshold] call QS_fnc_aoPressure)
+			};
+// End Updated Code
 			private _return = 0;
 			if ((count ( (units EAST) inAreaArray [_aoPos,_aoRadius,_aoRadius,0,FALSE,-1])) < _threshold) then {
 				_return = 1;

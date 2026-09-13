@@ -143,6 +143,84 @@ if (_clientToServer) then {
 			};
 		};
 	};
+	// Rappel collision synchronization is now emitted only by the server after
+	// it accepts the matching case-75 helper session.
+	if ((!_rejectRequest) && {_case isEqualTo 65}) then {
+		_rejectRequest = TRUE;
+		_rejectReason = 'case 65 server only';
+	};
+	/* Fast-rope requests need function-specific sender binding. The generic
+	   payload/rate limits above do not authorize a client-supplied object. */
+	if ((!_rejectRequest) && {_case isEqualTo 75}) then {
+		private _sender = (allPlayers select {((owner _x) isEqualTo _rxID) && {!(_x isKindOf 'HeadlessClient_F')}}) param [0,objNull];
+		private _params = _this param [1,[],[[]]];
+		private _functionName = toLowerANSI (_this param [2,'',['']]);
+		private _authorized = FALSE;
+		if (!isNull _sender) then {
+			if (_functionName isEqualTo 'ar_rappel_from_heli') then {
+				private _unit = _params param [0,objNull,[objNull]];
+				private _heli = _params param [1,objNull,[objNull]];
+				private _selfRequest = _unit isEqualTo _sender;
+				private _groupAIRequest = !isPlayer _unit && {(owner _unit) isEqualTo _rxID} &&
+					{(group _unit) isEqualTo (group _sender)} && {(leader _sender) isEqualTo _sender} &&
+					{isNull (remoteControlled _unit)} &&
+					{isNull (_unit getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])};
+				_authorized = (count _params) isEqualTo 2 && {!isNull _unit} && {!isNull _heli} &&
+					{alive _unit} && {alive _heli} && {_sender in _heli} && {_unit in _heli} &&
+					{_selfRequest || {_groupAIRequest}} &&
+					{[_unit,_heli] call (missionNamespace getVariable ['AR_Rappel_From_Heli_Action_Check',{FALSE}])};
+				// Preserve authenticated provenance for the scheduled server recheck.
+				if (_authorized) then {_this set [1,_params + [_rxID]];};
+			};
+			if (_functionName isEqualTo 'ar_hide_object_global') then {
+				isNil {
+				private _object = _params param [0,objNull,[objNull]];
+				private _unit = _params param [1,objNull,[objNull]];
+				private _serial = _params param [2,-1,[0]];
+				private _sessions = serverNamespace getVariable ['QS_AR_clientSessions',createHashMap];
+				private _sessionKey = netId _unit;
+				private _session = _sessions getOrDefault [_sessionKey,[]];
+				private _slot = [5,6] select ((typeOf _object) isEqualTo 'B_UAV_01_F');
+				private _knownHelper = _session param [_slot,objNull,[objNull]];
+				_authorized = (count _params) isEqualTo 4 && {!isNull _object} && {!isNull _unit} &&
+					{(owner _object) isEqualTo _rxID} && {(owner _unit) isEqualTo _rxID} &&
+					{(count _session) >= 8} && {(_session # 0) isEqualTo _unit} &&
+					{(_session # 1) isEqualTo _serial} && {(_session # 2) isEqualTo _rxID} &&
+					{diag_tickTime < (_session # 4)} && {alive _unit} && {alive (_session # 3)} &&
+					{_unit getVariable ['AR_Is_Rappelling',FALSE]} &&
+					{(_unit getVariable ['QS_AR_serial',-1]) isEqualTo _serial} &&
+					{(_unit getVariable ['AR_Rappelling_Vehicle',objNull]) isEqualTo (_session # 3)} &&
+					{typeOf _object in ['Land_Can_V2_F','B_UAV_01_F']} &&
+					{isNull _knownHelper || {_knownHelper isEqualTo _object}};
+				if (_authorized && {isNull _knownHelper}) then {
+					_session set [_slot,_object];
+					_sessions set [_sessionKey,_session];
+				};
+				if (_authorized) then {_this set [1,[_object,_unit,_serial,_session # 3]];};
+				};
+			};
+			if (_functionName isEqualTo 'ar_enable_rappelling_animation') then {
+				isNil {
+				private _unit = _params param [0,objNull,[objNull]];
+				private _sessions = serverNamespace getVariable ['QS_AR_clientSessions',createHashMap];
+				private _session = _sessions getOrDefault [netId _unit,[]];
+				_authorized = (count _params) isEqualTo 1 && {!isNull _unit} && {alive _unit} &&
+					{(owner _unit) isEqualTo _rxID} && {(count _session) >= 8} &&
+					{(_session # 0) isEqualTo _unit} && {(_session # 2) isEqualTo _rxID} &&
+					{diag_tickTime < (_session # 4)} && {_unit getVariable ['AR_Is_Rappelling',FALSE]} &&
+					{(_unit getVariable ['QS_AR_serial',-1]) isEqualTo (_session # 1)} && {!(_session # 7)};
+				if (_authorized) then {
+					_session set [7,TRUE];
+					_sessions set [netId _unit,_session];
+				};
+				};
+			};
+		};
+		if (!_authorized) then {
+			_rejectRequest = TRUE;
+			_rejectReason = 'case 75 ownership';
+		};
+	};
 
 	if (_rejectRequest) then {
 		private _rateMap = missionNamespace getVariable ['QS_remoteExec_rateMap',createHashMap];
@@ -1481,6 +1559,7 @@ if (_case < 70) exitWith {
 	};
 	/*/===== Toggle Collisions/*/
 	if (_case isEqualTo 65) then {
+		if (_isRx && {!isServer} && {_rxID isNotEqualTo 2}) exitWith {};
 		params ['','_rappelDevice','_heli','_toggle',['_randVar',0]];
 		if (_toggle) then {
 			comment 'ENABLE collisions';
@@ -1744,6 +1823,8 @@ if (_case < 80) exitWith {
 	};
 	/*/===== Fast Rope/*/
 	if (_case isEqualTo 75) then {
+		// Only the server may deliver a fast-rope endpoint to another client.
+		if (_isRx && {!isServer} && {_rxID isNotEqualTo 2}) exitWith {};
 		params ['','_params','_functionName','_isCall'];
 		if ((toLowerANSI _functionName) in [
 			'ar_rappel_all_cargo','ar_hint','ar_rappel_from_heli','ar_hide_object_global','ar_client_rappel_from_heli','ar_enable_rappelling_animation','ar_enable_rappelling_animation_client'

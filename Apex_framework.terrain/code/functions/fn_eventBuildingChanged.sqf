@@ -17,8 +17,20 @@ __________________________________________________*/
 
 params ['_changedFrom','_changedTo','_isRuin'];
 if (_isRuin) then {
-	if (_changedTo isKindOf 'Land_TTowerBig_2_ruins_F') then {
-		(missionNamespace getVariable 'QS_garbageCollector') pushBack [_changedTo,'NOW_DISCREET',(time + 120)];
+/* Legacy Code as of 9.9.2026 */
+//|	if (_changedTo isKindOf 'Land_TTowerBig_2_ruins_F') then {
+//|		(missionNamespace getVariable 'QS_garbageCollector') pushBack [_changedTo,'NOW_DISCREET',(time + 120)];
+// Updated Code
+	// Track actual destruction instead of enumerating all terrain buildings.
+	// Original buildable-collapse cleanup and side-objective completion below
+	// remain unchanged. The core retires at most 16 ruins per normal rotation.
+	if (isServer && {!isNull _changedTo} && {!(_changedTo getVariable ['QS_cleanup_ruinQueued',FALSE])}) then {
+		private _queue = missionNamespace getVariable ['QS_cleanup_ruinQueue',[]];
+		_changedTo setVariable ['QS_cleanup_ruinQueued',TRUE,FALSE];
+		private _missionRuin = ((getObjectType _changedFrom) isEqualTo 8) && {((getObjectType _changedTo) isEqualTo 8)};
+		_queue pushBack [_changedTo,serverTime,_missionRuin];
+		missionNamespace setVariable ['QS_cleanup_ruinQueue',_queue,FALSE];
+// End Updated Code
 	};
 	if (QS_list_playerBuildables isNotEqualTo []) then {
 		private _queue = missionNamespace getVariable ['QS_buildingChanged_cleanupQueue',[]];

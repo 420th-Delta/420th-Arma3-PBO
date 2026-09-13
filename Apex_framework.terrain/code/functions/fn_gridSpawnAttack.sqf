@@ -91,10 +91,24 @@ if (_type isEqualTo 0) exitWith {
 		};
 		_enemyGrp = createGroup [EAST,TRUE];
 		_grpSpeedCoef = random [1,1.05,1.1];
+// Added Code
+		private _slots = ['SLOTS',_spawnPos,_teamSize,random 360,'O_Soldier_F',TRUE,FALSE,300,{
+			params ['_point']; (_point distance2D _igPos) < 1001 && {_point call _fn_blacklist} && {!([_point,_igPos,25] call QS_fnc_waterIntersect)}
+		}] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _enemyGrp;};
+// End Updated Code
 		for '_j' from 0 to (_teamsize - 1) step 1 do {
+// Added Code
+			if (_slots isEqualTo []) exitWith {};
+// End Updated Code
 			_enemyUnitType = selectRandomWeighted _unitTypes;
-			_enemyUnit = _enemyGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _enemyUnitType,_enemyUnitType],_spawnPos,[],10,'NONE'];
-			_enemyUnit setVehiclePosition [(getPosWorld _enemyUnit),[],10,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|			_enemyUnit = _enemyGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _enemyUnitType,_enemyUnitType],_spawnPos,[],10,'NONE'];
+//|			_enemyUnit setVehiclePosition [(getPosWorld _enemyUnit),[],10,'NONE'];
+// Updated Code
+			_enemyUnit = _enemyGrp createUnit [QS_core_units_map getOrDefault [toLowerANSI _enemyUnitType,_enemyUnitType],_slots # _j,[],0,'NONE'];
+			_enemyUnit setPosATL (_slots # _j);
+// End Updated Code
 			{
 				_enemyUnit enableAIFeature [_x,FALSE];
 			} forEach ['COVER','AUTOCOMBAT'];

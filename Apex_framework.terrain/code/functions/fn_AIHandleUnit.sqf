@@ -40,12 +40,22 @@ _objectParent = objectParent _unit;
 // the recurring AI handler because other mission behaviors can restore AUTO or
 // explicitly select DOWN after the unit's initial setup.
 private _unitType = toLowerANSI (typeOf _unit);
+// Primary-only exceptions include tropical and ghillie sniper classes. Other
+// activities retain their native stance rules.
+private _primaryAO = !isNil 'QS_fnc_aoPressure' && {['CONTEXT',_unit] call QS_fnc_aoPressure};
+private _primarySniper = _primaryAO && {['SNIPER',_unitType] call QS_fnc_aoPressure};
+private _primaryArtilleryAllowed = !_primaryAO || {['ARTY_ALLOWED',_unit] call QS_fnc_aoPressure};
+if (_primaryAO) then {
+	_unit setVariable ['QS_AI_UNIT_disableStanceAdjust',!_primarySniper,FALSE];
+	if (_primarySniper && {isNull _objectParent}) then {_unit setUnitPos 'AUTO';};
+};
 if (
 	(isNull _objectParent) &&
 	{(!isPlayer _unit)} &&
 	{((side _unit) in [EAST,RESISTANCE])} &&
 	{(_unit isKindOf 'CAManBase')} &&
-	{(!((_unitType select [0,8]) in ['o_sniper','i_sniper']))}
+	{(!((_unitType select [0,8]) in ['o_sniper','i_sniper']))} &&
+	{!_primarySniper}
 ) then {
 	_unit setUnitPos 'Up';
 };
@@ -143,6 +153,30 @@ if (
 };
 if (alive _attackTarget) then {
 	_unit setVariable ['QS_AI_UNIT_attackTarget',_attackTarget,FALSE];
+};
+// Primary reports come only from actual server/HC AI knowledge. They are capped
+// per leader and never read player positions to create a pursuit destination.
+if (_primaryAO && {_isLeader} && {(WEST getFriend (side _grp)) < 0.6}) then {
+	private _epoch = missionNamespace getVariable ['QS_primaryPressure_epoch',-1];
+	private _next = _grp getVariable ['QS_primaryPressure_nextIntel',[-1,-1]];
+	if ((_unit getVariable ['QS_primaryPressure_rosterEpoch',-1]) isEqualTo _epoch &&
+		{(_next # 0) isNotEqualTo _epoch || {_uiTime >= (_next # 1)}}) then {
+		_grp setVariable ['QS_primaryPressure_nextIntel',[_epoch,_uiTime + 10],FALSE];
+		private _targets = (_unit targets [TRUE,1000,[WEST],30]) select {
+			alive _x && {!captive _x} &&
+			{(isPlayer _x && {lifeState _x in ['HEALTHY','INJURED']} && {isNull (objectParent _x)}) ||
+				{_x isKindOf 'LandVehicle' && {((crew _x) findIf {isPlayer _x && {alive _x} && {lifeState _x in ['HEALTHY','INJURED']}}) >= 0}}}
+		};
+		for '_sample' from 0 to ((count _targets min 3) - 1) do {
+			private _target = _targets # ((floor (_uiTime / 10) * 3 + _sample) mod (count _targets));
+			private _knowledge = _unit targetKnowledge _target;
+			private _age = time - (_knowledge # 2);
+			if ((_knowledge # 0) && {_age >= 0} && {_age <= 30} && {(_knowledge # 5) <= 75}) then {
+				private _report = [_target,serverTime - _age,ASLToAGL (_knowledge # 6),_grp knowsAbout _target,_grp,TRUE,rating _target];
+				if (isServer) then {_report call QS_fnc_serverAIIntelDelta;} else {_report remoteExecCall ['QS_fnc_serverAIIntelDelta',2,FALSE];};
+			};
+		};
+	};
 };
 _suppression = getSuppression _unit;
 _unitReady = unitReady _unit;
@@ -406,11 +440,94 @@ if (isNull _objectParent) then {
 		};
 	};
 };
+// OUTGOING COVER FIRE: use the existing owner-local infantry pass. A small
+// number of non-leading soldiers suppress a recent real sighting while the
+// rest of the group moves; this creates no projectile or scheduled worker.
+private _fn_coverReady = {
+	params ['_fps','_now','_after','_active','_limit','_range','_age','_error','_ammo'];
+	_now >= _after && {_active < _limit} && {_range >= 60} && {_range <= 500} &&
+	{_age >= 0} && {_age <= 20} && {_error <= 30} && {_ammo >= 8}
+};
+private _fn_coverProfile = {
+	params ['_players','_members'];
+	if (_players <= 8) exitWith {[2,4,6,60,90]};
+	[[2,4] select (_members >= 8),8,12,24,36]
+};
+private _fn_coverShooters = {
+	params ['_candidates','_machineGunners','_limit'];
+	(_machineGunners + (_candidates - _machineGunners)) select [0,_limit]
+};
+private _coverManaged = isNull _objectParent && {!isPlayer _unit} &&
+	{(WEST getFriend (side _grp)) < 0.6} && {_unit checkAIFeature 'PATH'} &&
+	{!(_unit getVariable ['QS_primaryAO_exempt',FALSE])} && {!(_grp getVariable ['QS_primaryAO_exempt',FALSE])} &&
+	{!(_unit getVariable ['QS_RD_missionObjective',FALSE])} && {!(_unit getVariable ['QS_aoTask_medevac_unit',FALSE])} &&
+	{_primaryAO || {missionNamespace getVariable ['QS_defendControl_active',FALSE] &&
+	{(_unit distance2D (missionNamespace getVariable ['QS_HQpos',[0,0,0]])) < 2500}}};
+_unit setVariable ['QS_AI_coverManaged',_coverManaged,FALSE];
 //======================================================================= SUPPRESSIVE FIRE (UNIT)
-if (_fps > 10) then {
+if (_coverManaged || {_fps > 10}) then {
 	private _isSuppressing = _currentCommand isEqualTo 'Suppress';
+	if (_coverManaged && {!_isSuppressing} && {!captive _unit} &&
+		{isNull (_unit getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])} &&
+		{!(_unit getVariable ['QS_AI_JOB',FALSE])} && {_unitBehaviour in ['AWARE','COMBAT']} &&
+		{(primaryWeapon _unit) isNotEqualTo ''} &&
+		{serverTime >= (_unit getVariable ['QS_AI_coverAfter',0])} &&
+		{(_unit ammo (primaryWeapon _unit)) >= 8}) then {
+		private _members = (units _grp) select {alive _x && {!isPlayer _x} && {isNull (objectParent _x)}};
+		private _candidates = _members select {_x isNotEqualTo leader _grp && {lifeState _x in ['HEALTHY','INJURED']}};
+		private _machineGunners = _candidates select {
+			_x getVariable ['QS_AI_UNIT_isMG',FALSE] ||
+			{(toLowerANSI (primaryWeapon _x)) in (missionNamespace getVariable ['QS_AI_weapons_MG',[]])}
+		};
+		private _groundPlayers = missionNamespace getVariable [['QS_defendControl_groundCount','QS_primaryPressure_groundCount'] select _primaryAO,0];
+		private _coverProfile = [_groundPlayers,count _members] call _fn_coverProfile;
+		_coverProfile params ['_limit','_burstMin','_burstMax','_coolMin','_coolMax'];
+		private _shooters = [_candidates,_machineGunners,_limit] call _fn_coverShooters;
+		private _active = {serverTime < (_x getVariable ['QS_AI_coverUntil',0])} count _members;
+		if (_unit in _shooters && {_active < _limit}) then {
+			private _targets = (_unit targets [TRUE,500,[WEST],20]) select {
+				isPlayer _x && {alive _x} && {!captive _x} && {lifeState _x in ['HEALTHY','INJURED']} && {isNull (objectParent _x)}
+			};
+			private _ordered = FALSE;
+			{
+				private _knowledge = _unit targetKnowledge _x;
+				private _point = +(_knowledge # 6);
+				private _age = time - (_knowledge # 2);
+				private _distance = (eyePos _unit) distance _point;
+				if (_knowledge # 0 && {(_unit knowsAbout _x) >= 1.5} &&
+					{[_fps,serverTime,_unit getVariable ['QS_AI_coverAfter',0],_active,_limit,_distance,_age,_knowledge # 5,_unit ammo (primaryWeapon _unit)] call _fn_coverReady}) then {
+					_point = _point vectorAdd [0,0,1];
+					private _start = eyePos _unit;
+					private _ray = _point vectorDiff _start;
+					private _length2 = _ray vectorDotProduct _ray;
+					private _friends = (_unit nearEntities ['CAManBase',500]) select {
+						alive _x && {_x isNotEqualTo _unit} && {((side _grp) getFriend (side (group _x))) >= 0.6}
+					};
+					private _blocked = _friends findIf {
+						private _position = eyePos _x;
+						private _along = ((_position vectorDiff _start) vectorDotProduct _ray) / (1 max _length2);
+						_along > 0 && {_along <= 1.03} && {(_position distance (_start vectorAdd (_ray vectorMultiply _along))) < 5}
+					};
+					if (_blocked < 0 && {!terrainIntersectASL [_start,_point]}) then {
+						private _duration = _burstMin + random (_burstMax - _burstMin);
+						_unit doSuppressiveFire _point;
+						_unit suppressFor _duration;
+						_unit setVariable ['QS_AI_coverUntil',serverTime + _duration,FALSE];
+						_unit setVariable ['QS_AI_coverAfter',serverTime + _coolMin + random (_coolMax - _coolMin),FALSE];
+						_unit setVariable ['QS_AI_UNIT_lastSuppressiveFire',serverTime + 24,FALSE];
+						_grp setVariable ['QS_AI_coverUntil',(serverTime + _duration) max (_grp getVariable ['QS_AI_coverUntil',0]),FALSE];
+						_ordered = TRUE;
+						_isSuppressing = TRUE;
+					};
+				};
+				if (_ordered) exitWith {};
+			} forEach (_targets select [0,3]);
+		};
+	};
 	if (
 		(!_isSuppressing) &&
+		{_fps > 10} &&
+		{!_coverManaged} &&
 		{(isNull _objectParent)} &&
 		{((random 1) > 0.666)} &&
 		{((_unit getVariable ['QS_AI_UNIT_isMG',FALSE]) || (_unit getVariable ['QS_AI_UNIT_isGL',FALSE]) || (((_unit getVariable ['QS_AI_UNIT_rv',[-1,-1,-1]]) # 0) > 0.85))} &&
@@ -556,6 +673,7 @@ if (_fps > 10) then {
 	};
 	if (
 		(!(_isSuppressing)) &&
+		{!_coverManaged} &&
 		{((random 1) > 0.666)} &&
 		{(_unitBehaviour isNotEqualTo 'STEALTH')} &&
 		{((_unit getVariable ['QS_AI_UNIT_isMG',FALSE]) || (_unit getVariable ['QS_AI_UNIT_isGL',FALSE]) || (((_unit getVariable ['QS_AI_UNIT_rv',[-1,-1,-1]]) # 0) > 0.85))} &&
@@ -714,7 +832,7 @@ if (_isLeader) then {
 						private _supportProvider = objNull;
 						private _targetPos = [0,0,0];
 						private _smokePos = [0,0,0];
-						if ((missionNamespace getVariable 'QS_AI_supportProviders_ARTY') isNotEqualTo []) then {
+						if (_primaryArtilleryAllowed && {(missionNamespace getVariable 'QS_AI_supportProviders_ARTY') isNotEqualTo []}) then {
 							_supportProviders = missionNamespace getVariable 'QS_AI_supportProviders_ARTY';
 							{
 								_supportProvider = _x;
@@ -751,7 +869,7 @@ if (_isLeader) then {
 								if (_exit) exitWith {};
 							} forEach _supportProviders;
 						};
-						if ((missionNamespace getVariable 'QS_AI_supportProviders_MTR') isNotEqualTo []) then {
+						if (_primaryArtilleryAllowed && {(missionNamespace getVariable 'QS_AI_supportProviders_MTR') isNotEqualTo []}) then {
 							_supportProviders = missionNamespace getVariable 'QS_AI_supportProviders_MTR';
 							{
 								_supportProvider = _x;
@@ -776,7 +894,15 @@ if (_isLeader) then {
 															(missionNamespace getVariable 'QS_garbageCollector') pushBack [_smokeShell,'DELAYED_FORCED',(time + 120)];
 															_targetPos = ((_unit targetKnowledge _target) # 6) getPos [(random 25),(random 360)];
 															_targetPos set [2,0];
-															_supportGroup setVariable ['QS_AI_GRP_fireMission',[_targetPos,((magazines (vehicle _supportProvider)) # 0),(round (2 + (random 2))),(serverTime + 180)],QS_system_AI_owners];
+															if (_primaryAO) then {
+																private _knowledge = _unit targetKnowledge _target;
+																_targetPos = ASLToAGL (_knowledge # 6);
+																_targetPos set [2,0];
+																private _seen = serverTime - (time - (_knowledge # 2));
+																_supportGroup setVariable ['QS_AI_GRP_fireMission',[_targetPos,((magazines (vehicle _supportProvider)) # 0),6,serverTime + 30,[_target,+_targetPos,_seen]],QS_system_AI_owners];
+															} else {
+																_supportGroup setVariable ['QS_AI_GRP_fireMission',[_targetPos,((magazines (vehicle _supportProvider)) # 0),(round (2 + (random 2))),(serverTime + 180)],QS_system_AI_owners];
+															};
 															_exit = TRUE;
 														};
 													};

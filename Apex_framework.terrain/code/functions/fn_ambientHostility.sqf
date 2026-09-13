@@ -71,13 +71,21 @@ if (_type isEqualTo 0) exitWith {
 	private _players = allPlayers;
 	private _playersOnGround = (_players unitsBelowHeight 25) select { ((side _x) in [WEST,CIVILIAN,SIDEFRIENDLY]) };	
 	_checkVisibleDistance = 300;
+	private _fn_groundPosition = {
+		params ['_point'];
+		(_point distance2D _targetPosition) > _minDist && {(_point distance2D _targetPosition) < _maxDist} &&
+		{(_blacklistedPositions findIf {(_point distance2D (_x # 0)) < (_x # 1)}) < 0} &&
+		{['BLACKLIST',_point] call QS_fnc_findRandomPos} &&
+		{!([_point,_targetPosition,25] call QS_fnc_waterIntersect)} &&
+		{([AGLToASL _point,_checkVisibleDistance,_playersOnGround,[WEST,CIVILIAN,SIDEFRIENDLY],0,0] call QS_fnc_isPosVisible) <= 0.1}
+	};
 	for '_x' from 0 to 49 step 1 do {
 		_spawnPosition = ['RADIUS',_targetPosition,_maxDist,'LAND',[3,0,0.5,3,0,FALSE,objNull],TRUE,[],[],FALSE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 		if (
 			(((_spawnPosition distance2D _targetPosition) > _minDist) && ((_spawnPosition distance2D _targetPosition) < _maxDist)) &&
 			{((_players inAreaArray [_spawnPosition,300,300,0,FALSE]) isEqualTo [])} &&
 			{(!([_spawnPosition,_targetPosition,25] call (missionNamespace getVariable 'QS_fnc_waterIntersect')))} &&
-			{((_blacklistedPositions findIf {((_targetPosition distance2D (_x # 0)) < (_x # 1))}) isEqualTo -1)} &&
+			{((_blacklistedPositions findIf {((_spawnPosition distance2D (_x # 0)) < (_x # 1))}) isEqualTo -1)} &&
 			{(([(AGLToASL _spawnPosition),_checkVisibleDistance,_playersOnGround,[WEST,CIVILIAN,SIDEFRIENDLY],0,0] call (missionNamespace getVariable 'QS_fnc_isPosVisible')) <= 0.1)}
 		) exitWith {_positionFound = TRUE;};
 	};
@@ -91,9 +99,21 @@ if (_type isEqualTo 0) exitWith {
 	if (_isVehicle) then {
 		for '_x' from 0 to 1 step 1 do {
 			_vehicleType = selectRandomWeighted _vehicleTypes;
-			_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],_spawnPosition,[],50,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|			_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],_spawnPosition,[],50,'NONE'];
+// Updated Code
+			private _slots = ['VEHICLE_SLOTS',_spawnPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,TRUE,300,_fn_groundPosition] call QS_fnc_spawnGroup;
+			if (_slots isEqualTo []) exitWith {};
+			private _vehiclePosition = _slots # 0;
+			if (([(AGLToASL _vehiclePosition),_checkVisibleDistance,_playersOnGround,[WEST,CIVILIAN,SIDEFRIENDLY],0,0] call (missionNamespace getVariable 'QS_fnc_isPosVisible')) > 0.1) exitWith {};
+			_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],_vehiclePosition,[],0,'NONE'];
+// End Updated Code
 			_vehicle setDir (random 360);
-			_vehicle setVehiclePosition [(AGLToASL _spawnPosition),[],0,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|			_vehicle setVehiclePosition [(AGLToASL _spawnPosition),[],0,'NONE'];
+// Updated Code
+			_vehicle setPosATL _vehiclePosition;
+// End Updated Code
 			_grp = createVehicleCrew _vehicle;
 			if (!((side _grp) in [EAST,RESISTANCE])) then {
 				_grp = createGroup [EAST,TRUE];
@@ -148,12 +168,24 @@ if (_type isEqualTo 0) exitWith {
 	} else {
 		_grpSize = [2,4] select (_nearbyCount > 4);
 		for '_x' from 0 to 1 step 1 do {
+// Added Code
+			private _slots = ['SLOTS',_spawnPosition,_grpSize,random 360,'O_Soldier_F',TRUE,FALSE,300,_fn_groundPosition] call QS_fnc_spawnGroup;
+			if (_slots isEqualTo []) exitWith {};
+// End Updated Code
 			_grp = createGroup [EAST,TRUE];
 			for '_x' from 0 to (_grpSize - 1) step 1 do {
 				_unitType = selectRandomWeighted _unitTypes;
-				_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_spawnPosition,[],15,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|				_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_spawnPosition,[],15,'NONE'];
+// Updated Code
+				_unit = _grp createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],_slots # _x,[],0,'NONE'];
+// End Updated Code
 				_unit setDir (random 360);
-				_unit setVehiclePosition [(getPosWorld _unit),[],10,'NONE'];
+/* Legacy Code as of 9.9.2026 */
+//|				_unit setVehiclePosition [(getPosWorld _unit),[],10,'NONE'];
+// Updated Code
+				_unit setPosATL (_slots # _x);
+// End Updated Code
 				_unit setVariable ['QS_AI_UNIT_enabled',TRUE,QS_system_AI_owners];
 				_unit call (missionNamespace getVariable 'QS_fnc_unitSetup');
 				if ((toLowerANSI _unitType) in ['o_g_soldier_f','o_g_soldier_lite_f','i_c_soldier_bandit_6_f','i_c_soldier_para_1_f']) then {

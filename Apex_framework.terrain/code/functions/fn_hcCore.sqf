@@ -175,7 +175,12 @@ for '_x' from 0 to 1 step 0 do {
 					sleep 0.003;
 				} forEach (allUnits + allUnitsUav + vehicles + allGroups);
 			};
-			_QS_module_dynSim_checkDelay = _timeNow + _QS_module_dynSim_delay;
+/* Legacy Code as of 9.9.2026 */
+//|			_QS_module_dynSim_checkDelay = _timeNow + _QS_module_dynSim_delay;
+// Updated Code
+			// Start the next interval after this scan; a slow pass must not restart immediately.
+			_QS_module_dynSim_checkDelay = time + _QS_module_dynSim_delay;
+// End Updated Code
 		};
 		if (!(missionNamespace getVariable ['QS_server_dynSim',_false])) then {
 			_QS_module_dynSim = _false;

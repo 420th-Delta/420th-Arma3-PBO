@@ -21,7 +21,7 @@ private _grp = grpNull;
 private _position = [0,0,0];
 private _vehicleType = '';
 if (_type isEqualTo 'REPAIR') then {
-	_data params ['_roads'];
+	_data params ['_roads',['_groundValid',{TRUE}]];
 	if (_mobile) then {
 		_vTypes = [
 			'o_truck_03_repair_f',0.666,
@@ -33,6 +33,11 @@ if (_type isEqualTo 'REPAIR') then {
 		_grp = createGroup [EAST,TRUE];
 		_roadPosition = _roads # _roadIndex;
 		_vehicleType = selectRandomWeighted _vTypes;
+// Added Code
+		private _slots = ['VEHICLE_SLOTS',_roadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],TRUE,FALSE,-1,_groundValid] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _grp;};
+		_roadPosition = _slots # 0;
+// End Updated Code
 		_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vehicleType,_vehicleType],_roadPosition,[],0,'NONE'];
 		_vehicle setDir (random 360);
 		_vehicle lock 3;
@@ -73,7 +78,7 @@ if (_type isEqualTo 'REPAIR') then {
 	};
 };
 if (_type isEqualTo 'MEDICAL') then {
-	_data params ['_roads'];
+	_data params ['_roads',['_groundValid',{TRUE}]];
 	// spawn near HQ
 	if (_mobile) then {
 		_vTypes = selectRandom ['o_truck_03_medical_f'];
@@ -82,6 +87,11 @@ if (_type isEqualTo 'MEDICAL') then {
 		if (_roadIndex isEqualTo -1) exitWith {};
 		_grp = createGroup [EAST,TRUE];
 		_roadPosition = _roads # _roadIndex;
+// Added Code
+		private _slots = ['VEHICLE_SLOTS',_roadPosition,1,0,QS_core_vehicles_map getOrDefault [toLowerANSI _vTypes,_vTypes],TRUE,FALSE,-1,_groundValid] call QS_fnc_spawnGroup;
+		if (_slots isEqualTo []) exitWith {deleteGroup _grp;};
+		_roadPosition = _slots # 0;
+// End Updated Code
 		_vehicle = createVehicle [QS_core_vehicles_map getOrDefault [toLowerANSI _vTypes,_vTypes],_roadPosition,[],0,'NONE'];
 		_vehicle setDir (random 360);
 		_vehicle lock 3;
