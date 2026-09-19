@@ -975,8 +975,19 @@ private _fn_stalkPlayers = {
 	_this select {isPlayer _x && {alive _x} && {!(_x isKindOf 'HeadlessClient_F')}}
 };
 private _fn_stalkTargetAllowed = {
-	params ['_target'];
-	(_target call QS_fnc_groundTargetPriority) >= 0
+	params ['_target','_players'];
+	private _priority = _target call QS_fnc_groundTargetPriority;
+	if (_priority < 0) exitWith {FALSE};
+	if (_priority < 4) exitWith {TRUE};
+	private _members = if (_target isKindOf 'CAManBase') then {[_target]} else {crew _target};
+	(_members findIf {
+		private _unit = _x;
+		_unit in _players && {
+			!((_unit getVariable ['QS_unit_role','']) in ['jtac','jtac_WL','forward_observer','mortar_gunner']) || {
+				(_players findIf {_x isNotEqualTo _unit && {(_x distance2D _unit) <= 500}}) >= 0
+			}
+		}
+	}) >= 0
 };
 // PRIMARY_STALKING_POLICY_END
 private _fn_contactTick = {
@@ -2965,6 +2976,11 @@ for '_x' from 0 to 1 step 0 do {
 	_QS_serverTime = serverTime;
 // Added Code
 	if (_QS_module_classic && {_QS_module_classic_pressure}) then {['AIR'] call QS_fnc_aoPressure;};
+	// Reuse the existing AI pass for role-support ownership and expiry checks.
+	if (_QS_uiTime >= (localNamespace getVariable ['QS_artillerySupport_watchAfter',0])) then {
+		localNamespace setVariable ['QS_artillerySupport_watchAfter',_QS_uiTime + 3];
+		['WATCHDOG'] call QS_fnc_artillerySupport;
+	};
 	if (isServer) then {['DROP_TICK'] call QS_fnc_aoPressure;};
 	['ARTY_TICK'] call QS_fnc_aoPressure;
 // End Updated Code
@@ -3891,6 +3907,8 @@ for '_x' from 0 to 1 step 0 do {
 				_QS_module_tracers_checkOverride = _true;
 // Added Code
 				_QS_module_classic_pressure = ['INIT',_QS_module_classic_aoPos,_QS_module_classic_aoSize,_QS_module_classic_hqPos,_QS_module_classic_enemy_0,_QS_unitCap,(_QS_module_classic_infReinforce && _QS_module_classic_infReinforce_enabled),(_QS_module_classic_vehReinforce && _QS_module_classic_vehReinforce_enabled)] call QS_fnc_aoPressure;
+				// One artillery allowance is issued when a Primary AO enters service.
+				['START','PRIMARY',missionNamespace getVariable ['QS_primaryPressure_epoch',0]] call QS_fnc_artillerySupport;
 // End Updated Code
 			};
 			if (missionNamespace getVariable 'QS_classic_AI_active') then {
@@ -4131,6 +4149,8 @@ for '_x' from 0 to 1 step 0 do {
 			if (!(missionNamespace getVariable 'QS_classic_AI_active')) then {
 				if (missionNamespace getVariable 'QS_classic_AI_triggerDeinit') then {
 // Added Code
+					// Cancel any pending support work before the Primary roster is retired.
+					['END','PRIMARY',missionNamespace getVariable ['QS_primaryPressure_epoch',0]] call QS_fnc_artillerySupport;
 					if (_QS_module_classic_pressure) then {
 						{_QS_module_classic_enemy_0 pushBackUnique _x;} forEach (['STOP'] call QS_fnc_aoPressure);
 						_QS_module_classic_pressure = FALSE;

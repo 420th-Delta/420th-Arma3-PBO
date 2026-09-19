@@ -844,7 +844,10 @@ missionNamespace setVariable ['QS_module_services_script',scriptNull,FALSE];
 /*/===================== Gear manager module/*/
 _QS_module_gearManager = TRUE && ((missionNamespace getVariable ['QS_missionConfig_Arsenal',0]) isNotEqualTo 3);
 _arsenalType = missionNamespace getVariable ['QS_missionConfig_Arsenal',1];
-missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
+// Forward Observer shares the configured JTAC equipment, including its laser designator.
+private _artilleryArsenalRole = player getVariable ['QS_unit_role','rifleman'];
+if (_artilleryArsenalRole isEqualTo 'forward_observer') then {_artilleryArsenalRole = 'jtac';};
+missionNamespace setVariable ['QS_client_arsenalData',([(player getVariable ['QS_unit_side',WEST]),_artilleryArsenalRole] call (missionNamespace getVariable 'QS_data_arsenal')),FALSE];
 _QS_module_gearManager_delay = 3;
 _QS_module_gearManager_checkDelay = time + _QS_module_gearManager_delay;
 _playerThreshold = 0;
@@ -6000,7 +6003,11 @@ for '_z' from 0 to 1 step 0 do {
 	};
 	if (_QS_module_soundControllers) then {
 		if (_QS_uiTime > _QS_module_soundControllers_checkDelay) then {
-			_QS_player setVariable ['QS_client_soundControllers',[(getAllSoundControllers _QS_v2),(getAllEnvSoundControllers _QS_posWorldPlayer)],_false];
+			// Vehicle sound controllers are unavailable on an on-foot unit.
+			_QS_player setVariable ['QS_client_soundControllers',[
+				(if (isNull _QS_v2 || {_QS_v2 isKindOf 'CAManBase'}) then {[]} else {getAllSoundControllers _QS_v2}),
+				(getAllEnvSoundControllers _QS_posWorldPlayer)
+			],_false];
 			_QS_module_soundControllers_checkDelay = _QS_uiTime + (_QS_module_soundControllers_delay + (random 3));
 		};
 	};

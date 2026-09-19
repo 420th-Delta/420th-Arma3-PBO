@@ -16,6 +16,11 @@ __________________________________________________/*/
 params ['_groupLeader'];
 _v = vehicle _groupLeader;
 _g = group _groupLeader;
+// Added Code
+private _fn_current = _v getVariable ['QS_heliInsert_current',{params ['_v']; alive _v && {alive (driver _v)}}];
+if (!([_v] call _fn_current)) exitWith {};
+_v setVariable ['QS_heliInsert_building',TRUE];
+// End Updated Code
 _v land 'GET OUT';
 _v flyInHeight [0.1,TRUE];
 if ((random 1) > 0.333) then {
@@ -44,11 +49,19 @@ waitUntil {
 		{(((getPosATL _v) # 2) < 2.5)} ||
 		{(!alive _v)} || 
 		{(!canMove _v)} || 
-		{(diag_tickTime > _timeout)}
+/* Legacy Code as of 9.9.2026 */
+//|		{(diag_tickTime > _timeout)}
+// Updated Code
+		{(diag_tickTime > _timeout) || {!([_v] call _fn_current)}}
+// End Updated Code
 	)
 };
 _v removeAllEventHandlers 'GetOut';
-private _spawnUnits = alive _v && ((((getPosATL _v) # 2) < 10) || (isTouchingGround _v));
+/* Legacy Code as of 9.9.2026 */
+//|private _spawnUnits = alive _v && ((((getPosATL _v) # 2) < 10) || (isTouchingGround _v));
+// Updated Code
+private _spawnUnits = ([_v] call _fn_current) && alive _v && ((((getPosATL _v) # 2) < 10) || (isTouchingGround _v));
+// End Updated Code
 _side = EAST;
 if (_spawnUnits) then {
 	private _unitTypes = ['o_heli_insert_1'] call QS_data_listUnits;
@@ -61,14 +74,28 @@ if (_spawnUnits) then {
 	private _unit = objNull;
 	private _units = [];
 	_infantryGroup = createGroup [_side,TRUE];
+// Added Code
+	_infantryGroup addEventHandler ['EnemyDetected',{call (missionNamespace getVariable 'QS_fnc_AIGroupEventEnemyDetected')}];
+// End Updated Code
 	_emptyPositions = _v emptyPositions 'Cargo';
 	for '_x' from 0 to ((round (_emptyPositions * (selectRandom [0.35,0.5,0.75]))) - 1) step 1 do {
+// Added Code
+		if (!([_v] call _fn_current)) exitWith {};
+// End Updated Code
 		_unitType = selectRandomWeighted _unitTypes;
 		_unit = _infantryGroup createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[-100,-100,0],[],0,'NONE'];
+// Added Code
+		_unit setVariable ['QS_heliInsert_lease',_v getVariable ['QS_heliInsert_lease',-1]];
+		(_v getVariable ['QS_heliInsert_units',[]]) pushBack _unit;
+// End Updated Code
 		_unit setVariable ['QS_dynSim_ignore',TRUE,TRUE];
 		_infantryGroup setBehaviour 'COMBAT';
 		_infantryGroup setCombatMode 'RED';
-		_infantryGroup addEventHandler ['EnemyDetected',{call (missionNamespace getVariable 'QS_fnc_AIGroupEventEnemyDetected')}];
+/* Legacy Code as of 9.9.2026 */
+//|		_infantryGroup addEventHandler ['EnemyDetected',{call (missionNamespace getVariable 'QS_fnc_AIGroupEventEnemyDetected')}];
+// Updated Code
+
+// End Updated Code
 		_unit enableDynamicSimulation TRUE;
 		_unit enableStamina FALSE;
 		_unit enableFatigue FALSE;
@@ -81,6 +108,11 @@ if (_spawnUnits) then {
 		_units pushBack _unit;
 		_unit setVehiclePosition [(getPosWorld _v),[],15,'NONE'];
 	};
+// Added Code
+	// A cycle can interrupt construction between scheduled slices. Leave an
+	// unfinished roster with the lifetime worker; never publish it into a new AO.
+	if (!([_v] call _fn_current)) exitWith {};
+// End Updated Code
 	//comment 'Radial positions';
 	_position = missionNamespace getVariable ['QS_hqPos',(missionNamespace getVariable 'QS_aoPos')];
 	_infantryGroup enableAttack TRUE;
@@ -113,15 +145,42 @@ if (_spawnUnits) then {
 		_QS_array pushBack _x;
 	} forEach (units _infantryGroup);
 	missionNamespace setVariable ['QS_enemyGroundReinforceArray',_QS_array,FALSE];
-	[_units,getPosWorld _v,_infantryGroup] spawn {
-		params ['_units','_position','_group'];
+/* Legacy Code as of 9.9.2026 */
+//|	[_units,getPosWorld _v,_infantryGroup] spawn {
+//|		params ['_units','_position','_group'];
+// Updated Code
+	_v setVariable ['QS_heliInsert_building',FALSE];
+	[_units,getPosWorld _v,_infantryGroup,_v getVariable ['QS_heliInsert_lease',-1],_v getVariable ['QS_heliInsert_activity',[]]] spawn {
+		params ['_units','_position','_group','_lease','_activity'];
+        private _fn_activity = {[
+	+(missionNamespace getVariable ['QS_aoPos',[0,0,0]]),
+	missionNamespace getVariable ['QS_classic_AI_active',FALSE],
+	missionNamespace getVariable ['QS_primaryPressure_running',FALSE],
+	missionNamespace getVariable ['QS_primaryPressure_epoch',-1],
+	missionNamespace getVariable ['QS_defendActive',FALSE],
+	missionNamespace getVariable ['QS_defendControl_active',FALSE],
+	missionNamespace getVariable ['QS_defendControl_epoch',-1],
+	missionNamespace getVariable ['QS_customAO_GT_active',FALSE]
+]};
+// End Updated Code
 		uiSleep 2;
+// Added Code
+        if (_activity isNotEqualTo (call _fn_activity)) exitWith {};
+// End Updated Code
 		{
-			if ((_x distance2D _position) > 100) then {
+/* Legacy Code as of 9.9.2026 */
+//|			if ((_x distance2D _position) > 100) then {
+// Updated Code
+			if ((_x getVariable ['QS_heliInsert_lease',-1]) isEqualTo _lease && {!isPlayer _x} && {!captive _x} && {(_x distance2D _position) > 100}) then {
+// End Updated Code
 				deleteVehicle _x;
 			};
 		} forEach _units;
 		uiSleep 7;
+// Added Code
+        if (_activity isNotEqualTo (call _fn_activity)) exitWith {};
+        _units = _units select {alive _x && {!isPlayer _x} && {!captive _x} && {(_x getVariable ['QS_heliInsert_lease',-1]) isEqualTo _lease}};
+// End Updated Code
 		{
 			if (alive _x) then {
 				_x enableAIFeature ['PATH',TRUE];
@@ -129,13 +188,20 @@ if (_spawnUnits) then {
 			};
 		} forEach _units;
 		_units doFollow (leader _group);
-		[(units _group),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
+/* Legacy Code as of 9.9.2026 */
+//|		[(units _group),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
+// Updated Code
+		[_units,1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
+// End Updated Code
 	};
 };
 _helipad = _v getVariable ['QS_assignedHelipad',objNull];
 if (!isNull _helipad) then {
 	deleteVehicle _helipad;
 };
+// Added Code
+if (!([_v] call _fn_current)) exitWith {};
+// End Updated Code
 _v land 'NONE';
 _v flyInHeight [50,FALSE];
 sleep 0.5;
@@ -145,24 +211,35 @@ _wp setWaypointSpeed 'FULL';
 _wp setWaypointBehaviour 'CARELESS';
 _wp setWaypointCombatMode 'BLUE';
 _wp setWaypointCompletionRadius 150;
-_g addEventHandler [
-	'WaypointComplete',
-	{
-		params ['_group','_waypointIndex'];
-		_group removeEventHandler [_thisEvent,_thisEventHandler];
-		_leader = leader _group;
-		_v = vehicle _leader;
-		deleteVehicleCrew _v;
-		if (!isNull (_v getVariable 'QS_assignedHelipad')) then {
-			deleteVehicle (_v getVariable 'QS_assignedHelipad');
-		};
-		if ((allPlayers inAreaArray [_v,500,500,0,FALSE]) isEqualTo []) then {
-			deleteVehicle _v;
-		} else {
-			_v setDamage [1,TRUE];
-		};
-	}
-];
+/* Legacy Code as of 9.9.2026 */
+//|_g addEventHandler [
+//|	'WaypointComplete',
+//|	{
+//|		params ['_group','_waypointIndex'];
+//|		_group removeEventHandler [_thisEvent,_thisEventHandler];
+//|		_leader = leader _group;
+//|		_v = vehicle _leader;
+//|		deleteVehicleCrew _v;
+//|		if (!isNull (_v getVariable 'QS_assignedHelipad')) then {
+//|			deleteVehicle (_v getVariable 'QS_assignedHelipad');
+//|		};
+//|		if ((allPlayers inAreaArray [_v,500,500,0,FALSE]) isEqualTo []) then {
+//|			deleteVehicle _v;
+//|		} else {
+//|			_v setDamage [1,TRUE];
+//|		};
+//|	}
+//|];
+// Updated Code
+private _departureEH = _g addEventHandler ['WaypointComplete',{
+    params ['_group','_waypointIndex'];
+    _group removeEventHandler [_thisEvent,_thisEventHandler];
+    private _heli = vehicle (leader _group);
+    _heli setVariable ['QS_heliInsert_closed',TRUE];
+}];
+_v setVariable ['QS_heliInsert_departureEH',_departureEH];
+
+// End Updated Code
 if (!isNull (_v getVariable ['QS_heliInsert_supportHeli',objNull])) then {
 	_supportHeli = _v getVariable 'QS_heliInsert_supportHeli';
 	_v removeAllEventHandlers 'Hit';
@@ -193,21 +270,26 @@ if (!isNull (_v getVariable ['QS_heliInsert_supportHeli',objNull])) then {
 				_waypoint setWaypointType 'MOVE';
 				_waypoint setWaypointCompletionRadius 150;
 				_waypoint setWaypointForceBehaviour TRUE;
-				_supportGroup addEventHandler [
-					'WaypointComplete',
-					{
-						params ['_group','_waypointIndex'];
-						_group removeEventHandler [_thisEvent,_thisEventHandler];
-						_leader = leader _group;
-						_v = vehicle _leader;
-						deleteVehicleCrew _v;
-						if ((allPlayers inAreaArray [_v,500,500,0,FALSE]) isEqualTo []) then {
-							deleteVehicle _v;
-						} else {
-							_v setDamage [1,TRUE];
-						};
-					}
-				];
+/* Legacy Code as of 9.9.2026 */
+//|				_supportGroup addEventHandler [
+//|					'WaypointComplete',
+//|					{
+//|						params ['_group','_waypointIndex'];
+//|						_group removeEventHandler [_thisEvent,_thisEventHandler];
+//|						_leader = leader _group;
+//|						_v = vehicle _leader;
+//|						deleteVehicleCrew _v;
+//|						if ((allPlayers inAreaArray [_v,500,500,0,FALSE]) isEqualTo []) then {
+//|							deleteVehicle _v;
+//|						} else {
+//|							_v setDamage [1,TRUE];
+//|						};
+//|					}
+//|				];
+// Updated Code
+                // The common insertion lifetime also owns the escort. No
+                // second callback deletes crew or explodes a nearby aircraft.
+// End Updated Code
 			};
 		};
 	};
