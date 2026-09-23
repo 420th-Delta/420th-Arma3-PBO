@@ -13,11 +13,14 @@ Description:
 	AI vehicle animation sources & appearance
 ______________________________________________/*/
 
+params [['_case',0],['_vehicle',objNull],['_side',EAST],['_chance',0.5]];
+if ((_case isEqualTo 0) && {_side in [EAST,RESISTANCE]}) then {
+	[_vehicle] call QS_fnc_airDefenseRegister;
+};
 if (
 	((missionNamespace getVariable ['QS_system_activeDLC','']) isNotEqualTo '') ||
 	((missionNamespace getVariable ['QS_missionConfig_dlcVehicles','']) isNotEqualTo '')
 ) exitWith {};
-params [['_case',0],['_vehicle',objNull],['_side',EAST],['_chance',0.5]];
 _type = toLowerANSI (typeOf _vehicle);
 _cheetah = ['b_apc_tracked_01_aa_f','b_t_apc_tracked_01_aa_f'];
 _bobcat = ['b_apc_tracked_01_crv_f','b_t_apc_tracked_01_crv_f'];

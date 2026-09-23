@@ -207,4 +207,5 @@ if (alive _vehicle) then {
 	};
 	/*/
 };
+[_vehicle] call QS_fnc_airDefenseRegister;
 _vehicle;

@@ -1,0 +1,152 @@
+/* Real config/crew/state checks. Injected contacts isolate ranking from radar timing and weather. */
+private _entities = [];
+private _spawn = {
+	params ['_class','_position'];
+	private _vehicle = createVehicle [_class,_position,[],0,'NONE'];
+	_vehicle setPosATL _position;
+	createVehicleCrew _vehicle;
+	_vehicle allowDamage FALSE;
+	_vehicle enableSimulationGlobal FALSE;
+	{
+		_x allowDamage FALSE;
+		_x setUnitCombatMode 'BLUE';
+		_entities pushBack _x;
+		_entities pushBackUnique group _x;
+	} forEach crew _vehicle;
+	_entities pushBack _vehicle;
+	_vehicle
+};
+private _tigris = ['O_APC_Tracked_02_AA_F',[21000,20000,0]] call _spawn;
+private _sam = ['O_SAM_System_04_F',[21000,20100,0]] call _spawn;
+private _jet = ['B_Plane_Fighter_01_F',[22000,20000,300]] call _spawn;
+private _attack = ['B_Heli_Attack_01_dynamicLoadout_F',[21700,20100,150]] call _spawn;
+private _transport = ['B_Heli_Transport_01_F',[21500,20000,100]] call _spawn;
+private _ground = ['B_MRAP_01_F',[21300,20000,0]] call _spawn;
+private _enemy = ['O_Plane_Fighter_02_F',[21400,20000,200]] call _spawn;
+private _empty = ['B_MRAP_01_F',[21400,20000,0]] call _spawn;
+deleteVehicleCrew _empty;
+private _nyx = ['I_LT_01_AA_F',[21000,20200,0]] call _spawn;
+private _heliPylons = ['B_Heli_Light_01_dynamicLoadout_F',[21600,20100,100]] call _spawn;
+
+{[([_x] call QS_fnc_airDefenseClassifyTarget) isEqualTo (_forEachIndex + 1),'target rank',[_x,[_x] call QS_fnc_airDefenseClassifyTarget]] call T420_AA_fnc_assert;} forEach [_jet,_attack,_transport,_ground];
+[((weapons _transport) isNotEqualTo []) && {([_transport] call QS_fnc_airDefenseClassifyTarget) isEqualTo 3},'door-gun transport remains tier 3',weapons _transport] call T420_AA_fnc_assert;
+[(getPylonMagazines _heliPylons isNotEqualTo []) && {([_heliPylons] call QS_fnc_airDefenseClassifyTarget) isEqualTo 2},'armed pylon helicopter tier 2',getPylonMagazines _heliPylons] call T420_AA_fnc_assert;
+
+{[[_x] call QS_fnc_airDefenseRegister,'register AA',typeOf _x] call T420_AA_fnc_assert;} forEach [_tigris,_sam,_nyx,_enemy];
+private _contacts = [_ground,_transport,_attack,_jet] apply {[_x,TRUE]};
+private _result = [_tigris,_contacts,TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _jet,'jet outranks closer helicopters and ground',_result] call T420_AA_fnc_assert;
+_contacts = [_ground,_transport,_attack] apply {[_x,TRUE]};
+_result = [_tigris,_contacts,TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _attack,'attack helicopter outranks transport',_result] call T420_AA_fnc_assert;
+_result = [_tigris,[[_ground,TRUE],[_transport,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _transport,'transport outranks ground',_result] call T420_AA_fnc_assert;
+_result = [_tigris,[[_ground,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _ground,'Tigris cannon permits surface target',_result] call T420_AA_fnc_assert;
+_result = [_sam,[[_ground,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[isNull (_result # 0),'Rhea refuses incompatible ground target',_result] call T420_AA_fnc_assert;
+_result = [_sam,[[_jet,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _jet,'Rhea accepts compatible sensor contact',_result] call T420_AA_fnc_assert;
+private _samWeapon = (_sam weaponsTurret [0]) # 0;
+private _samWeaponConfig = configFile >> 'CfgWeapons' >> _samWeapon;
+private _samMinimumLock = getNumber (_samWeaponConfig >> 'missileLockMinDistance');
+diag_log format ['T420_AA_RHEA_RANGE|%1',[_samWeapon,_samMinimumLock,getNumber (_samWeaponConfig >> 'minRange'),(getArray (_samWeaponConfig >> 'modes')) apply {[_x,getNumber (_samWeaponConfig >> _x >> 'minRange'),getNumber (_samWeaponConfig >> _x >> 'maxRange')]}]];
+if (_samMinimumLock > 20) then {
+	_jet setPosATL ((getPosATL _sam) vectorAdd [_samMinimumLock * 0.5,0,10]);
+	_result = [_sam,[[_jet,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+	[isNull (_result # 0),'Rhea rejects aircraft inside its native minimum lock distance',[_samMinimumLock,_sam distance _jet,_result]] call T420_AA_fnc_assert;
+	_jet setPosATL [22000,20000,300];
+};
+_result = [_sam,[[_jet,FALSE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[isNull (_result # 0),'Rhea requires a current sensor or datalink contact',_result] call T420_AA_fnc_assert;
+_jet setPosATL [21400,20100,0];
+_result = [_tigris,[[_jet,TRUE],[_transport,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _transport,'landed jet becomes a surface target below an airborne transport',_result] call T420_AA_fnc_assert;
+_jet setPosATL [22000,20000,300];
+_result = [_tigris,[[_enemy,TRUE],[_empty,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[isNull (_result # 0),'reject enemy-side and empty targets',_result] call T420_AA_fnc_assert;
+_jet setPosATL [29000,20000,300];
+_result = [_tigris,[[_jet,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[isNull (_result # 0),'reject beyond available weapon range',_result] call T420_AA_fnc_assert;
+_jet setPosATL [22000,20000,300];
+private _priorTransportPos = getPosATL _transport;
+_transport setPosATL ((markerPos 'QS_marker_base_marker') vectorAdd [500,0,100]);
+_result = [_tigris,[[_transport,TRUE],[_ground,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[(_result # 0) isEqualTo _ground && {_result # 4},'base contact excluded without suppressing outside contact',_result] call T420_AA_fnc_assert;
+_result = [_tigris,[[_transport,TRUE]],TRUE] call QS_fnc_airDefenseSelectTarget;
+[isNull (_result # 0) && {_result # 4},'only protected contact requests hold',_result] call T420_AA_fnc_assert;
+_transport setPosATL _priorTransportPos;
+
+/* Apply uses real units/features with a deterministic contact provider. */
+T420_AA_selectorOriginal = QS_fnc_airDefenseSelectTarget;
+QS_fnc_airDefenseSelectTarget = {[_this # 0,T420_AA_contacts,TRUE] call T420_AA_selectorOriginal;};
+private _gunner = gunner _tigris;
+_gunner enableAIFeature ['TARGET',FALSE];
+_gunner enableAIFeature ['AUTOTARGET',TRUE];
+_gunner setUnitCombatMode 'GREEN';
+T420_AA_contacts = [[_ground,TRUE]];
+[_tigris] call QS_fnc_airDefenseApply;
+[(_tigris getVariable ['QS_airDefense_target',objNull]) isEqualTo _ground,'Apply assigns ground when no air available'] call T420_AA_fnc_assert;
+T420_AA_contacts pushBack [_jet,TRUE];
+[_tigris] call QS_fnc_airDefenseApply;
+[(_tigris getVariable ['QS_airDefense_target',objNull]) isEqualTo _jet,'Apply preempts existing ground assignment'] call T420_AA_fnc_assert;
+T420_AA_contacts = [];
+[_tigris] call QS_fnc_airDefenseApply;
+[isNull (_tigris getVariable ['QS_airDefense_target',objNull]),'Apply releases priority for vanilla fallback'] call T420_AA_fnc_assert;
+[!(_gunner checkAIFeature 'TARGET') && {_gunner checkAIFeature 'AUTOTARGET'} && {(unitCombatMode _gunner) isEqualTo 'GREEN'},'fallback restores exact saved features and combat mode'] call T420_AA_fnc_assert;
+
+_transport setPosATL ((markerPos 'QS_marker_base_marker') vectorAdd [500,0,100]);
+T420_AA_contacts = [[_transport,TRUE]];
+[_tigris] call QS_fnc_airDefenseApply;
+[(_tigris getVariable ['QS_airDefense_holding',FALSE]) && {(unitCombatMode _gunner) isEqualTo 'BLUE'} && {!(_gunner checkAIFeature 'TARGET')},'base exclusion actively prevents autonomous fire'] call T420_AA_fnc_assert;
+private _projectile = createVehicle ['B_35mm_AA_Tracer_Red',[21000,20000,20],[],0,'CAN_COLLIDE'];
+private _vetoBefore = _tigris getVariable ['QS_airDefense_vetoCount',0];
+diag_log format ['T420_AA_FIRED_BEFORE|%1',[isNull _projectile,local _projectile,typeOf _projectile,getText (configFile >> 'CfgAmmo' >> 'B_35mm_AA_Tracer_Red' >> 'simulation'),_tigris getVariable ['QS_airDefense_holding',FALSE],_tigris getVariable ['QS_airDefense_registered',FALSE],side group _gunner,remoteControlled _gunner,_vetoBefore]];
+[_tigris,'','','','B_35mm_AA_Tracer_Red','',_projectile,_gunner] call QS_fnc_airDefenseFired;
+[((_tigris getVariable ['QS_airDefense_vetoCount',0]) - _vetoBefore) isEqualTo 1,'Fired veto executed for protected shot',[_vetoBefore,_tigris getVariable ['QS_airDefense_vetoCount',0],isNull _projectile]] call T420_AA_fnc_assert;
+uiSleep 0.05;
+[isNull _projectile,'Fired veto deletes new shot while protected hold active'] call T420_AA_fnc_assert;
+_transport setPosATL _priorTransportPos;
+[_tigris] call QS_fnc_airDefenseApply;
+[!(_tigris getVariable ['QS_airDefense_holding',TRUE]) && {(_tigris getVariable ['QS_airDefense_target',objNull]) isEqualTo _transport},'leaving exclusion releases hold and reacquires transport'] call T420_AA_fnc_assert;
+T420_AA_contacts = [[_jet,TRUE]];
+[_enemy] call QS_fnc_airDefenseApply;
+[(_enemy getVariable ['QS_airDefense_target',objNull]) isEqualTo _jet && {_enemy getVariable ['QS_airDefense_abortCAS',FALSE]},'enemy jet requests cancellation of ground CAS on air priority'] call T420_AA_fnc_assert;
+private _casPilot = currentPilot _enemy;
+private _casGroup = group _casPilot;
+_casGroup setVariable ['QS_AI_GRP_fireMission',['fixture',serverTime + 60]];
+[2,_casPilot,_casGroup,_ground,getPosATL _ground,serverTime + 60] call compile preprocessFileLineNumbers 'code\functions\fn_AIFireMission.sqf';
+[isNil {_casGroup getVariable 'QS_AI_GRP_fireMission'} && {!(_enemy getVariable ['QS_AI_PLANE_fireMission',FALSE])},'actual CAS entry rejects lower-tier ground mission and releases request state'] call T420_AA_fnc_assert;
+[_tigris,FALSE] call QS_fnc_airDefenseRegister;
+[_tigris] call QS_fnc_airDefenseApply;
+[isNull (_tigris getVariable ['QS_airDefense_target',objNull]) && {(unitCombatMode _gunner) isEqualTo 'GREEN'},'unregister restores owner state'] call T420_AA_fnc_assert;
+QS_fnc_airDefenseSelectTarget = T420_AA_selectorOriginal;
+T420_AA_selectorOriginal = nil;
+T420_AA_contacts = nil;
+
+private _populationKeys = ['QS_missionConfig_priorityAA_minPlayers'];
+private _populationSaved = _populationKeys apply {[_x,!isNil {missionNamespace getVariable _x},missionNamespace getVariable [_x,0]]};
+missionNamespace setVariable ['QS_missionConfig_priorityAA_minPlayers',10];
+private _factor = missionNamespace getVariable ['QS_missionConfig_airDefense_reinforcementWeight',2];
+{
+	private _players = _x;
+	[([_players] call QS_fnc_airDefenseUseEnhanced) isEqualTo (_players >= 10),format ['population gate boundary at %1 human players',_players]] call T420_AA_fnc_assert;
+	private _plain = [0] call QS_fnc_getAIMotorPool;
+	private _weighted = [0,_players] call QS_fnc_airDefenseReinforcementPool;
+	private _weightsValid = (count _plain) isEqualTo count _weighted;
+	for '_i' from 0 to ((count _plain) - 2) step 2 do {
+		private _expected = _plain # (_i + 1);
+		if (_players >= 10 && {(_plain # _i) in ['o_apc_tracked_02_aa_f','i_lt_01_aa_f']}) then {_expected = _expected * _factor;};
+		_weightsValid = _weightsValid && {(_weighted # (_i + 1)) isEqualTo _expected};
+	};
+	[_weightsValid,format ['reinforcement AA weights follow population threshold at %1 players',_players],[_plain,_weighted]] call T420_AA_fnc_assert;
+	[([0] call QS_fnc_getAIMotorPool) isEqualTo _plain,format ['ordinary AO pool remains unchanged at %1 players',_players]] call T420_AA_fnc_assert;
+} forEach [9,10,11];
+private _stratis = [8,10] call QS_fnc_airDefenseReinforcementPool;
+[(_stratis # ((_stratis find 'o_apc_tracked_02_aa_f') + 1)) isEqualTo 0,'Stratis zero Tigris weight remains zero'] call T420_AA_fnc_assert;
+{
+	_x params ['_key','_present','_value'];
+	missionNamespace setVariable [_key,if (_present) then {_value} else {nil}];
+} forEach _populationSaved;
+[_entities] call T420_AA_fnc_cleanup;
+diag_log 'T420_AA_TARGETING_LIMIT: injected sensor contacts, frozen aircraft, and direct Fired invocation do not demonstrate live missile lock, dogfighting, or network ownership transfer.';

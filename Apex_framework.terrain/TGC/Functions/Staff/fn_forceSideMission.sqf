@@ -33,6 +33,24 @@ private _missions = missionNamespace getVariable ["QS_sideMission_staffForceList
 private _missionIndex = _missions findIf {(_x # 1) isEqualTo _sideMission};
 if (_missionIndex isEqualTo -1) exitWith {};
 
+if (_sideMission isEqualTo 'QS_fnc_SMPriorityAA') exitWith {
+    if !(missionNamespace getVariable ['QS_missionConfig_priorityAA_enabled',true]) exitWith {
+        ['systemChat','Priority AA is disabled by the server configuration.'] remoteExec ['QS_fnc_remoteExecCmd',_owner,false];
+    };
+    private _enhanced = [] call QS_fnc_airDefenseUseEnhanced;
+    if (!_enhanced && {(missionNamespace getVariable ['QS_missionConfig_sideMissions',1]) isNotEqualTo 1}) exitWith {
+        ['systemChat','The current population uses ordinary Priority AA; Side Missions are disabled by the server configuration.'] remoteExec ['QS_fnc_remoteExecCmd',_owner,false];
+    };
+    missionNamespace setVariable ['QS_priorityAA_force',true,false];
+    if (missionNamespace getVariable ['QS_priorityAA_active',false]) then {
+        missionNamespace setVariable ['QS_priorityAA_abort',true,false];
+    };
+    if ((missionNamespace getVariable ['QS_priorityAA_legacyActive',false]) || {!_enhanced && {missionNamespace getVariable ['QS_sideMissionActive',false]}}) then {
+        missionNamespace setVariable ['QS_smAbort',true,true];
+    };
+    ['systemChat',format ['%1 queued Priority AA. It will start when its channel is available and spawning is permitted.',name _requestingPlayer]] remoteExec ['QS_fnc_remoteExecCmd',-2,false];
+};
+
 missionNamespace setVariable ["QS_smSuspend",true,true];
 missionNamespace setVariable ["QS_smAbort",true,true];
 missionNamespace setVariable ["QS_forcedSideMission",_sideMission,false];

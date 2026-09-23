@@ -16,19 +16,59 @@ Description:
 	[1,[0,0,0],33] call QS_fnc_smDebrief
 ______________________________________________________________________/*/
 
-params [['_type',1],['_smPos',[0,0,0]],['_reward',-1]];
-missionNamespace setVariable ['QS_evacPosition_2',_smPos,TRUE];
-['QS_IA_TASK_SM_0'] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
+if (!isServer) exitWith {};
+params [['_type',1],['_smPos',[0,0,0]],['_reward',-1],['_context',[]],['_queued',FALSE]];
+if (!_queued) exitWith {
+	if (_context isEqualTo []) then {
+		_context = ['QS_IA_TASK_SM_0',markerText 'QS_marker_sideMarker','QS_evacPosition_2',FALSE,-1];
+	};
+	_context params ['_taskId','_markerText','_evacVariable','_isPriorityAA','_instanceId'];
+	if (!_isPriorityAA || {_instanceId isEqualTo (missionNamespace getVariable ['QS_priorityAA_instanceId',-1])}) then {
+		missionNamespace setVariable [_evacVariable,+_smPos,TRUE];
+	};
+	// AA task IDs are never reused, so also retire their persistent JIP creation entry.
+	[_taskId,[],_isPriorityAA] call (missionNamespace getVariable 'BIS_fnc_deleteTask');
+	// Reserve one worker atomically: both channels can finish in the same scheduler frame.
+	isNil {
+		private _queue = serverNamespace getVariable ['QS_smDebrief_queue',[]];
+		_queue pushBack [_type,+_smPos,_reward,+_context,TRUE];
+		serverNamespace setVariable ['QS_smDebrief_queue',_queue];
+		if !(serverNamespace getVariable ['QS_smDebrief_running',FALSE]) then {
+			serverNamespace setVariable ['QS_smDebrief_running',TRUE];
+			[] spawn {
+				private _running = TRUE;
+				while {_running} do {
+					private _request = [];
+					isNil {
+						private _queue = serverNamespace getVariable ['QS_smDebrief_queue',[]];
+						if (_queue isEqualTo []) then {
+							serverNamespace setVariable ['QS_smDebrief_running',FALSE];
+							_running = FALSE;
+						} else {
+							_request = _queue deleteAt 0;
+						};
+					};
+					if (_running) then {
+						_request call QS_fnc_smDebrief;
+					};
+				};
+			};
+		};
+	};
+};
 if (_type isEqualTo 0) exitWith {
 	['playMusic','EventTrack02_F_Curator'] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 	_failedText = parseText "<t align='center'><t size='2.2'>Side Mission</t><br/><t size='1.5' color='#b60000'>FAILED</t><br/>____________________<br/>
 		You'll have to do better than that next time!<br/><br/><br/>Focus on the main objective for now; we'll relay the bad news to HQ, with some luck we'll have another objective lined up. 
 		We'll get back to you in 15 - 30 minutes.</t>";
+	if (_context # 3) then {
+		_failedText = parseText "<t align='center'><t size='2.2'>Priority AA</t><br/><t size='1.5' color='#b60000'>ENDED</t><br/>____________________<br/>This anti-air objective is no longer active. HQ will notify you when the next battery is located.</t>";
+	};
 	['hint',_failedText] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 };
 if (_type isEqualTo 1) then {
 	['playMusic','EventTrack03_F_Curator'] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
-	['CompletedSideMission',[(markerText 'QS_marker_sideMarker')]] remoteExec ['QS_fnc_showNotification',-2,FALSE];
+	['CompletedSideMission',[(_context # 1)]] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 	private ['_rewardText','_rewardVeh','_landRewardLocations','_shipRewardLocations','_rewardType','_rewardPosition','_newRewardArray'];
 	if (missionNamespace getVariable ['QS_virtualSectors_active',FALSE]) then {
 		private ['_QS_virtualSectors_scoreSides','_scoreEast','_scoreToRemove'];

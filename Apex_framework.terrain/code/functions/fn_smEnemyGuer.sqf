@@ -100,6 +100,7 @@ if ((count allPlayers) > 25) then {
 		_SMaa addEventHandler ['GetOut',(missionNamespace getVariable 'QS_fnc_AIXDismountDisabled')];
 		_SMaa addEventHandler ['Killed',(missionNamespace getVariable 'QS_fnc_vKilled2')];
 		_grp = createVehicleCrew _SMaa;
+		[_SMaa] call QS_fnc_airDefenseRegister;
 		_SMaa lock 3;
 		[_grp,_pos,250,[],TRUE] call (missionNamespace getVariable 'QS_fnc_taskPatrolVehicle');
 		{
