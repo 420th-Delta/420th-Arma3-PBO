@@ -4434,6 +4434,9 @@ for '_x' from 0 to 1 step 0 do {
 		] + _jetJunk + _backpackDroneTypes;
 		private _perfEntityCensus = ['core.cleanupEntities'] call QS_fnc_perfBegin;
 		_allMissionObjectsAll = entities [_cleanupEntityTypes,[],_false,_false];
+		// Player-dropped GroundWeaponHolders can be absent from entities, so
+		// include the mission-object lookup before applying the usual cleanup rules.
+		_allMissionObjectsAll append ((allMissionObjects 'GroundWeaponHolder') - _allMissionObjectsAll);
 		[_perfEntityCensus,count _allMissionObjectsAll] call QS_fnc_perfEnd;
 		_missionCraters = [];
 		_missionWeaponHolders = [];
