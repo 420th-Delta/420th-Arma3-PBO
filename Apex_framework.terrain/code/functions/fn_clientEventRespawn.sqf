@@ -147,8 +147,9 @@ if (!((getPlayerUID player) in (['CURATOR'] call (missionNamespace getVariable '
 player setUnitFreefallHeight 65;
 player enableAIFeature ['MOVE',TRUE];
 if ((missionNamespace getVariable ['QS_missionConfig_artyEngine',1]) in [0,1]) then {
-	enableEngineArtillery FALSE;
+	[FALSE] call QS_fnc_clientArtilleryAccess;
 };
+[] call QS_fnc_clientArtilleryAccess;
 if (player getUnitTrait 'QS_trait_HQ') then {
 	missionNamespace setVariable ['QS_hc_Commander',player,TRUE];
 };

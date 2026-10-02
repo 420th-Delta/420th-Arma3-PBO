@@ -197,6 +197,7 @@ class CfgFunctions {
 			class clearPosition {file = "code\functions\fn_clearPosition.sqf";};
 			class clientAIBehaviours {file = "code\functions\fn_clientAIBehaviours.sqf";};
 			class clientArsenal {file = "code\functions\fn_clientArsenal.sqf";};
+			class clientArtilleryAccess {file = "code\functions\fn_clientArtilleryAccess.sqf";};
 			class clientATAdjust {file = "code\functions\fn_clientATAdjust.sqf";};
 			class clientBaseLights {file = "code\functions\fn_clientBaseLights.sqf";};
 			class clientCore {file = "code\functions\fn_clientCore.sqf";};

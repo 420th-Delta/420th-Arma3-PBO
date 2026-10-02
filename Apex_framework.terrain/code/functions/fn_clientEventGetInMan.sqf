@@ -165,9 +165,10 @@ if ((missionNamespace getVariable ['QS_missionConfig_artyEngine',1]) isEqualTo 1
 			(_unit getUnitTrait 'QS_trait_gunner')
 		)
 	) then {
-		enableEngineArtillery TRUE;
+		[TRUE] call QS_fnc_clientArtilleryAccess;
 	};
 };
+[] call QS_fnc_clientArtilleryAccess;
 if (_position isEqualTo 'gunner') then {
 	private _isArty = FALSE;
 	if (_supportTypes isNotEqualTo []) then {
