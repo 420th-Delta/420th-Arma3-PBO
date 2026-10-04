@@ -22,6 +22,56 @@ if (_mode isEqualTo 0) then {
 	if (worldName isEqualTo 'Malden') then {_safezoneRadius = 500;};
 	if (worldName isEqualTo 'Enoch') then {_safezoneRadius = 500;};
 	if (worldName isEqualTo 'Stratis') then {_safezoneRadius = 500;};
+	// Editor markers supply vertices in numeric order; retain the radius as fallback.
+	private _safezoneType = 'RAD';
+	private _safezoneArea = ['QS_marker_base_marker',_safezoneRadius];
+	private _vertexMarkers = [];
+	private _vertexNumbers = [];
+	private _invalidMarkers = FALSE;
+	private _markerPrefix = 'QS_base_safe_';
+	{
+		if ((_x select [0,count _markerPrefix]) isEqualTo _markerPrefix) then {
+			private _suffix = _x select [count _markerPrefix];
+			private _digits = toArray _suffix;
+			if ((_digits isEqualTo []) || {(_digits findIf {(_x < 48) || {_x > 57}}) isNotEqualTo -1}) then {
+				_invalidMarkers = TRUE;
+			} else {
+				private _number = parseNumber _suffix;
+				if ((_number <= 0) || {_number in _vertexNumbers}) then {
+					_invalidMarkers = TRUE;
+				} else {
+					_vertexNumbers pushBack _number;
+					_vertexMarkers pushBack [_number,_x];
+				};
+			};
+		};
+	} forEach allMapMarkers;
+	_vertexMarkers sort TRUE;
+	private _vertices = _vertexMarkers apply {
+		private _position = markerPos (_x # 1);
+		[_position # 0,_position # 1,0]
+	};
+	private _twiceArea = 0;
+	if ((count _vertices) >= 3) then {
+		// Translate to the first vertex to avoid cancellation at large map coordinates.
+		private _origin = _vertices # 0;
+		{
+			private _point = _x vectorDiff _origin;
+			private _next = (_vertices # ((_forEachIndex + 1) mod (count _vertices))) vectorDiff _origin;
+			_twiceArea = _twiceArea + (((_point # 0) * (_next # 1)) - ((_next # 0) * (_point # 1)));
+		} forEach _vertices;
+	};
+	if (
+		(!_invalidMarkers) &&
+		{(count _vertices) >= 3} &&
+		{(count (_vertices arrayIntersect _vertices)) isEqualTo (count _vertices)} &&
+		{(abs _twiceArea) > 0.01}
+	) then {
+		_safezoneType = 'POLY';
+		_safezoneArea = [_vertices,-1]; // No altitude restriction.
+	} else {
+		diag_log format ['QS main base safe zone: circular fallback (invalid marker names/numbers: %1, vertices: %2, twice signed area: %3). Use at least three distinct QS_base_safe_# markers in perimeter order.',_invalidMarkers,count _vertices,_twiceArea];
+	};
 	_szIn = {
 		params ['_id','_zoneActive','_zoneType','_type','_level','_areaParams','_codeEntry','_codeExit','_codeCondition','_codeEval','_zoneSides'];
 		[1] call QS_fnc_clientEventFiredPrevent;
@@ -116,7 +166,7 @@ if (_mode isEqualTo 0) then {
 	_szCondition = {
 		TRUE
 	};
-	['ADD',['BASE_HIGHSEC_0',TRUE,'SAFE','RAD',2,['QS_marker_base_marker',_safezoneRadius],_szIn,_szOut,_szCondition,_szEval,[WEST]]] call QS_fnc_zoneManager;
+	['ADD',['BASE_HIGHSEC_0',TRUE,'SAFE',_safezoneType,2,_safezoneArea,_szIn,_szOut,_szCondition,_szEval,[WEST]]] call QS_fnc_zoneManager;
 };
 if (_mode isEqualTo 1) then {
 	//comment 'FOB';

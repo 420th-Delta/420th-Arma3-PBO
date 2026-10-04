@@ -88,8 +88,12 @@ if (_mode isEqualTo 'GET') exitWith {
 				)} ||
 				{(
 					(_type isEqualTo 'POLY') &&
-					{((_entity isEqualType objNull) && {(_entity inPolygon (_areaParams # 0))})} &&
-					{((_areaParams # 1) isEqualTo -1) || {(((getPosASL _entity) # 2) < (_areaParams # 1))}}
+					{((_entity isEqualTypeAny [objNull,[]]) && {(_entity inPolygon (_areaParams # 0))})} &&
+					{((_areaParams # 1) isEqualTo -1) || {
+						// Coordinate queries use ASL, matching the existing object height check.
+						private _positionASL = if (_entity isEqualType objNull) then {getPosASL _entity} else {_entity};
+						((_positionASL # 2) < (_areaParams # 1))
+					}}
 				)} ||
 				{(
 					(_type isEqualTo 'CUSTOM') &&
