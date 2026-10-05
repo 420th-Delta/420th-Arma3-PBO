@@ -56,6 +56,7 @@ if (_type isEqualTo 'onLoad') exitWith {
 	(_display displayCtrl 1610) ctrlSetText 'PMC Skins';
 	(_display displayCtrl 1610) ctrlSetToolTip 'Skins shared by your Private Military Company';
 	(_display displayCtrl 1610) ctrlEnable TRUE;
+	['MAIN_BUTTON',_display] call QS_fnc_clientVehicleAccess;
 };
 if (_type isEqualTo 'onUnload') exitWith {
 	closeDialog 2;

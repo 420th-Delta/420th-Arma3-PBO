@@ -3,15 +3,14 @@ File: fn_clientInGameUIAction.sqf
 Author:
 
 	Quiksilver
-	
 Last modified:
 
 	9/11/2023 A3 2.14 by Quiksilver
-	
 Description:
-	
 	-
 ______________________________________________/*/
+
+if (['NATIVE_ACTION',_this] call QS_fnc_clientVehicleAccess) exitWith {TRUE};
 
 if (
 	(_this isEqualTo []) ||
@@ -251,7 +250,7 @@ if (_QS_actionName isEqualTo 'RepairVehicle') exitWith {
 				[63,[5,[(format [localize 'STR_QS_Text_261',profileName]),'PLAIN DOWN',0.5]]] remoteExec ['QS_fnc_remoteExec',(effectiveCommander _QS_actionTarget),FALSE];
 			};
 			if ((fuel (_this # 0)) isEqualTo 0) then {
-				0 = [_this # 0] spawn {
+				private _fuelRecovery = [_this # 0] spawn {
 					_v = _this # 0;
 					uiSleep 5;
 					if (local _v) then {
@@ -500,8 +499,6 @@ if (_QS_actionName isEqualTo 'Assemble') then {
 		_QS_c = TRUE;
 		50 cutText [localize 'STR_QS_Text_067','PLAIN'];
 	};
-	//"$STR_A3_DISASSEMBLE"
-	//"$STR_ACTION_ASSEMBLE"
 	if (!(['$STR_A3_DISASSEMBLE',_QS_actionText,FALSE] call (missionNamespace getVariable 'QS_fnc_inString'))) then {
 		if (!isNil {player getVariable 'QS_client_assembledWeapons'}) then {
 			private _assembledWeapons = player getVariable 'QS_client_assembledWeapons';
@@ -577,8 +574,7 @@ if (_QS_actionName isEqualTo 'UseMagazine') exitWith {
 };
 if (_QS_actionName isEqualTo 'DisAssemble') exitWith {
 	if (
-		(!isNull (attachedTo _QS_actionTarget)) //&&
-		//((attachedTo _QS_actionTarget) isKindOf 'CAManBase')
+		(!isNull (attachedTo _QS_actionTarget))
 	) then {
 		50 cutText [localize 'STR_QS_Text_070','PLAIN DOWN',0.5];
 		_QS_c = TRUE;
@@ -616,7 +612,7 @@ if (_QS_actionName in ['TakeVehicleControl','MoveToPilot']) exitWith {
 		50 cutText [localize 'STR_QS_Text_384','PLAIN',0.333];
 		_QS_c = TRUE;
 	};
-	if (lockedDriver _QS_actionTarget) then {
+	if ((lockedDriver _QS_actionTarget) || {['LOCKED_FOR',_QS_actionTarget,player,'driver'] call QS_fnc_clientVehicleAccess}) then {
 		50 cutText [localize 'STR_QS_Text_394','PLAIN',0.333];
 		_QS_c = TRUE;
 	};
@@ -682,28 +678,14 @@ if (_QS_actionName isEqualTo 'UserType') then {
 		(toLower (localize "$STR_A3_HATCH_OPEN")),
 		(toLower (localize "$STR_A3_HATCH_CLOSE"))
 	]) then {
-		/*/
-			private _info = 2 call (missionNamespace getVariable 'QS_fnc_getDoor');
-			_info params ['_house','_door'];
-			if (isNull _house) exitWith {};
-			private _getDoorAnimations = [_house, _door] call (missionNamespace getVariable 'QS_fnc_getDoorAnimations');
-			_getDoorAnimations params ['_animations','_lockedVariable'];
-			if (_animations isEqualTo []) exitWith {};
-			if (diag_tickTime > (missionNamespace getVariable ['QS_interact_doorLastOpenTime',-1])) then {
-				missionNamespace setVariable ['QS_interact_doorLastOpenTime',(diag_tickTime + 1),FALSE];
-				2 call (missionNamespace getVariable 'QS_fnc_clientInteractDoor');
-			};
-		/*/
 	} else {
 		if (_actionTextLower in [
 			(toLower (localize 'STR_QS_Interact_019')),		// 'beacons on',
 			(toLower (localize 'STR_QS_Interact_020'))		// 'beacons off'
 		]) then {
 			if (_actionTextLower isEqualTo (toLower (localize 'STR_QS_Interact_019'))) then {
-				//comment 'Beacons on';
 				call (missionNamespace getVariable 'QS_fnc_clientInteractUtilityOffroad');
 			} else {
-				//comment 'Beacons off';
 				(vehicle player) setVariable ['Utility_Offroad_Beacons',FALSE,TRUE];
 			};
 		};
@@ -750,7 +732,6 @@ if (_QS_actionName isEqualTo 'UnloadUnconsciousUnits') exitWith {
 	if (!isNull (isVehicleCargo _QS_actionTarget)) then {
 		50 cutText [localize 'STR_QS_Text_070','PLAIN DOWN',0.5];
 		_QS_c = TRUE;
-		
 	};
 	if (surfaceIsWater (getPosWorld _QS_actionTarget)) then {
 		50 cutText [localize 'STR_QS_Text_070','PLAIN DOWN',0.5];
