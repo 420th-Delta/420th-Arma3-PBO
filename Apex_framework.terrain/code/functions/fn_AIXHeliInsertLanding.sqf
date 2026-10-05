@@ -3,11 +3,11 @@ File: fn_AIXHeliInsertLanding.sqf
 Author:
 
 	Quiksilver
-	
+
 Last modified:
 
 	9/10/2023 A3 2.14 by Quiksilver
-	
+
 Description:
 
 	-
@@ -16,11 +16,31 @@ __________________________________________________/*/
 params ['_groupLeader'];
 _v = vehicle _groupLeader;
 _g = group _groupLeader;
+
+private _ownedObjects = _v getVariable ['QS_Taru_ownedObjects',[]];
+private _ownedGroups = _v getVariable ['QS_Taru_ownedGroups',[]];
+private _auxHandles = _v getVariable ['QS_Taru_auxHandles',[]];
+_v setVariable ['QS_Taru_ownedObjects',_ownedObjects];
+_v setVariable ['QS_Taru_ownedGroups',_ownedGroups];
+_v setVariable ['QS_Taru_auxHandles',_auxHandles];
+private _originalPilot = _groupLeader;
+private _fn_owned = {
+    local _v && {local _g} && {alive _originalPilot} && {(driver _v) isEqualTo _originalPilot} &&
+    {((crew _v) findIf {isPlayer _x || {captive _x} || {!local _x} || {!isNull remoteControlled _x} || {!isNull (_x getVariable ['bis_fnc_moduleRemoteControl_owner',objNull])}}) < 0}
+};
+if (!(call _fn_owned)) exitWith {};
+private _pad = _v getVariable ['QS_assignedHelipad',objNull];
+private _fn_landed = {
+    alive _v && {canMove _v} && {call _fn_owned} && {!isNull _pad} && {_v distance2D _pad < 35} &&
+    {isTouchingGround _v || {(getPosATL _v # 2) < 2.5}} && {vectorMagnitude velocity _v < 3}
+};
+_v setVariable ['QS_Taru_stage','LANDING',true];
 _v land 'GET OUT';
 _v flyInHeight [0.1,TRUE];
 if ((random 1) > 0.333) then {
-	[_v] spawn {
-		params ['_v'];
+	isNil {
+	private _smokeHandle = [_v,_ownedObjects] spawn {
+		params ['_v','_ownedObjects'];
 		private _smoke = objNull;
 		private _vPos = position (_v getVariable 'QS_assignedHelipad');
 		private _position = [0,0,0];
@@ -29,26 +49,34 @@ if ((random 1) > 0.333) then {
 			for '_x' from 0 to 7 step 1 do {
 				_position = _vPos getPos [(25 + (random [0,2.5,5])),_increment];
 				_increment = _increment + 45;
-				_smoke = createVehicle ['SmokeShellArty',_position,[],0,'CAN_COLLIDE'];
+				isNil {
+					_smoke = createVehicle ['SmokeShellArty',_position,[],0,'CAN_COLLIDE'];
+					_ownedObjects pushBack _smoke;
+				};
 				_smoke setVehiclePosition [(AGLToASL _position),[],3,'CAN_COLLIDE'];
 				(missionNamespace getVariable 'QS_garbageCollector') pushBack [_smoke,'DELAYED_FORCED',(time + 90)];
 			};
 		};
+	};
+	_auxHandles pushBack _smokeHandle;
 	};
 };
 _timeout = diag_tickTime + 60;
 waitUntil {
 	uiSleep 0.25;
 	(
-		(isTouchingGround _v) ||
-		{(((getPosATL _v) # 2) < 2.5)} ||
-		{(!alive _v)} || 
-		{(!canMove _v)} || 
+		(call _fn_landed) ||
+        {!(call _fn_owned)} ||
+		{(!alive _v)} ||
+		{(!canMove _v)} ||
 		{(diag_tickTime > _timeout)}
 	)
 };
+if (!(call _fn_owned)) exitWith {};
 _v removeAllEventHandlers 'GetOut';
-private _spawnUnits = alive _v && ((((getPosATL _v) # 2) < 10) || (isTouchingGround _v));
+private _spawnUnits = (call _fn_landed) && {diag_tickTime <= _timeout};
+_v setVariable ['QS_Taru_genericDelivered',_spawnUnits,true];
+_v setVariable ['QS_Taru_manifestReady',false];
 _side = EAST;
 if (_spawnUnits) then {
 	private _unitTypes = ['o_heli_insert_1'] call QS_data_listUnits;
@@ -60,11 +88,18 @@ if (_spawnUnits) then {
 	};
 	private _unit = objNull;
 	private _units = [];
-	_infantryGroup = createGroup [_side,TRUE];
+	private _infantryGroup = grpNull;
+	isNil {
+		_infantryGroup = createGroup [_side,TRUE];
+		_ownedGroups pushBack _infantryGroup;
+	};
 	_emptyPositions = _v emptyPositions 'Cargo';
 	for '_x' from 0 to ((round (_emptyPositions * (selectRandom [0.35,0.5,0.75]))) - 1) step 1 do {
 		_unitType = selectRandomWeighted _unitTypes;
-		_unit = _infantryGroup createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[-100,-100,0],[],0,'NONE'];
+		isNil {
+			_unit = _infantryGroup createUnit [QS_core_units_map getOrDefault [toLowerANSI _unitType,_unitType],[-100,-100,0],[],0,'NONE'];
+			_ownedObjects pushBack _unit;
+		};
 		_unit setVariable ['QS_dynSim_ignore',TRUE,TRUE];
 		_infantryGroup setBehaviour 'COMBAT';
 		_infantryGroup setCombatMode 'RED';
@@ -81,7 +116,9 @@ if (_spawnUnits) then {
 		_units pushBack _unit;
 		_unit setVehiclePosition [(getPosWorld _v),[],15,'NONE'];
 	};
-	//comment 'Radial positions';
+	_v setVariable ['QS_Taru_manifest',+_units];
+	_v setVariable ['QS_Taru_manifestReady',true];
+
 	_position = missionNamespace getVariable ['QS_hqPos',(missionNamespace getVariable 'QS_aoPos')];
 	_infantryGroup enableAttack TRUE;
 	[(units _infantryGroup),2] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
@@ -113,7 +150,8 @@ if (_spawnUnits) then {
 		_QS_array pushBack _x;
 	} forEach (units _infantryGroup);
 	missionNamespace setVariable ['QS_enemyGroundReinforceArray',_QS_array,FALSE];
-	[_units,getPosWorld _v,_infantryGroup] spawn {
+	isNil {
+	private _activationHandle = [_units,getPosWorld _v,_infantryGroup] spawn {
 		params ['_units','_position','_group'];
 		uiSleep 2;
 		{
@@ -131,38 +169,13 @@ if (_spawnUnits) then {
 		_units doFollow (leader _group);
 		[(units _group),1] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
 	};
+	_auxHandles pushBack _activationHandle;
+	};
 };
 _helipad = _v getVariable ['QS_assignedHelipad',objNull];
 if (!isNull _helipad) then {
 	deleteVehicle _helipad;
 };
-_v land 'NONE';
-_v flyInHeight [50,FALSE];
-sleep 0.5;
-_wp = _g addWaypoint [(_v getVariable ['QS_heli_spawnPosition',[0,0,50]]),0];
-_wp setWaypointType 'MOVE';
-_wp setWaypointSpeed 'FULL';
-_wp setWaypointBehaviour 'CARELESS';
-_wp setWaypointCombatMode 'BLUE';
-_wp setWaypointCompletionRadius 150;
-_g addEventHandler [
-	'WaypointComplete',
-	{
-		params ['_group','_waypointIndex'];
-		_group removeEventHandler [_thisEvent,_thisEventHandler];
-		_leader = leader _group;
-		_v = vehicle _leader;
-		deleteVehicleCrew _v;
-		if (!isNull (_v getVariable 'QS_assignedHelipad')) then {
-			deleteVehicle (_v getVariable 'QS_assignedHelipad');
-		};
-		if ((allPlayers inAreaArray [_v,500,500,0,FALSE]) isEqualTo []) then {
-			deleteVehicle _v;
-		} else {
-			_v setDamage [1,TRUE];
-		};
-	}
-];
 if (!isNull (_v getVariable ['QS_heliInsert_supportHeli',objNull])) then {
 	_supportHeli = _v getVariable 'QS_heliInsert_supportHeli';
 	_v removeAllEventHandlers 'Hit';
@@ -170,7 +183,8 @@ if (!isNull (_v getVariable ['QS_heliInsert_supportHeli',objNull])) then {
 		if (((crew _supportHeli) findIf {(alive _x)}) isNotEqualTo -1) then {
 			_supportGroup = group (effectiveCommander _supportHeli);
 			_supportGroup lockWP FALSE;
-			[_supportHeli,_supportGroup,_v] spawn {
+			isNil {
+			private _supportReturnHandle = [_supportHeli,_supportGroup,_v] spawn {
 				params ['_supportHeli','_supportGroup','_v'];
 				sleep 10;
 				_supportGroup = group (effectiveCommander _supportHeli);
@@ -209,6 +223,12 @@ if (!isNull (_v getVariable ['QS_heliInsert_supportHeli',objNull])) then {
 					}
 				];
 			};
+			_auxHandles pushBack _supportReturnHandle;
+			};
 		};
 	};
+};
+
+if (call _fn_owned) then {
+    ['RETURN',_v,objNull,getPosATL _v,_v getVariable ['QS_heli_spawnPosition',[0,0,150]],_v getVariable ['QS_heli_centerPosition',[0,0,0]],'',-1,_spawnUnits] call compile preprocessFileLineNumbers 'code\scripts\QS_TaruDelivery.sqf';
 };
