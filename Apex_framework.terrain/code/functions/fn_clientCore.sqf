@@ -3026,6 +3026,7 @@ for '_z' from 0 to 1 step 0 do {
 				{(_cursorDistance < 5)} &&
 				{(_cursorTarget isKindOf 'CAManBase')} &&
 				{(isPlayer _cursorTarget)} &&
+				{!(_cursorTarget isKindOf 'HeadlessClient_F')} &&
 				{((group _cursorTarget) isNotEqualTo (group _QS_player))} &&
 				{(!(_grpTarget getVariable [_QS_joinGroup_privateVar,_false]))}
 			) then {
