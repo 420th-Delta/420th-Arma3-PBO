@@ -198,6 +198,9 @@ _mainMissionRefreshAt = 1;
 _mainMissionRadius = 750;
 _mainMissionRegionIndex = -1;
 _regionMasterList = call (compileScript ['code\config\QS_data_ao.sqf']);
+private _classicLowPopulationRegions = _regionMasterList select {(_x # 0) isEqualTo 0};
+private _classicRegionRestricted = FALSE;
+private _classicLastAOId = '';
 _defendAOActive = FALSE;
 // Added Code
 // MEGA_CORE_INIT_BEGIN
@@ -1684,9 +1687,25 @@ for '_x' from 0 to 1 step 0 do {
 							(!(missionNamespace getVariable ['QS_aoSuspended',_false])) && 
 							(!(missionNamespace getVariable ['QS_customAO_active',_false]))
 						) then {
+							// Apply population changes to the next AO, including any queued locations.
+							// Terrains without the configured low-population region retain their existing rotation.
+							private _restrictClassicRegion = ((count (allPlayers - (entities 'HeadlessClient_F'))) < 20) && {_classicLowPopulationRegions isNotEqualTo []};
+							if (_restrictClassicRegion isNotEqualTo _classicRegionRestricted) then {
+								_aoList = [];
+								_mainMissionRegionListProxy = [];
+								_classicRegionRestricted = _restrictClassicRegion;
+							};
+							// Keep the previous AO excluded even after a pool or population reset.
+							private _classicEligibleRegions = ([_regionMasterList,_classicLowPopulationRegions] select _classicRegionRestricted) select {
+								((_x # 1) findIf {(_x # 0) isNotEqualTo _classicLastAOId}) >= 0
+							};
+							// Leave spawning idle if no different AO is allowed by the current rules.
+							if (_classicEligibleRegions isEqualTo []) exitWith {};
+							_aoList = _aoList select {(_x # 0) isNotEqualTo _classicLastAOId};
+							_mainMissionRegionListProxy = _mainMissionRegionListProxy select {_x in _classicEligibleRegions};
 							if (_aoList isEqualTo []) then {
 								if (_mainMissionRegionListProxy isEqualTo []) then {
-									_mainMissionRegionListProxy = _regionMasterList call _fn_arrayShuffle;
+									_mainMissionRegionListProxy = _classicEligibleRegions call _fn_arrayShuffle;
 									if ((_QS_worldName isEqualTo 'Tanoa') && ((random 1) > 0.5)) then {
 										_mainMissionRegion = _mainMissionRegionListProxy # 0;
 									} else {
@@ -1701,7 +1720,7 @@ for '_x' from 0 to 1 step 0 do {
 									_mainMissionRegionListProxy deleteAt _mainMissionRegionIndex;
 									missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion # 0),_false];								
 								};
-								_mainMissionRegion_aoList = (_mainMissionRegion # 1) call _fn_arrayShuffle;
+								_mainMissionRegion_aoList = ((_mainMissionRegion # 1) select {(_x # 0) isNotEqualTo _classicLastAOId}) call _fn_arrayShuffle;
 								for '_x' from 0 to (round(((count _mainMissionRegion_aoList) * 0.75) - 1)) step 1 do {
 									_ao = selectRandom _mainMissionRegion_aoList;
 									_aoList pushBack _ao;
@@ -1709,6 +1728,7 @@ for '_x' from 0 to 1 step 0 do {
 								};
 							};
 							_ao = selectRandom _aoList;
+							_classicLastAOId = _ao # 0;
 							diag_log str _ao;
 							_aoList deleteAt (_aoList find _ao);
 							_mainMissionActive = _true;
