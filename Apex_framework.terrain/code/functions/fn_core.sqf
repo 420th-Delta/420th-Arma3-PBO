@@ -1960,6 +1960,8 @@ for '_x' from 0 to 1 step 0 do {
 // Updated Code
 			// MEGA_CORE_REQUEST_BEGIN
 			private _megaDefenseRequest = FALSE;
+			private _staffDefendRequest = missionNamespace getVariable ['QS_staffDefendRequest',0];
+			private _staffForceDefend = _staffDefendRequest isEqualTo 2;
 			isNil {
 				private _megaDefenseCore = missionNamespace getVariable ['QS_megaDefense_core',['IDLE',-1,[]]];
 				_megaDefenseRequest = (missionNamespace getVariable ['QS_megaDefense_pending',FALSE]) &&
@@ -1969,7 +1971,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (_megaDefenseRequest) then {missionNamespace setVariable ['QS_megaDefense_core',['TRANSITION',_megaDefenseEpoch,+(_megaDefenseCore # 2)],FALSE];};
 			};
 			// MEGA_CORE_REQUEST_END
-			if ((_timeNow > _aoGraceTime) || {_megaDefenseRequest}) then {
+			if ((_timeNow > _aoGraceTime) || {_megaDefenseRequest} || {_staffForceDefend}) then {
 // End Updated Code
 				if ((missionNamespace getVariable 'QS_mission_aoType') isEqualTo 'CLASSIC') then {
 					if (_timeNow > _avgPlayerCountCheckDelay) then {
@@ -1982,7 +1984,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|						([0] call _fn_aoSubObjectives) ||
 // Updated Code
-						_megaDefenseRequest || {([0] call _fn_aoSubObjectives)} ||
+						_megaDefenseRequest || {_staffForceDefend} || {([0] call _fn_aoSubObjectives)} ||
 // End Updated Code
 						{(missionNamespace getVariable 'QS_aoCycleVar')}
 					) then {
@@ -1990,6 +1992,12 @@ for '_x' from 0 to 1 step 0 do {
 // Added Code
 						// MEGA_CORE_HANDOFF_BEGIN
 						private _normalAO_manualDefense = _megaDefenseRequest;
+						private _normalAO_staffDefense = _staffDefendRequest > 0;
+						if (_normalAO_staffDefense) then {
+							missionNamespace setVariable ['QS_staffDefendRequest',0,_false];
+							missionNamespace setVariable ['QS_staffDefendStarting',_true,_false];
+							missionNamespace setVariable ['QS_forceDefend',1,_true];
+						};
 						missionNamespace setVariable ['QS_megaDefense_core',[[ 'IDLE','TRANSITION' ] select _normalAO_manualDefense,_megaDefenseEpoch,+(missionNamespace getVariable ['QS_HQpos',[]])],FALSE];
 						if (_normalAO_manualDefense) then {
 							missionNamespace setVariable ['QS_classic_AI_triggerInit',FALSE,FALSE];
@@ -2308,7 +2316,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|						if ((_ao # 8) isNotEqualTo 0) then {
 // Updated Code
-						if (((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense}) then {
+						if (((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense} || {_normalAO_staffDefense}) then {
 // End Updated Code
 							_defendAO = _true;
 							_defendAOActive = _true;
@@ -2357,7 +2365,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|							((_ao # 8) isNotEqualTo 0),
 // Updated Code
-							(((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense}),
+							(((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense} || {_normalAO_staffDefense}),
 // End Updated Code
 							_normalAO_defendScript
 						] spawn {

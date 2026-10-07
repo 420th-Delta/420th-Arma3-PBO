@@ -439,6 +439,8 @@ private _weaponsList = configFile >> 'CfgWeapons';
 	['QS_smSuccess',FALSE,FALSE],
 	['QS_forceNightVote',FALSE,FALSE],
 	['QS_forceDefend',0,TRUE],
+	['QS_staffDefendRequest',0,FALSE],
+	['QS_staffDefendStarting',FALSE,FALSE],
 	['QS_heartAttacks',0,TRUE],
 	['QS_mainao_firstRun',TRUE,FALSE],
 	['QS_commanderAlive',FALSE,FALSE],

@@ -52,7 +52,9 @@ diag_log 'Defend AO 0';
 // Updated Code
 // MEGA_DEFENSE_ENTRY_BEGIN
 private _megaDefense = missionNamespace getVariable ['QS_megaDefense_pending',FALSE];
-if ((time < 300) && {!_megaDefense}) exitWith {};
+private _staffDefense = missionNamespace getVariable ['QS_staffDefendStarting',FALSE];
+if (_staffDefense) then {missionNamespace setVariable ['QS_staffDefendStarting',FALSE,FALSE];};
+if ((time < 300) && {!_megaDefense} && {!_staffDefense}) exitWith {};
 private _defendForce = [missionNamespace getVariable 'QS_forceDefend',1] select _megaDefense;
 // End Updated Code
 _allPlayersCount = count allPlayers;
