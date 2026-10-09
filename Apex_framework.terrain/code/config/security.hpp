@@ -30,18 +30,7 @@ class CfgDisabledCommands {
         };
     };
 
-
-	/*/ Required for Zeus map markers.    RE-ENABLE THIS SECTION TO STRENGTHEN ANTICHEAT SECURITY. DISABLED FOR ZEUS MARKER FUNCTIONALITY.
-    class SETMARKERTEXT
-    {
-        class SYNTAX1
-        {
-            targets[] = {1,0,0};
-            args[] = {{"STRING"},{"STRING"}};
-        };
-    };
-	/*/
-
+	// SETMARKERTEXT restrictions remain disabled for Zeus map markers.
 
     class ADDMPEVENTHANDLER
     {
@@ -52,18 +41,7 @@ class CfgDisabledCommands {
         };
     };
 
-
-	/*/ Enabling this will cause some issues with vanilla UAV logic
-    class SETWAYPOINTSTATEMENTS
-    {
-        class SYNTAX1
-        {
-            targets[] = {1,0,1};
-            args[] = {{"ARRAY"},{"ARRAY"}};
-        };
-    };
-	/*/
-
+	// SETWAYPOINTSTATEMENTS restrictions remain disabled for vanilla UAV compatibility.
 
     class PUBLICVARIABLE
     {
@@ -213,6 +191,7 @@ class CfgRemoteExec {
 		class BIS_fnc_showNotification {allowedTargets = 1;};
 		class QS_fnc_remoteExec {allowedTargets = 0;};
 		class QS_fnc_remoteExecCmd {allowedTargets = 0;};
+		class QS_fnc_clientVehicleAccess {allowedTargets = 0; jip = 0;};
 		class QS_fnc_finishCargoChildUnload {allowedTargets = 0;};
 		class QS_fnc_finishCargoParentUnload {allowedTargets = 0;};
 		class QS_fnc_clientApplyEntityState {allowedTargets = 1; jip = 0;};

@@ -1,13 +1,11 @@
 /*/
 File: fn_initPlayerLocal.sqf
 Author:
-	
 	Quiksilver
 
 Last modified:
 
 	9/10/2023 A3 2.14 by Quiksilver
-	
 Description:
 
 	Player Init
@@ -523,9 +521,7 @@ if (!isNil {player getVariable 'BIS_fnc_addCuratorPlayer_handler'}) then {
 {
 	inGameUISetEventHandler _x;
 } forEach [
-	['Action',"_this call (missionNamespace getVariable 'QS_fnc_clientInGameUIAction');"]//,
-	//['NextAction',"_this call (missionNamespace getVariable 'QS_fnc_clientInGameUINextAction');"],
-	//['PrevAction',"_this call (missionNamespace getVariable 'QS_fnc_clientInGameUIPrevAction');"]
+	['Action',"_this call (missionNamespace getVariable 'QS_fnc_clientInGameUIAction');"]
 ];
 {
 	player addEventHandler _x;
@@ -540,8 +536,6 @@ if (!isNil {player getVariable 'BIS_fnc_addCuratorPlayer_handler'}) then {
 	['HitPart',{call (missionNamespace getVariable 'QS_fnc_clientEventHitPart')}],
 	['HandleDamage',{call (missionNamespace getVariable 'QS_fnc_clientEventHandleDamage')}],
 	['FiredNear',{call (missionNamespace getVariable 'QS_fnc_clientEventFiredNear')}],
-	//['GestureChanged',{call (missionNamespace getVariable 'QS_fnc_clientEventGestureChanged')}],					// These execute frequently when player is moving, only use if you have a reason. Test out in editor
-	//['GestureDone',{call (missionNamespace getVariable 'QS_fnc_clientEventGestureDone')}],						// These execute frequently when player is moving, only use if you have a reason. Test out in editor
 	['GetInMan',{call (missionNamespace getVariable 'QS_fnc_clientEventGetInMan')}],
 	['GetOutMan',{call (missionNamespace getVariable 'QS_fnc_clientEventGetOutMan')}],
 	['SeatSwitchedMan',{call (missionNamespace getVariable 'QS_fnc_clientEventSeatSwitchedMan')}],
@@ -613,7 +607,6 @@ QS_ui_releaseActions = [
 			[(missionProfileNamespace getVariable 'QS_ClientUnitInsignia2')] call (missionNamespace getVariable 'QS_fnc_clientSetUnitInsignia');
 		};
 		// Uniform
-		
 		if (
 			(!isNil {missionProfileNamespace getVariable 'QS_ClientUTexture2'}) &&
 			{((missionProfileNamespace getVariable 'QS_ClientUTexture2') isEqualType '')} &&
@@ -627,10 +620,8 @@ QS_ui_releaseActions = [
 			player setVariable ['QS_ClientUTexture2',(missionProfileNamespace getVariable 'QS_ClientUTexture2'),FALSE];
 			player setVariable ['QS_ClientUTexture2_Uniforms2',(missionProfileNamespace getVariable 'QS_ClientUTexture2_Uniforms2'),FALSE];
 			if ((vest player) isNotEqualTo '') then {
-			
 			};
 			if ((backpack player) isNotEqualTo '') then {
-			
 			};
 		};
 	};
@@ -736,43 +727,7 @@ player addRating (0 - (rating player));
 	['AUTOCOMBAT',FALSE],
 	['MOVE',TRUE]
 ];
-// Disabling the auto join group on connect feature until we can figure out the issue with players not appearing in group management.
-/*
-if (isNil {(group player) getVariable 'BIS_dg_reg'}) then {
-	_allGroups = (groups ((side _x) isEqualTo (player getVariable ['QS_unit_side',WEST]))) select {
-		(
-			(isPlayer (leader _x)) && 
-			{(!isNil {_x getVariable 'BIS_dg_reg'})} && 
-			{(!(_x getVariable ['BIS_dg_pri',FALSE]))}
-		)
-	};
-	if (_allGroups isNotEqualTo []) then {
-		private _allGroupsSorted = [];
-		{
-			_allGroupsSorted pushBack [(count (units _x)),_x];
-		} forEach _allGroups;
-		_allGroupsSorted sort FALSE;
-		if (_allGroups isNotEqualTo []) then {
-			[player] joinSilent ((_allGroupsSorted # 0) # 1);
-		};
-	};
-};
-_squadParams = squadParams player;
-if (_squadParams isNotEqualTo []) then {
-	_squadName = (_squadParams # 0) # 0;
-	private _exit3 = FALSE;
-	{
-		if ((side (group _x)) isEqualTo (player getVariable ['QS_unit_side',WEST])) then {
-			if ((squadParams _x) isNotEqualTo []) then {
-				if ((((squadParams _x) # 0) # 0) isEqualTo _squadName) then {
-					[player] joinSilent (group _x);
-					_exit3 = TRUE;
-				};
-			};
-			if (_exit3) exitWith {};
-		};
-	} forEach allPlayers;
-};*/
+
 _worldName = worldName;
 if (_worldName isEqualTo 'Stratis') then {
 	private _terrainLocation = nearestLocation [[3764.32,7944.11,0.0131321],'nameLocal'];
@@ -884,7 +839,6 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 		];
 	};
 	if (_worldName isEqualTo 'Enoch') then {
-		
 	};
 	if (_worldName isEqualTo 'Stratis') then {
 		// Hide some key buildings in the base area
@@ -910,7 +864,6 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 		];
 	};
 };
-
 
 /*/================= Radio Channels/*/
 
@@ -1039,3 +992,5 @@ if (missionNamespace getVariable ['QS_missionConfig_introMusic',TRUE]) then {
 if (userInputDisabled) then {
 	disableUserInput FALSE;
 };
+
+['INIT'] call QS_fnc_clientVehicleAccess;
