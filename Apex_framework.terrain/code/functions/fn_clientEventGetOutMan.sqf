@@ -30,9 +30,10 @@ if (_isLocal) then {
 [0,_vehicle] call (missionNamespace getVariable 'QS_fnc_clientVehicleEventHandlers');
 if ((missionNamespace getVariable ['QS_missionConfig_artyEngine',1]) isEqualTo 1) then {
 	if (_vehicle isEqualTo (missionNamespace getVariable ['QS_arty',objNull])) then {
-		enableEngineArtillery FALSE;
+		[FALSE] call QS_fnc_clientArtilleryAccess;
 	};
 };
+[] call QS_fnc_clientArtilleryAccess;
 if (!isNil {player getVariable 'QS_pilot_vehicleInfo'}) then {
 	player setVariable ['QS_pilot_vehicleInfo',nil,TRUE];
 };

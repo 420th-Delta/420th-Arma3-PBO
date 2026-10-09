@@ -18,11 +18,25 @@ ___________________________________________*/
 [
 	// Weapons
 	[
+		'AHA_25mmGLMG',
+		'AHA_CZ57Avenger',
 		'apersminedispenser_mag'
 	],
 	
 	// Magazines
 	[
+		'OSS_12G_10rnd_HE',
+		'OSS_12G_20rnd_HE',
+		'7rnd_DE50_Pyro',
+		'3rnd_RevolverOSS_50BMG_EX',
+		'3rnd_RevolverOSS_50BMG_EXT',
+		'1rnd_20mmCarlG_HE',
+		'1rnd_20mmCarlG_HET',
+		'1rnd_37mmCarlG_HE',
+		'1rnd_37mmCarlG_HET',
+		'AHA_T24E2_MG',
+		'AHA_Commi_Vindi',
+		'OSS_TKB059',
 		'apersminedispenser_mag'
 	],
 	
@@ -96,6 +110,7 @@ ___________________________________________*/
 		'i_e_uavterminal'	
 	],*/
 	[
+		'b_tura_uavterminal_lxws',
 		'b_g_fia_uavterminal_lxws',
 		'o_uavterminal',
 		'i_uavterminal',

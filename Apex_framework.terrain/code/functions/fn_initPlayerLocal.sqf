@@ -675,7 +675,7 @@ enableDynamicSimulationSystem FALSE;
 disableRemoteSensors TRUE;
 calculatePlayerVisibilityByFriendly FALSE;
 useAISteeringComponent FALSE;
-enableEngineArtillery ((missionNamespace getVariable ['QS_missionConfig_artyEngine',1]) isEqualTo 2);
+[((missionNamespace getVariable ['QS_missionConfig_artyEngine',1]) isEqualTo 2)] call QS_fnc_clientArtilleryAccess;
 if (isNil {missionProfileNamespace getVariable 'QS_options_ambientLife'}) then {
 	missionProfileNamespace setVariable ['QS_options_ambientLife',TRUE];
 	enableEnvironment [TRUE,TRUE,getMissionConfigValue ['windyCoef',0.65]];

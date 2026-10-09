@@ -16,11 +16,11 @@ __________________________________________*/
 params ['_unit'];
 // engineer
 if (_unit getUnitTrait 'engineer') exitWith {
-	10
+	20
 };
 // mortar gunner
 if (_unit getUnitTrait 'QS_trait_gunner') exitWith {
-	4
+	10
 };
 // rifleman
 if (_unit getUnitTrait 'QS_trait_rifleman') exitWith {

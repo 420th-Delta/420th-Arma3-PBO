@@ -31,7 +31,10 @@ __________________________________________________/*/
 private _fn_taruShare = {
     params ['_connected','_sinceLift','_size','_ready','_roll'];
     if (!_ready || {_connected <= 0} || {_size <= 0}) exitWith {FALSE};
-    if (_connected < 20) exitWith {_roll < 0.90};
+
+    // disabled
+    // if (_connected < 20) exitWith {_roll < 0.90};
+
     // Seven squads' worth of ordinary arrivals buy one lift: <=12.5% by men.
     // Reset after a lift, so blocked flights cannot accumulate a catch-up burst.
     _sinceLift >= (7 * _size)

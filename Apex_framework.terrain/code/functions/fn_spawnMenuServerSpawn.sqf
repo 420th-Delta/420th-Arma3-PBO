@@ -384,5 +384,63 @@ if (_isVehicle) then {
 	];
 };
 
+// Finish server-local setup before moving the UAV and its crew to the requester.
+if (unitIsUAV _entity) then {
+	private _clientID = owner _unit;
+	if (_clientID > 2) then {
+		private _pilot = driver _entity;
+		private _crewGroup = group _pilot;
+		if (isNull _pilot || {isNull _crewGroup}) then {
+			diag_log format ['Spawn Menu: UAV ownership transfer skipped (no pilot/group). UAV=%1 client=%2',netId _entity,_clientID];
+		} else {
+			private _transferred = (groupOwner _crewGroup) isEqualTo _clientID;
+			if (!_transferred) then {
+				_transferred = _crewGroup setGroupOwner _clientID;
+			};
+			if (!_transferred) then {
+				diag_log format ['Spawn Menu: UAV ownership transfer failed. UAV=%1 client=%2',netId _entity,_clientID];
+			} else {
+				// Ownership propagation is asynchronous; do not delay the spawn reply.
+				[_entity,_unit,_crewGroup,_clientID] spawn {
+					params ['_uav','_requester','_crewGroup','_clientID'];
+					private _timeout = diag_tickTime + 10;
+					private _verified = FALSE;
+					waitUntil {
+						uiSleep 0.05;
+						if (!isNull _uav && {!isNull _crewGroup}) then {
+							_verified = (
+								((owner _uav) isEqualTo _clientID) &&
+								{(groupOwner _crewGroup) isEqualTo _clientID} &&
+								{!isNull (driver _uav)} &&
+								{((crew _uav) findIf {(owner _x) isNotEqualTo _clientID}) isEqualTo -1}
+							);
+						};
+						_verified ||
+						{isNull _uav} ||
+						{!alive _uav} ||
+						{isNull _requester} ||
+						{!isPlayer _requester} ||
+						{(owner _requester) isNotEqualTo _clientID} ||
+						{diag_tickTime >= _timeout}
+					};
+					if (
+						!_verified &&
+						{!isNull _uav} &&
+						{alive _uav} &&
+						{!isNull _requester} &&
+						{isPlayer _requester} &&
+						{(owner _requester) isEqualTo _clientID}
+					) then {
+						diag_log format [
+							'Spawn Menu: UAV ownership verification timed out. UAV=%1 target=%2 vehicleOwner=%3 groupOwner=%4 crewOwners=%5',
+							netId _uav,_clientID,owner _uav,groupOwner _crewGroup,(crew _uav) apply {owner _x}
+						];
+					};
+				};
+			};
+		};
+	};
+};
+
 private _displayName = getText (configFile >> 'CfgVehicles' >> _vehicleClass >> 'displayName');
 [_unit,format ['Spawn Menu: %1 spawned at grid %2.',_displayName,mapGridPosition _spawnPoint]] call _notify;

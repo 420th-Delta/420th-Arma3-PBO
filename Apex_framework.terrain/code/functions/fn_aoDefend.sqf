@@ -52,7 +52,9 @@ diag_log 'Defend AO 0';
 // Updated Code
 // MEGA_DEFENSE_ENTRY_BEGIN
 private _megaDefense = missionNamespace getVariable ['QS_megaDefense_pending',FALSE];
-if ((time < 300) && {!_megaDefense}) exitWith {};
+private _staffDefense = missionNamespace getVariable ['QS_staffDefendStarting',FALSE];
+if (_staffDefense) then {missionNamespace setVariable ['QS_staffDefendStarting',FALSE,FALSE];};
+if ((time < 300) && {!_megaDefense} && {!_staffDefense}) exitWith {};
 private _defendForce = [missionNamespace getVariable 'QS_forceDefend',1] select _megaDefense;
 // End Updated Code
 _allPlayersCount = count allPlayers;
@@ -889,7 +891,10 @@ for '_x' from 0 to 1 step 0 do {
 			_taruFlights = _taruFlights select {!scriptDone (_x # 1)};
 			private _cap = [3,1] select (_connected >= 20);
 			private _ready = diag_fps >= 18 && {_room >= _size + 1} && {_tickTimeNow >= _taruNext} && {count _taruFlights < _cap};
-			if (_connected > 0 && {_connected < 20} && {_room >= _size + 1} && {diag_fps >= 18} && {!_ready}) exitWith {};
+			
+			// Disabled
+			// if (_connected > 0 && {_connected < 20} && {_room >= _size + 1} && {diag_fps >= 18} && {!_ready}) exitWith {};
+
 			private _lift = ['TARU_POLICY',_connected,_taruSince,_size,_ready,random 1] call QS_fnc_AIXHeliInsert;
 			private _flight = [];
 			private _drop = +_spawnPos;

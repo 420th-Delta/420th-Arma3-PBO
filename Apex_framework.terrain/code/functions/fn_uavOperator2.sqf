@@ -437,12 +437,12 @@ for '_i' from 0 to 1 step 0 do {
 		if (_inNavalArtillery) then {
 			if (!_artilleryEngineEnabled) then {
 				_artilleryEngineEnabled = _true;
-				enableEngineArtillery _artilleryEngineEnabled;
+				[_artilleryEngineEnabled] call QS_fnc_clientArtilleryAccess;
 			};
 		} else {
 			if (_artilleryEngineEnabled) then {
 				_artilleryEngineEnabled = _false;
-				enableEngineArtillery _artilleryEngineEnabled;
+				[_artilleryEngineEnabled] call QS_fnc_clientArtilleryAccess;
 			};
 		};
 	};

@@ -1724,6 +1724,7 @@ for '_z' from 0 to 1 step 0 do {
 	_cameraView = cameraView;
 	if (_QS_uiTime > _QS_miscDelay1) then {
 		_QS_miscDelay1 = _QS_uiTime + 0.5;
+		[] call QS_fnc_clientArtilleryAccess;
 		_serverTime = serverTime;
 		if (_QS_player isNotEqualTo player) then {
 			_QS_player = player;
@@ -3025,6 +3026,7 @@ for '_z' from 0 to 1 step 0 do {
 				{(_cursorDistance < 5)} &&
 				{(_cursorTarget isKindOf 'CAManBase')} &&
 				{(isPlayer _cursorTarget)} &&
+				{!(_cursorTarget isKindOf 'HeadlessClient_F')} &&
 				{((group _cursorTarget) isNotEqualTo (group _QS_player))} &&
 				{(!(_grpTarget getVariable [_QS_joinGroup_privateVar,_false]))}
 			) then {
@@ -4884,7 +4886,8 @@ for '_z' from 0 to 1 step 0 do {
 						};
 						if (_QS_artyEnabled) then {
 							_QS_artyEnabled = _false;
-							enableEngineArtillery _false;	/*/ Disable arty computer if robocop detects trolling/friendly fire/*/
+							localNamespace setVariable ['QS_artilleryAccess_enforcementBlocked',_true];
+							[] call QS_fnc_clientArtilleryAccess;	/*/ Disable arty computer if robocop detects trolling/friendly fire/*/
 						};
 					};
 				};

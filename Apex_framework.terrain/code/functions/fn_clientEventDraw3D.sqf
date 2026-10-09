@@ -576,6 +576,10 @@ if (!isStreamFriendlyUIEnabled) then {
 			private _staffUIDs = ['ALL'] call (missionNamespace getVariable 'QS_fnc_whitelist');
 			private _getUnitIcon = {
 				params ['_unit'];
+				// Voice transmission overrides every normal player marker.
+				if ((isPlayer _unit) && {(getPlayerChannel _unit) isNotEqualTo -1}) exitWith {
+					'\a3\ui_f\data\IGUI\RscIngameUI\RscDisplayVoiceChat\microphone_ca.paa'
+				};
 				// Staff take precedence over leadership of any friendly group.
 				if ((getPlayerUID _unit) in _staffUIDs) exitWith {
 					'\a3\ui_f\data\GUI\cfg\Ranks\general_gs.paa'

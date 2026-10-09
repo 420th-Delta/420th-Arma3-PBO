@@ -1626,12 +1626,12 @@ _____________________________________________________________-->
             <Chinese>動態模擬已禁用</Chinese>
         </Key>
         <Key ID="STR_QS_Text_177">
-            <Original>3D Group Hexagons disabled</Original>
+            <Original>3D Group Icons disabled</Original>
             <Chinesesimp>禁用六边形友军标识</Chinesesimp>
             <Chinese>禁用六邊形友軍標識</Chinese>
         </Key>
         <Key ID="STR_QS_Text_178">
-            <Original>3D Group Hexagons enabled</Original>
+            <Original>3D Group Icons enabled</Original>
             <Chinesesimp>启用六边形友军标识</Chinesesimp>
             <Chinese>啟用六邊形友軍標識</Chinese>
         </Key>
@@ -8665,12 +8665,12 @@ _____________________________________________________________-->
             <Chinese>切換動態模擬</Chinese>
         </Key>
         <Key ID="STR_QS_Dialogs_049">
-            <Original>3D Group Hexagons</Original>
+            <Original>3D Group Icons</Original>
             <Chinesesimp>友军识别标记</Chinesesimp>
             <Chinese>友軍識別標記</Chinese>
         </Key>
         <Key ID="STR_QS_Dialogs_050">
-            <Original>Toggle 3D Group Hexagons</Original>
+            <Original>Toggle 3D Group Icons</Original>
             <Chinesesimp>切换友军识别</Chinesesimp>
             <Chinese>切換友軍識別</Chinese>
         </Key>

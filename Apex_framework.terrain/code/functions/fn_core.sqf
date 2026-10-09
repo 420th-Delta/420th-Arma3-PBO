@@ -52,9 +52,8 @@ private [
 	'_QS_wavesUpdate_checkDelay','_QS_lightningsUpdate_checkDelay_timer','_QS_lightningsUpdate_checkDelay','_QS_lightningsEnabled','_QS_canEnableLightnings',
 	'_QS_gustsUpdate_checkDelay_timer','_QS_gustsUpdate_checkDelay','_QS_rainbowUpdate_checkDelay_timer','_QS_rainbowUpdate_checkDelay','_QS_day','_QS_day_wind',
 	'_QS_day_overcast','_QS_day_rain','_QS_day_fog','_QS_day_lightnings','_QS_dayTime','_QS_dayTime_wind','_QS_dayTime_overcast','_QS_dayTime_rain','_QS_dayTime_fog',
-	'_QS_timeManager','_QS_date','_QS_date_checkDelay_timer','_QS_date_checkDelay','_QS_saveDate','_QS_saveDate_delay','_QS_timeAccelerationManager','_QS_solarHorizons',
-	'_QS_sunrise','_QS_sunset','_QS_solarNoon','_QS_timeAcceleration_inProgress','_QS_darkAccelerated','_QS_lightAccelerated','_QS_dawnDuskTimeDeccelerated',
-	'_QS_darkAccelerationFactor','_QS_noonAccelerationFactor','_QS_dawnDuskDeccelerationFactor','_QS_timeAccelerationControl',
+	'_QS_timeManager','_QS_date','_QS_saveDate','_QS_saveDate_delay','_QS_timeAccelerationManager',
+	'_QS_timeAccelerationControl',
 	'_QS_module_recruitableAI','_QS_module_recruitableAI_checkDelay','_QS_module_recruitableAI_array','_array','_unit','_randomize','_configCode',
 	'_t','_unitPos','_unitDir','_isRespawning','_canRespawnAfter','_respawnTickets','_exit','_QS_module_recruitableAI_delay','_QS_module_recruitableAI_side',
 	'_QS_module_recruitableAI_unitTypes','_QS_module_recruitableAI_pilotTypes','_QS_messagingSystem','_QS_messages','_QS_message_interval','_QS_message_delay','_QS_messageCurrent','_QS_messageCount',
@@ -84,7 +83,7 @@ private [
 	'_module_fob_assault_timer','_module_fob_assault_groupComposition','_module_fob_assault_group','_module_fob_assault_duration','_resumeScript',
 	'_QS_module_AI_cleanupCheckArray','_QS_module_AI_cleanup','_cleanupCheck','_module_fob_logistics_reinforceServices','_QS_module_airdefense_2',
 	'_module_fob_allUnits','_QS_module_cas_respawn','_QS_module_cas_respawn_threshold','_QS_module_cas_respawn_checkDelay','_QS_module_recruitableAI_data',
-	'_QS_rainCheckInterval','_QS_module_time_duskAcc','_QS_rainHoursMax','_QS_nextRainArray','_QS_heliDroneRespawnDelay','_QS_heliDroneRespawnCheckDelay',
+	'_QS_rainCheckInterval','_QS_rainHoursMax','_QS_nextRainArray','_QS_heliDroneRespawnDelay','_QS_heliDroneRespawnCheckDelay',
 	'_QS_aiAssignedTarget','_QS_vRespawnDist_base','_QS_vRespawnDist_field','_QS_module_aoSmallTasks','_QS_module_aoSmallTasks_delay','_QS_module_aoSmallTasks_checkDelay',
 	'_QS_module_aoSmallTasks_timeout','_QS_module_aoSmallTasks_list','_QS_module_aoSmallTasks_current','_QS_module_aoSmallTasks_data','_QS_module_aoSmallTasks_isActive',
 	'_QS_module_aoSmallTasks_timeoutDelay','_QS_marker_hqMarker_delay','_QS_marker_hqMarker_checkDelay',
@@ -97,7 +96,7 @@ private [
 	'_QS_corpseCollector','_QS_wreckCollector','_QS_remainsCollectorActive','_QS_module_opsec','_QS_module_opsec_delay','_QS_module_opsec_checkDelay','_QS_module_opsec_checkMarkers','_QS_module_opsec_checkVariables',
 	'_QS_module_opsec_clientHeartbeat','_QS_module_heartbeat_array','_QS_module_opsec_checkMarkers_whitelistedMarkers','_markerData','_QS_module_opsec_deleteMarker',
 	'_QS_allMapMarkers','_QS_diagTickTimeNow','_QS_system_weekday','_QS_productVersion','_allSimpleObjects','_smokeShellCount','_smokeShellLimit','_missionSmokeShells',
-	'_QS_module_dynSim','_QS_module_dynSim_delay','_QS_module_dynSim_checkDelay','_QS_module_time_dawnOffset','_QS_simulateEvent_data','_scMainMissionRegionListProxy','_scMainMissionRadius',
+	'_QS_module_dynSim','_QS_module_dynSim_delay','_QS_module_dynSim_checkDelay','_QS_simulateEvent_data','_scMainMissionRegionListProxy','_scMainMissionRadius',
 	'_scAOList','_scAOArray','_scAO','_scToRemove','_QS_module_customMissions','_QS_module_customMissions_list','_QS_module_customMission_selected','_QS_module_customMissions_delay',
 	'_QS_module_customMission_played','_scWinningSide','_scDuration','_scTimeStart','_missionObjectType','_QS_module_enemyCAS_spawnDelayDefault','_scAOIndex','_casJetObj',
 	'_casUID','_casAllowanceIndex','_casPilot','_casAllowancePool','_playerCountArray','_sum','_avgPlayerCount',
@@ -199,6 +198,9 @@ _mainMissionRefreshAt = 1;
 _mainMissionRadius = 750;
 _mainMissionRegionIndex = -1;
 _regionMasterList = call (compileScript ['code\config\QS_data_ao.sqf']);
+private _classicLowPopulationRegions = _regionMasterList select {(_x # 0) isEqualTo 0};
+private _classicRegionRestricted = FALSE;
+private _classicLastAOId = '';
 _defendAOActive = FALSE;
 // Added Code
 // MEGA_CORE_INIT_BEGIN
@@ -917,36 +919,24 @@ if (!(_QS_weatherDynamic)) then {
 /*/=============================== TIME MANAGER*/
 
 _QS_timeManager = TRUE;
-_QS_date_checkDelay_timer = 60;
-_QS_date_checkDelay = _timeNow + _QS_date_checkDelay_timer;
 _QS_saveDate = TRUE;
 _QS_saveDate_delay = _timeNow + 1800;
 _QS_timeAccelerationManager = TRUE;
-_QS_solarHorizons = _QS_date call (missionNamespace getVariable 'BIS_fnc_sunriseSunsetTime');
-_QS_sunrise = _QS_solarHorizons # 0;
-_QS_sunset = _QS_solarHorizons # 1;
-_QS_solarNoon = (_QS_sunrise + _QS_sunset) / 2;
-_QS_timeAcceleration_inProgress = 0;
-_QS_darkAccelerated = TRUE;
-_QS_lightAccelerated = TRUE;
-_QS_dawnDuskTimeDeccelerated = TRUE;
-(missionNamespace getVariable ['QS_missionConfig_timeMultiplier',[12,1.5,0.35]]) params [
-	'_QS_darkAccelerationFactor',
-	'_QS_noonAccelerationFactor',
-	'_QS_dawnDuskDeccelerationFactor'
-];
-// Use one constant time scale for the full day/night cycle.
-_QS_timeAccelerationControl = 12;
+// Fixed windows observed on June 1, 2035: dawn 04:00-06:00, dusk 18:00-20:00.
+// Four hours at 6x plus twenty hours at 24x gives a 90-minute day.
+private _fn_timeMultiplierForHour = {
+	params ['_hour'];
+	if (((_hour >= 4) && {_hour < 6}) || {(_hour >= 18) && {_hour < 20}}) then {
+		6
+	} else {
+		24
+	}
+};
+_QS_timeAccelerationControl = [dayTime] call _fn_timeMultiplierForHour;
 setTimeMultiplier _QS_timeAccelerationControl;
 _QS_currentTimeMultiplier = timeMultiplier;
 _QS_timeAccelerationManager_delay = 15;
 _QS_timeAccelerationManager_checkDelay = _timeNow + _QS_timeAccelerationManager_delay;
-_QS_module_time_duskAcc = 0.5;
-_QS_module_time_dawnOffset = 0.5;
-if (_QS_worldName isEqualTo 'Tanoa') then {
-	_QS_module_time_duskAcc = 1;
-	_QS_module_time_dawnOffset = 0.1;
-};
 _QS_baseLights = TRUE;
 missionNamespace setVariable ['QS_lamps',(missionNamespace getVariable 'QS_lamps'),TRUE];
 if (_QS_baseLights) then {
@@ -1467,7 +1457,6 @@ diag_log '***** Profile Saved *****';
 //comment 'Functions preload';
 _fn_arrayShuffle = missionNamespace getVariable 'QS_fnc_arrayShuffle';
 _fn_deleteTask = missionNamespace getVariable 'BIS_fnc_deleteTask';
-_fn_sunriseSunsetTime = missionNamespace getVariable 'BIS_fnc_sunriseSunsetTime';
 _fn_setUnitInsignia = missionNamespace getVariable 'BIS_fnc_setUnitInsignia';
 _fn_setTask = missionNamespace getVariable 'BIS_fnc_setTask';
 _fn_taskSetState = missionNamespace getVariable 'BIS_fnc_taskSetState';
@@ -1698,9 +1687,25 @@ for '_x' from 0 to 1 step 0 do {
 							(!(missionNamespace getVariable ['QS_aoSuspended',_false])) && 
 							(!(missionNamespace getVariable ['QS_customAO_active',_false]))
 						) then {
+							// Apply population changes to the next AO, including any queued locations.
+							// Terrains without the configured low-population region retain their existing rotation.
+							private _restrictClassicRegion = ((count (allPlayers - (entities 'HeadlessClient_F'))) < 20) && {_classicLowPopulationRegions isNotEqualTo []};
+							if (_restrictClassicRegion isNotEqualTo _classicRegionRestricted) then {
+								_aoList = [];
+								_mainMissionRegionListProxy = [];
+								_classicRegionRestricted = _restrictClassicRegion;
+							};
+							// Keep the previous AO excluded even after a pool or population reset.
+							private _classicEligibleRegions = ([_regionMasterList,_classicLowPopulationRegions] select _classicRegionRestricted) select {
+								((_x # 1) findIf {(_x # 0) isNotEqualTo _classicLastAOId}) >= 0
+							};
+							// Leave spawning idle if no different AO is allowed by the current rules.
+							if (_classicEligibleRegions isEqualTo []) exitWith {};
+							_aoList = _aoList select {(_x # 0) isNotEqualTo _classicLastAOId};
+							_mainMissionRegionListProxy = _mainMissionRegionListProxy select {_x in _classicEligibleRegions};
 							if (_aoList isEqualTo []) then {
 								if (_mainMissionRegionListProxy isEqualTo []) then {
-									_mainMissionRegionListProxy = _regionMasterList call _fn_arrayShuffle;
+									_mainMissionRegionListProxy = _classicEligibleRegions call _fn_arrayShuffle;
 									if ((_QS_worldName isEqualTo 'Tanoa') && ((random 1) > 0.5)) then {
 										_mainMissionRegion = _mainMissionRegionListProxy # 0;
 									} else {
@@ -1715,7 +1720,7 @@ for '_x' from 0 to 1 step 0 do {
 									_mainMissionRegionListProxy deleteAt _mainMissionRegionIndex;
 									missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion # 0),_false];								
 								};
-								_mainMissionRegion_aoList = (_mainMissionRegion # 1) call _fn_arrayShuffle;
+								_mainMissionRegion_aoList = ((_mainMissionRegion # 1) select {(_x # 0) isNotEqualTo _classicLastAOId}) call _fn_arrayShuffle;
 								for '_x' from 0 to (round(((count _mainMissionRegion_aoList) * 0.75) - 1)) step 1 do {
 									_ao = selectRandom _mainMissionRegion_aoList;
 									_aoList pushBack _ao;
@@ -1723,6 +1728,7 @@ for '_x' from 0 to 1 step 0 do {
 								};
 							};
 							_ao = selectRandom _aoList;
+							_classicLastAOId = _ao # 0;
 							diag_log str _ao;
 							_aoList deleteAt (_aoList find _ao);
 							_mainMissionActive = _true;
@@ -1954,6 +1960,8 @@ for '_x' from 0 to 1 step 0 do {
 // Updated Code
 			// MEGA_CORE_REQUEST_BEGIN
 			private _megaDefenseRequest = FALSE;
+			private _staffDefendRequest = missionNamespace getVariable ['QS_staffDefendRequest',0];
+			private _staffForceDefend = _staffDefendRequest isEqualTo 2;
 			isNil {
 				private _megaDefenseCore = missionNamespace getVariable ['QS_megaDefense_core',['IDLE',-1,[]]];
 				_megaDefenseRequest = (missionNamespace getVariable ['QS_megaDefense_pending',FALSE]) &&
@@ -1963,7 +1971,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (_megaDefenseRequest) then {missionNamespace setVariable ['QS_megaDefense_core',['TRANSITION',_megaDefenseEpoch,+(_megaDefenseCore # 2)],FALSE];};
 			};
 			// MEGA_CORE_REQUEST_END
-			if ((_timeNow > _aoGraceTime) || {_megaDefenseRequest}) then {
+			if ((_timeNow > _aoGraceTime) || {_megaDefenseRequest} || {_staffForceDefend}) then {
 // End Updated Code
 				if ((missionNamespace getVariable 'QS_mission_aoType') isEqualTo 'CLASSIC') then {
 					if (_timeNow > _avgPlayerCountCheckDelay) then {
@@ -1976,7 +1984,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|						([0] call _fn_aoSubObjectives) ||
 // Updated Code
-						_megaDefenseRequest || {([0] call _fn_aoSubObjectives)} ||
+						_megaDefenseRequest || {_staffForceDefend} || {([0] call _fn_aoSubObjectives)} ||
 // End Updated Code
 						{(missionNamespace getVariable 'QS_aoCycleVar')}
 					) then {
@@ -1984,6 +1992,12 @@ for '_x' from 0 to 1 step 0 do {
 // Added Code
 						// MEGA_CORE_HANDOFF_BEGIN
 						private _normalAO_manualDefense = _megaDefenseRequest;
+						private _normalAO_staffDefense = _staffDefendRequest > 0;
+						if (_normalAO_staffDefense) then {
+							missionNamespace setVariable ['QS_staffDefendRequest',0,_false];
+							missionNamespace setVariable ['QS_staffDefendStarting',_true,_false];
+							missionNamespace setVariable ['QS_forceDefend',1,_true];
+						};
 						missionNamespace setVariable ['QS_megaDefense_core',[[ 'IDLE','TRANSITION' ] select _normalAO_manualDefense,_megaDefenseEpoch,+(missionNamespace getVariable ['QS_HQpos',[]])],FALSE];
 						if (_normalAO_manualDefense) then {
 							missionNamespace setVariable ['QS_classic_AI_triggerInit',FALSE,FALSE];
@@ -2302,7 +2316,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|						if ((_ao # 8) isNotEqualTo 0) then {
 // Updated Code
-						if (((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense}) then {
+						if (((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense} || {_normalAO_staffDefense}) then {
 // End Updated Code
 							_defendAO = _true;
 							_defendAOActive = _true;
@@ -2351,7 +2365,7 @@ for '_x' from 0 to 1 step 0 do {
 /* Legacy Code as of 9.9.2026 */
 //|							((_ao # 8) isNotEqualTo 0),
 // Updated Code
-							(((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense}),
+							(((_ao # 8) isNotEqualTo 0) || {_normalAO_manualDefense} || {_normalAO_staffDefense}),
 // End Updated Code
 							_normalAO_defendScript
 						] spawn {
@@ -4448,6 +4462,9 @@ for '_x' from 0 to 1 step 0 do {
 		] + _jetJunk + _backpackDroneTypes;
 		private _perfEntityCensus = ['core.cleanupEntities'] call QS_fnc_perfBegin;
 		_allMissionObjectsAll = entities [_cleanupEntityTypes,[],_false,_false];
+		// Player-dropped GroundWeaponHolders can be absent from entities, so
+		// include the mission-object lookup before applying the usual cleanup rules.
+		_allMissionObjectsAll append ((allMissionObjects 'GroundWeaponHolder') - _allMissionObjectsAll);
 		[_perfEntityCensus,count _allMissionObjectsAll] call QS_fnc_perfEnd;
 		_missionCraters = [];
 		_missionWeaponHolders = [];
@@ -5242,98 +5259,14 @@ for '_x' from 0 to 1 step 0 do {
 				_QS_saveDate_delay = _timeNow + 600;
 			};
 		};
-		if (_timeNow > _QS_date_checkDelay) then {
-			if ((date # 2) isNotEqualTo (_QS_date # 2)) then {
-				_QS_date = date;
-				_QS_solarHorizons = _QS_date call _fn_sunriseSunsetTime;
-				_QS_sunrise = _QS_solarHorizons # 0;
-				_QS_sunset = _QS_solarHorizons # 1;
-				_QS_solarNoon = (_QS_sunrise + _QS_sunset) / 2;
-			};
-			_QS_date_checkDelay = _timeNow + _QS_date_checkDelay_timer;
-		};
 		if (_QS_timeAccelerationManager) then {
 			if (_timeNow > _QS_timeAccelerationManager_checkDelay) then {
 				_QS_dayTime = dayTime;
+				_QS_timeAccelerationControl = [_QS_dayTime] call _fn_timeMultiplierForHour;
 				_QS_currentTimeMultiplier = timeMultiplier;
 				if (_QS_currentTimeMultiplier isNotEqualTo _QS_timeAccelerationControl) then {
 					setTimeMultiplier _QS_timeAccelerationControl;
 				};
-				/* Dynamic day/night acceleration controller disabled in favor of a constant 12x multiplier.
-				if (_QS_timeAcceleration_inProgress > 0) then {
-					if (_QS_timeAcceleration_inProgress isEqualTo 1) then {
-						if (_QS_dayTime > (_QS_sunrise - 0.25)) then {
-							if (_QS_dayTime < _QS_solarNoon) then {
-								if (_QS_currentTimeMultiplier isNotEqualTo _QS_timeAccelerationControl) then {
-									setTimeMultiplier _QS_timeAccelerationControl;
-								};
-								_QS_timeAcceleration_inProgress = 0;
-							};
-						};
-					};
-					if (_QS_timeAcceleration_inProgress isEqualTo 2) then {
-						if (_QS_dayTime > (_QS_sunset - 3)) then {
-							if (_QS_currentTimeMultiplier isNotEqualTo _QS_timeAccelerationControl) then {
-								setTimeMultiplier _QS_timeAccelerationControl;
-							};
-							_QS_timeAcceleration_inProgress = 0;
-						};
-					};
-					if (_QS_timeAcceleration_inProgress isEqualTo 3) then {
-						if (_QS_dayTime > _QS_sunset) then {
-							if (_QS_currentTimeMultiplier isNotEqualTo _QS_timeAccelerationControl) then {
-								setTimeMultiplier _QS_timeAccelerationControl;
-							};
-							_QS_timeAcceleration_inProgress = 0;
-						};
-					};
-					if (_QS_timeAcceleration_inProgress isEqualTo 4) then {
-						if (_QS_dayTime > (_QS_sunrise + 2)) then {
-							if (_QS_currentTimeMultiplier isNotEqualTo _QS_timeAccelerationControl) then {
-								setTimeMultiplier _QS_timeAccelerationControl;
-							};
-							_QS_timeAcceleration_inProgress = 0;
-						};
-					};
-				} else {
-					if (_QS_darkAccelerated) then {
-						if ((_QS_dayTime > (_QS_sunset + _QS_module_time_duskAcc)) || {(_QS_dayTime < (_QS_sunrise - 0.5))}) then {
-							_QS_timeAcceleration_inProgress = 1;
-							if (_QS_currentTimeMultiplier isNotEqualTo _QS_darkAccelerationFactor) then {
-								setTimeMultiplier _QS_darkAccelerationFactor;
-							};
-						};
-					};
-					if (_QS_lightAccelerated) then {
-						if (_QS_dayTime > (_QS_solarNoon - 2)) then {
-							if (_QS_dayTime < (_QS_sunset - 3)) then {
-								_QS_timeAcceleration_inProgress = 2;
-								if (_QS_currentTimeMultiplier isNotEqualTo _QS_noonAccelerationFactor) then {
-									setTimeMultiplier _QS_noonAccelerationFactor;
-								};
-							};
-						};
-					};
-					if (_QS_dawnDuskTimeDeccelerated) then {
-						if (_QS_dayTime > (_QS_sunset - 1.5)) then {
-							if (_QS_dayTime < _QS_sunset) then {
-								_QS_timeAcceleration_inProgress = 3;
-								if (_QS_currentTimeMultiplier isNotEqualTo _QS_dawnDuskDeccelerationFactor) then {
-									setTimeMultiplier _QS_dawnDuskDeccelerationFactor;
-								};
-							};
-						};
-						if (_QS_dayTime > (_QS_sunrise - _QS_module_time_dawnOffset)) then {
-							if (_QS_dayTime < (_QS_sunrise + 2)) then {
-								_QS_timeAcceleration_inProgress = 4;
-								if (_QS_currentTimeMultiplier isNotEqualTo _QS_dawnDuskDeccelerationFactor) then {
-									setTimeMultiplier _QS_dawnDuskDeccelerationFactor;
-								};
-							};
-						};
-					};
-				};
-				*/
 				if (_QS_baseLights) then {
 					if (_QS_baseLights_state) then {
 						if (([0,0,0] getEnvSoundController 'night') <= 0.7) then {

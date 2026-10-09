@@ -87,7 +87,8 @@ SLT_fnc_enableScript = {
 								default {[1,1,1,_alphaAI]};
 							};
 						};
-						private _icon = '\a3\ui_f\data\GUI\cfg\Ranks\private_gs.paa';
+						// Hide only the icon; AI text follows the existing name-tag rules.
+						private _icon = ['', '\a3\ui_f\data\GUI\cfg\Ranks\private_gs.paa'] select (missionNamespace getVariable ['QS_HUD_show3DHex',TRUE]);
 						private _iconSize = [0.5,0.5] select (_aiVehicle isNotEqualTo _ai);
 						private _text = if ((count (crew _aiVehicle)) > 1) then {
 							format ['AI + %1 more',(count (crew _aiVehicle)) - 1]
